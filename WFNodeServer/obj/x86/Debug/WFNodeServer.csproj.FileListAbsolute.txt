@@ -1,0 +1,5 @@
+C:\src\WFNodeServer\WFNodeServer\bin\Debug\WFNodeServer.exe
+C:\src\WFNodeServer\WFNodeServer\bin\Debug\WFNodeServer.pdb
+C:\src\WFNodeServer\WFNodeServer\obj\x86\Debug\WFNodeServer.exe
+C:\src\WFNodeServer\WFNodeServer\obj\x86\Debug\WFNodeServer.pdb
+C:\src\WFNodeServer\WFNodeServer\bin\Debug\WFNodeServer.exe.config
