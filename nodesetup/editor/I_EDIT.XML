@@ -1,0 +1,251 @@
+<editors>
+   <editor id="I_INTEGER">
+       <range uom="25" min="0" max="50000000" prec="0" />
+   </editor>
+   <editor id="I_INTEGER16">
+       <range uom="25" min="0" max="65535" prec="0" />
+   </editor>
+   <editor id="I_FREQUENCY">
+       <range uom="90" min="0" max="65535" prec="0" />
+   </editor>
+   <editor id="I_ANALOG">
+       <range uom="25" min="0" max="1023" prec="0" />
+   </editor>
+   <editor id="I_BATTERY">
+       <range uom="51" min="0" max="100" prec="0" />
+   </editor>
+   <editor id="I_FLOAT1">
+       <range uom="25" min="0" max="50000000" prec="1" />
+   </editor>
+   <editor id="I_FLOAT2">
+       <range uom="25" min="0" max="50000000" prec="2" />
+   </editor>
+   <editor id="I_DEGREE">
+       <range uom="14" min="-360" max="360" prec="0" />
+   </editor>
+   <editor id="I_10DAYS">
+      <range uom="25" min="0" max="10" prec="0" />
+   </editor>
+   <editor id="I_ODDEVEN">
+      <range uom="25" subset="0,1" nls="EN_ODD" />
+   </editor>
+   <editor id="I_TIMEOFUSE">
+      <range uom="25" subset="0-2" nls="EN_TOU" />
+   </editor>
+   <editor id="I_SEASON">
+      <range uom="25" subset="1-4" nls="EN_SEASON" />
+   </editor>
+   <editor id="I_MONTH">
+      <range uom="47" subset="1-12" />
+   </editor>
+   <editor id="I_DAYOFWEEK">
+      <range uom="25" subset="0-6" nls="EN_DAY" />
+   </editor>
+   <editor id="I_SKY">
+      <range uom="25" subset="0-34" nls="EN_SKY" />
+   </editor>
+   <editor id="I_WIND_DIRECTION">
+      <range uom="25" subset="0-8" nls="EN_WIND_DIRECTION" />
+   </editor>
+   <editor id="I_WIND_C">
+      <range uom="32" subset="0-500" />
+   </editor>
+   <editor id="I_WIND_F">
+      <range uom="48" subset="0-500" />
+   </editor>
+   <editor id="I_WEATHER_SYMBOL">
+      <range uom="25" subset="0-21" />
+   </editor>
+   
+   <editor id="I_SWITCH">
+      <range uom="25" subset="0,255" nls="EN_SWITCH" />
+   </editor>
+   <editor id="I_DIMMER">
+      <range uom="51" subset="0-100" />
+   </editor>
+   <editor id="I_MIDIMMER">
+      <range uom="51" subset="10-100" />
+   </editor>
+   <editor id="I_COLOR">
+      <range uom="25" subset="0-255" nls="EN_COLOR" />
+   </editor>
+   <editor id="I_COLORSET">
+      <range uom="25" subset="0-15" nls="EN_COLORSET" />
+   </editor>
+   <editor id="I_NA">
+      <range uom="25" subset="0" nls="EN_NA" />
+   </editor>
+   <editor id="I_RAINMACHINEPROGRAM">
+      <range uom="25" subset="0-2" nls="EN_RAINMACHINEPROGRAM" />
+   </editor>
+   <editor id="I_RAIN_NEXTRUN">
+      <range uom="25" subset="0-3" nls="EN_RAIN_NEXTRUN" />
+   </editor>
+   <editor id="I_BINARY">
+      <range uom="25" subset="0-1" />
+   </editor>
+   <editor id="I_TRUE_BOOL">
+      <range uom="25" subset="0-1" nls="EN_TRUE_BOOL" />
+   </editor>
+   
+    <editor id="I_LOC_STATUS">
+      <range uom="25" subset="0-1" nls="EN_LOC_STATUS" />
+   </editor>
+   
+    <editor id="I_ERROR_STATUS">
+      <range uom="25" subset="0-1" nls="EN_ERROR_STATUS" />
+   </editor>
+   
+   <!-- Honeywell Alarm -->
+   <editor id="I_HONALARM_STATUS">
+       <range uom="25" subset="0-3" nls="EN_HONALARM_STATUS" />
+   </editor>
+     
+   <!-- DSC -->
+   <editor id="I_DSC_STANDARD">
+       <range uom="25" subset="0-1" nls="EN_STATUS" />
+   </editor>
+    <editor id="I_DSC_STATUS">
+       <range uom="25" subset="0-4" nls="EN_DSCSTAT" />
+   </editor>
+   <editor id="I_DSC_USER">
+       <range uom="70" min="1" max="42" prec="0" />
+   </editor>
+   <editor id="I_ALARM_ZONE">
+       <range uom="25" min="0" max="1" prec="0" nls="EN_ALARM_ZONE" />
+   </editor>
+   <editor id="I_DSC_PANIC">
+      <range uom="25" subset="0-3" nls="EN_DSC_PANIC" />
+   </editor>
+   
+   <editor id="I_HONTSTAT_FAN_MODE">
+      <range uom="68" subset="0,1,6" />
+   </editor>
+   <editor id="I_HONTSTAT_STATUS">
+      <range uom="25" subset="0-4" nls="EN_HONTSTAT_STATUS" />
+   </editor>
+   
+   <!-- GEM -->
+   <editor id="I_GEM_A">
+       <range uom="1" min="0" max="200" prec="1" />
+   </editor>
+   <editor id="I_GEM_CO">
+       <range uom="55" min="0" max="32768" prec="0" />
+   </editor>
+   <editor id="I_GEM_T">
+       <range uom="14" min="0" max="500" prec="2" />
+   </editor>
+   <editor id="I_GEM_V">
+       <range uom="72" min="0" max="300" prec="1" />
+   </editor>
+   <editor id="I_GEM_W">
+       <range uom="73" min="0" max="50000" prec="0" />
+   </editor>
+   <editor id="I_GEM_WH">
+       <range uom="33" min="0" max="500"  prec="2" />
+   </editor>
+   <editor id="I_GEM_RUNTIME">
+      <range uom="10" min="0" max="5000000000" prec="2" />
+   </editor> 
+   
+   <!-- Temperature -->
+   <editor id="I_TEMP">
+      <range uom="14" min="-50" max="200" prec="2" />
+   </editor>
+   <editor id="I_TEMP_C">
+      <range uom="14" min="-50" max="75" step="0.5" prec="1" />
+   </editor>
+   <editor id="I_TEMP_F">
+      <range uom="14" min="-50" max="150" step="1" prec="0" />
+   </editor>
+   <editor id="I_SETTEMP_C">
+      <range uom="14" min="0" max="10" step="0.5" prec="1" />
+   </editor>
+   <editor id="I_SETTEMP_F">
+      <range uom="14" min="0" max="10" step="1" prec="0" />
+   </editor>
+   
+   <!-- CLISPC -  Cool Setpoint -->
+   <editor id="I_CLISPC_C">
+      <range uom="14" min="5" max="35" step="0.5" prec="1" />
+   </editor>
+   <editor id="I_CLISPC_F">
+      <range uom="14" min="32" max="90" step="1" prec="0"/>
+   </editor>
+   
+   <!-- CLISPH -  Heat Setpoint -->
+   <editor id="I_CLISPH_C">
+      <range uom="14" min="5" max="35" step="0.5" prec="1" />
+   </editor>
+   <editor id="I_CLISPH_F">
+      <range uom="14" min="32" max="90" step="1" prec="0"/>
+   </editor>
+     
+   
+   <editor id="I_TSTAT_ALERT">
+      <range uom="25" subset="0,1" nls="EN_ALERT" />
+   </editor>
+   <editor id="I_TSTAT_ECO_SCHED_TYPE">
+      <range uom="25" subset="0-10" nls="EN_ECOSCH" />
+   </editor>
+   <editor id="I_TSTAT_ECO_SCHED_OPT">
+      <range uom="25" subset="0-1" nls="EN_ECOSCH_OPT" />
+   </editor>
+   <editor id="I_TSTAT_FAN_MODE">
+      <range uom="68" subset="0,1" />
+   </editor>
+   <editor id="I_TSTAT_FAN_STATE">
+      <range uom="80" subset="0,1" />
+   </editor>
+   <editor id="I_TSTAT_FANONTIME">
+      <range uom="25" min="0" max="55" step="1" prec="0" />
+   </editor>
+   <editor id="I_HEARTBEAT">
+      <range uom="25" min="-1" max="1" step="1" prec="0" />
+   </editor>
+   <editor id="I_TSTAT_ECOHCS">
+      <range uom="25" subset="0-8" nls="EN_ECOHCS" />
+   </editor>
+    <editor id="I_TSTAT_VEN_ACTSTAGE">
+      <range uom="25" subset="0-4" />
+   </editor>
+   <editor id="I_TSTAT_HCS">
+      <range uom="66" subset="0-2" />
+   </editor>
+   <editor id="I_HUMIDITY">
+      <range uom="51" min="0" max="100" prec="0" />
+   </editor>
+   <editor id="I_TSTAT_HUM_SET">
+      <range uom="51" min="10" max="100" step="1" prec="0" />
+   </editor>
+   <editor id="I_TSTAT_LOC">
+      <range uom="25" subset="0,1" nls="EN_LOC" />
+   </editor>
+   <editor id="I_TSTAT_MODE">
+      <range uom="67" subset="0-3" />
+   </editor>
+   <editor id="I_TSTAT_OCC">
+      <range uom="25" subset="0,1" nls="EN_BOOL" />
+   </editor>
+   <editor id="I_TSTAT_PROG_MODE">
+      <range uom="25" subset="0,1" nls="EN_PM" />
+   </editor>
+   <editor id="I_TSTAT_PROG_MODE2">
+      <range uom="25" subset="0-2" nls="EN_PM2" />
+   </editor>
+   <editor id="I_TSTAT_RUNTIME">
+      <range uom="25" min="0" max="5000000000" prec="0" />
+   </editor>
+   <editor id="I_TSTAT_RUNTIME2">
+      <range uom="10" min="0" max="5000000000" prec="2" />
+   </editor> 
+   
+   <editor id="I_VSTAR_HCS">
+      <range uom="25" subset="0-4" nls="EN_VENSTATE" />
+   </editor>
+   
+   <editor id="I_RAIN_ZONE">
+      <range uom="25" subset="0-2" nls="EN_RAIN_ZONE" />
+   </editor>
+   
+</editors>

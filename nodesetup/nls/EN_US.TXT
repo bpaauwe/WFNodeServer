@@ -1,0 +1,16 @@
+ND-WeatherFlow-NAME = Weather Flow Smart Weather Station
+ND-WeatherFlow-ICON = Input
+ST-139W-GV1-NAME = Temperature
+ST-139W-GV2-NAME = Humidity
+ST-139W-GV3-NAME = Barometric Pressure
+ST-139W-GV4-NAME = Lightning Strikes
+ST-139W-GV5-NAME = Lightning Distance
+ST-139W-GV6-NAME = Illumination
+ST-139W-GV7-NAME = UV Index
+ST-139W-GV8-NAME = Solar Radiation
+ST-139W-GV9-NAME = Wind Speed
+ST-139W-GV10-NAME = Gust Speed
+ST-139W-GV11-NAME = Wind Direction
+ST-139W-GV12-NAME = Rainfall
+CMD-ST-NAME = Query
+
