@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.NetworkInformation;
 using System.Threading;
 
 namespace WFNodeServer {
@@ -62,6 +63,34 @@ namespace WFNodeServer {
             Console.WriteLine("Found ISY at " + ISYAddress);
         }
 
+        private static string GetBroadcast() {
+            string bcast_addr = "";
+
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces()) {
+                // Look for type == "Ethernet" && status == "Up"
+                if (ni.NetworkInterfaceType.ToString() != "Ethernet")
+                    continue;
+                if (ni.OperationalStatus.ToString() != "Up")
+                    continue;
+
+                foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses) {
+                    if (ip.IPv4Mask.ToString() == "0.0.0.0")
+                        continue;
+                    if (ip.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    var addrInt = BitConverter.ToInt32(ip.Address.GetAddressBytes(), 0);
+                    var maskInt = BitConverter.ToInt32(ip.IPv4Mask.GetAddressBytes(), 0);
+                    var bcastInt = addrInt | ~maskInt;
+                    IPAddress broadcast = new IPAddress(BitConverter.GetBytes(bcastInt));
+                    //Console.WriteLine("Broadcast Address: " + broadcast.ToString());
+                    bcast_addr = broadcast.ToString();
+                }
+            }
+
+            return bcast_addr;
+        }
+
         internal static string FindISY() {
             UdpClient listen_udp;
             UdpState state;
@@ -84,7 +113,7 @@ namespace WFNodeServer {
             state.client = listen_udp;
             state.ep = group_ep;
 
-            listen_udp.Send(handshake, 24, "192.168.92.255", 20034);
+            listen_udp.Send(handshake, 24, GetBroadcast(), 20034);
             Thread.Sleep(50);
 
             // Wait for 1/2 second for the ISY to respond
