@@ -58,7 +58,7 @@ namespace WFNodeServer {
             // Decode the string for debugging purposes.
             u = Convert.FromBase64String(auth);
             s = encoding.GetString(u);
-            Console.WriteLine("Authorize: encoding = \"" + s + "\" to \"" + auth + "\"");
+            //Console.WriteLine("Authorize: encoding = \"" + s + "\" to \"" + auth + "\"");
 
             return ("Basic " + auth);
         }
@@ -95,6 +95,7 @@ namespace WFNodeServer {
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.Headers.Add("Authorization", AuthHeader);
             request.Proxy = null;
+            request.KeepAlive = false;
 
             // Read data from the stream
             try {
@@ -121,24 +122,34 @@ namespace WFNodeServer {
                                     url + ", failed with " +
                                     response.StatusDescription);
                         }
-                    } else {
+                    } else {  // code == 200
                         byte[] buf = new byte[4096];
                         int len;
                         string chunk;
 
                         reader = response.GetResponseStream();
-                        do {
-                            len = reader.Read(buf, 0, buf.Length);
-                            if (len > 0) {
-                                chunk = new String(Encoding.ASCII.GetString(buf).ToCharArray(), 0, len);
-                                xml += chunk;
-                            }
-                        } while (len > 0);
+                        try {
+                            do {
+                                len = reader.Read(buf, 0, buf.Length);
+                                //Console.WriteLine("  -> Read " + len.ToString() + " bytes from stream.");
+                                if (len > 0) {
+                                    chunk = new String(Encoding.ASCII.GetString(buf).ToCharArray(), 0, len);
+                                    xml += chunk;
+                                }
+                            } while (len > 0);
+                        } catch {
+                            Console.WriteLine("Ignoring reader exception?");
+                        }
+
                         reader.Close();
                         //Console.WriteLine("REST got: " + xml);
                     }
+                } // End of content length > 0
+                try {
+                    response.Close();
+                } catch {
+                    Console.WriteLine("Ignoring exception on close?");
                 }
-                response.Close();
             } catch (WebException ex) {
                 // Try to get more information about the error
                 if (ex.Response != null) {
@@ -159,11 +170,13 @@ namespace WFNodeServer {
                     }
                 } else {
                     xml = "ISY REST request " + url + " failed with " + ex.Message;
-                    Console.WriteLine(xml);
+                    //Console.WriteLine(xml);
                     //throw new RestException();
+                    Console.WriteLine(ex.Message);
                 }
             }
 
+            request.Abort();
             return xml;
         }
     }

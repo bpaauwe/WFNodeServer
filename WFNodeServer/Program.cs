@@ -29,7 +29,35 @@ namespace WFNodeServer {
     class WeatherFlowNS {
         internal static NodeServer NS;
         static void Main(string[] args) {
-             NS = new NodeServer();
+            string username = "";
+            string password = "";
+            int profile = 0;
+            bool si_units = false;
+
+            foreach (string Cmd in args) {
+                string[] parts;
+                char[] sep = { '=' };
+                parts = Cmd.Split(sep);
+                switch (parts[0].ToLower()) {
+                    case "username":
+                        username = parts[1];
+                        break;
+                    case "password":
+                        password = parts[1];
+                        break;
+                    case "profile":
+                        int.TryParse(parts[1], out profile);
+                        break;
+                    case"si":
+                        si_units = true;
+                        break;
+                    default:
+                        Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
+                        break;
+                }
+            }
+
+            NS = new NodeServer(username, password, profile, si_units);
 
             while (true) ;
         }
@@ -57,7 +85,12 @@ namespace WFNodeServer {
             }
         }
         internal string Temperature {
-            get { return data.obs[0][2].ToString(); }
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.TempF(data.obs[0][2]).ToString("0.#");
+                else
+                    return data.obs[0][2].ToString();
+            }
         }
         internal string Humidity {
             get { return data.obs[0][3].ToString(); }
@@ -66,7 +99,12 @@ namespace WFNodeServer {
             get { return data.obs[0][4].ToString(); }
         }
         internal string Distance {
-            get { return data.obs[0][5].ToString(); }
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.KM2Miles(data.obs[0][5]).ToString("0.#");
+                else
+                    return data.obs[0][5].ToString();
+                }
         }
         internal string Battery {
             get { return data.obs[0][6].ToString(); }
@@ -88,16 +126,31 @@ namespace WFNodeServer {
             get { return data.obs[0][2].ToString(); }
         }
         internal string Rain {
-            get { return data.obs[0][3].ToString(); }
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3]).ToString("0.##");
+                else
+                    return data.obs[0][3].ToString();
+                }
         }
         internal string WindLull {
             get { return data.obs[0][4].ToString(); }
         }
         internal string WindSpeed {
-            get { return data.obs[0][5].ToString(); }
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.MS2MPH(data.obs[0][5]).ToString("0.#");
+                else
+                    return data.obs[0][5].ToString();
+                }
         }
         internal string GustSpeed {
-            get { return data.obs[0][6].ToString(); }
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.MS2MPH(data.obs[0][6]).ToString("0.#");
+                else
+                    return data.obs[0][5].ToString();
+            }
         }
         internal string WindDirection {
             get { return data.obs[0][7].ToString(); }
@@ -123,23 +176,27 @@ namespace WFNodeServer {
     }
 
     internal class NodeServer {
-        private static rest Rest;
+        internal rest Rest;
         internal event SkyEvent WFSkySubscribers = null;
         internal event AirEvent WFAirSubscribers = null;
         internal bool active = false;
         internal Dictionary<string, bool> NodeList = new Dictionary<string, bool>();
         internal int Profile = 0;
+        internal WeatherFlow_UDP udp_client;
+        internal bool SIUnits { get; set; }
 
-        internal NodeServer() {
-            WeatherFlow_UDP udp_client;
+        internal NodeServer(string user, string pass, int profile, bool si_units) {
             Thread udp_thread;
+
+            SIUnits = si_units;
+            Profile = profile;
 
             //ISYDetect.IsyAutoDetect();  // UPNP detection
             string ISYIP = ISYDetect.FindISY();
 
             Rest = new rest("http://" + ISYIP + "/rest/");
-            Rest.Username = "admin";
-            Rest.Password = "Tr1ck13r";
+            Rest.Username = user;
+            Rest.Password = pass;
 
             // Is there some way to detect what profile we're installed at?
             //  We can look at the nodes "/rest/nodes" and search the output
@@ -150,6 +207,13 @@ namespace WFNodeServer {
                 // Parse profile from node address
                 int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
                 Console.WriteLine("Detected profile number " + Profile.ToString());
+            } else {
+                // Should we try and create a node?
+                string address = "n" + profile.ToString("000") + "_weatherflow1";
+
+                Rest.REST("ns/" + profile.ToString() + "/nodes/" + address +
+                    "/add/WeatherFlow/?name=WeatherFlow");
+                NodeList.Add(address, si_units);
             }
                 
             // If we don't know the profile number, we shouldn't do
@@ -163,12 +227,9 @@ namespace WFNodeServer {
 
             WFAirSubscribers += new AirEvent(HandleAir);
             WFSkySubscribers += new SkyEvent(HandleSky);
-            // Try to create our node?  This will fail if the node already
-            // exist.
-            Rest.REST("ns/2/nodes/n002_weather_flow/add/WeatherFlow/?name=WeatherFlow");
 
             // Start a thread to monitor the UDP port
-            Console.WriteLine("Starting udp_thread Thread.");
+            Console.WriteLine("Starting WeatherFlow data collection thread.");
             udp_client = new WeatherFlow_UDP();
             udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
             udp_thread.IsBackground = true;
@@ -187,12 +248,13 @@ namespace WFNodeServer {
         // Handler that is called when we receive Air data
         internal void HandleAir(object sender, AirEventArgs air) {
             string report;
+            string unit;
             string prefix = "ns/" + Profile.ToString() + "/nodes/";
-
-            Console.WriteLine("In theory, we're updating the Air data now.");
+            air.si_units = SIUnits;
 
             foreach (string address in NodeList.Keys) {
-                report = prefix + address + "/report/status/GV1/" + air.Temperature + "/C";
+                unit = (SIUnits) ? "/F" : "/C";
+                report = prefix + address + "/report/status/GV1/" + air.Temperature + unit;
                 Rest.REST(report);
 
                 report = prefix + address + "/report/status/GV2/" + air.Humidity + "/PERCENT";
@@ -204,7 +266,8 @@ namespace WFNodeServer {
                 report = prefix + address + "/report/status/GV4/" + air.Strikes + "/0";
                 Rest.REST(report);
 
-                report = prefix + address + "/report/status/GV5/" + air.Distance + "/KM";
+                unit = (SIUnits) ? "/0" : "/KM";
+                report = prefix + address + "/report/status/GV5/" + air.Distance + unit;
                 Rest.REST(report);
             }
         }
@@ -212,7 +275,9 @@ namespace WFNodeServer {
         // Handler that is called when re receive Sky data
         internal void HandleSky(object sender, SkyEventArgs sky) {
             string report;
+            string unit;
             string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            sky.si_units = SIUnits;
 
             foreach (string address in NodeList.Keys) {
                 report = prefix + address + "/report/status/GV6/" + sky.Illumination + "/36";
@@ -221,12 +286,14 @@ namespace WFNodeServer {
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV8/" + sky.SolarRadiation + "/74";
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV9/" + sky.WindSpeed + "/49";
+                unit = (SIUnits) ? "/48" : "/49";
+                report = prefix + address + "/report/status/GV9/" + sky.WindSpeed + unit;
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV10/" + sky.GustSpeed + "/49";
+                report = prefix + address + "/report/status/GV10/" + sky.GustSpeed + unit;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV11/" + sky.WindDirection + "/25";
                 Rest.REST(report);
+                unit = (SIUnits) ? "/105" : "/82";
                 report = prefix + address + "/report/status/GV12/" + sky.Rain + "/82";
                 Rest.REST(report);
             }

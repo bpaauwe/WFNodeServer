@@ -34,6 +34,7 @@ namespace WFNodeServer {
         private string root_directory;
         private HttpListener listener;
         private int port;
+        private int profile;
 
         internal int Port {
             get {
@@ -42,12 +43,14 @@ namespace WFNodeServer {
             private set { }
         }
 
-        internal WFNServer(string path, int port) {
+        internal WFNServer(string path, int port, int profile) {
+            this.profile = profile;
             this.Initialize(path, port);
         }
 
         // Auto assign port. Can probably remove this
-        internal WFNServer(string path) {
+        internal WFNServer(string path, int profile) {
+            this.profile = profile;
             TcpListener l = new TcpListener(IPAddress.Loopback, 0);
             l.Start();
             int port = ((IPEndPoint)l.LocalEndpoint).Port;
@@ -96,13 +99,20 @@ namespace WFNodeServer {
             } else if (filename.Contains("query")) {
                 string[] parts;
                 parts = filename.Split('/');
+
                 Console.WriteLine("Query node " + parts[3]);
             } else if (filename.Contains("status")) {
                 string[] parts;
                 parts = filename.Split('/');
+
                 Console.WriteLine("Get status of node " + parts[3]);
+                NodeStatus();
             } else if (filename.Contains("add")) {
                 Console.WriteLine("Add our node.  How is this different from report/Add?");
+                AddNodes();
+
+            // the report API is not yet implemented on the ISY so we'll
+            // never get anything of these until it is.
             } else if (filename.Contains("report/add")) {
                 Console.WriteLine("Report that a node was added?");
             } else if (filename.Contains("report/rename")) {
@@ -127,6 +137,18 @@ namespace WFNodeServer {
 
             server_thread = new Thread(this.Listen);
             server_thread.Start();
+        }
+
+        private void AddNodes() {
+            string str;
+
+            str = "ns/" + profile.ToString() + "/nodes/n" + profile.ToString("000") + "_weather_flow/add/WeatherFlow/?name=WeatherFlow";
+            WeatherFlowNS.NS.Rest.REST(str);
+        }
+
+        private void NodeStatus() {
+            WeatherFlowNS.NS.RaiseAirEvent(this, new WFNodeServer.AirEventArgs(WeatherFlowNS.NS.udp_client.AirObj));
+            WeatherFlowNS.NS.RaiseSkyEvent(this, new WFNodeServer.SkyEventArgs(WeatherFlowNS.NS.udp_client.SkyObj));
         }
     }
  

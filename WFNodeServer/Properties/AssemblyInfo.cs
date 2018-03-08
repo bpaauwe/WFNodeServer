@@ -6,9 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("WFNodeServer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("ISY Nodeserver for WeatherFlow weather data")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Bobs Place media Engineering")]
 [assembly: AssemblyProduct("WFNodeServer")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]

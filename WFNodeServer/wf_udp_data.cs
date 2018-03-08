@@ -225,8 +225,6 @@ namespace WFNodeServer {
             try {
                 AirObj = serializer.Deserialize<AirData>(json);
 
-                Console.WriteLine("Processing Air observations");
-
                 // Do we just want to raise an event with the data object?
                 WeatherFlowNS.NS.RaiseAirEvent(this, new WFNodeServer.AirEventArgs(AirObj));
 
@@ -249,7 +247,6 @@ namespace WFNodeServer {
             try {
                 SkyObj = serializer.Deserialize<SkyData>(json);
 
-                Console.WriteLine("Processing Sky observations");
                 WeatherFlowNS.NS.RaiseSkyEvent(this, new WFNodeServer.SkyEventArgs(SkyObj));
                 //WFDeviceList[WF.WINDCHILL].SetValue(CalcWindChill());
                 //WFDeviceList[WF.DAILY_PRECIPITATION].SetValue(CalcDailyPrecipitation());
@@ -409,48 +406,48 @@ namespace WFNodeServer {
             return Math.Round((tempc * 1.8) + 32, 1);
         }
 
-        private static double TempC(double tempf) {
+        internal static double TempC(double tempf) {
             return Math.Round((tempf -32) / 1.8, 1);
         }
 
-        private static double MS2MPH(double ms) {
+        internal static double MS2MPH(double ms) {
             //return (ms * 3600.0) / 1609.344;
             return Math.Round(ms / 0.44704, 1);
         }
 
-        private static double MS2KPH(double ms) {
+        internal static double MS2KPH(double ms) {
             return Math.Round((ms * (18 / 5)), 1);
         }
 
-        private static double KPH2MS(double kph) {
+        internal static double KPH2MS(double kph) {
             return Math.Round((kph * (5 / 18)), 1);
         }
 
-        private static double MPH2MS(double mph) {
+        internal static double MPH2MS(double mph) {
             return Math.Round(mph * .44704, 1);
         }
 
-        private static double MPH2KPH(double mph) {
+        internal static double MPH2KPH(double mph) {
             return Math.Round(mph * 1.609344, 1);
         }
 
-        private static double KPH2MPH(double kph) {
+        internal static double KPH2MPH(double kph) {
             return Math.Round(kph / 1.609344, 1);
         }
 
-        private static double KM2Miles(double km) {
+        internal static double KM2Miles(double km) {
             return Math.Round(km / 1.609344, 1);
         }
 
-        private static double Miles2KM(double miles) {
+        internal static double Miles2KM(double miles) {
             return Math.Round(miles / 0.62137119, 1);
         }
 
-        private static double MM2Inch(double mm) {
+        internal static double MM2Inch(double mm) {
             return Math.Round(mm * 0.03937, 1);
         }
 
-        private static double Inch2MM(double inch) {
+        internal static double Inch2MM(double inch) {
             return Math.Round(inch * 25.4, 2);
         }
 
