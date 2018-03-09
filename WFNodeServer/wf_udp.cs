@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace WFNodeServer {
     partial class WeatherFlow_UDP {
@@ -52,6 +53,11 @@ namespace WFNodeServer {
             remoteEP = (EndPoint)groupEP;
 
             while (true) {
+                if (s.Available == 0) {
+                    Thread.Sleep(200);
+                    continue;
+                }
+
                 try {
                     // Listen for UDP packets
                     //byte[] bytes = listener.Receive(ref groupEP);

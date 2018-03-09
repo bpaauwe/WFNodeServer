@@ -28,9 +28,12 @@ using System.Xml;
 namespace WFNodeServer {
     class WeatherFlowNS {
         internal static NodeServer NS;
+        internal static bool shutdown = false;
+
         static void Main(string[] args) {
             string username = "";
             string password = "";
+            string isy_host = "";
             int profile = 0;
             bool si_units = false;
 
@@ -48,18 +51,24 @@ namespace WFNodeServer {
                     case "profile":
                         int.TryParse(parts[1], out profile);
                         break;
-                    case"si":
+                    case "si":
                         si_units = true;
+                        break;
+                    case "isy":
+                        isy_host = parts[1];
                         break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
+                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si]");
                         break;
                 }
             }
 
-            NS = new NodeServer(username, password, profile, si_units);
+            NS = new NodeServer(isy_host, username, password, profile, si_units);
 
-            while (true) ;
+            while (!shutdown) {
+                Thread.Sleep(30000);
+            }
         }
     }
 
@@ -80,34 +89,34 @@ namespace WFNodeServer {
 
         internal string Pressure {
             get {
-                double inhg = data.obs[0][1] * 0.02952998751;
+                double inhg = data.obs[0][1].GetValueOrDefault() * 0.02952998751;
                 return inhg.ToString("0.##");
             }
         }
         internal string Temperature {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.TempF(data.obs[0][2]).ToString("0.#");
+                    return WeatherFlow_UDP.TempF(data.obs[0][2].GetValueOrDefault()).ToString("0.#");
                 else
-                    return data.obs[0][2].ToString();
+                    return data.obs[0][2].GetValueOrDefault().ToString();
             }
         }
         internal string Humidity {
-            get { return data.obs[0][3].ToString(); }
+            get { return data.obs[0][3].GetValueOrDefault().ToString(); }
         }
         internal string Strikes {
-            get { return data.obs[0][4].ToString(); }
+            get { return data.obs[0][4].GetValueOrDefault().ToString(); }
         }
         internal string Distance {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.KM2Miles(data.obs[0][5]).ToString("0.#");
+                    return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
                 else
-                    return data.obs[0][5].ToString();
+                    return data.obs[0][5].GetValueOrDefault().ToString();
                 }
         }
         internal string Battery {
-            get { return data.obs[0][6].ToString(); }
+            get { return data.obs[0][6].GetValueOrDefault().ToString(); }
         }
     }
 
@@ -120,58 +129,58 @@ namespace WFNodeServer {
             si_units = false;
         }
         internal string Illumination {
-            get { return data.obs[0][1].ToString(); }
+            get { return data.obs[0][1].GetValueOrDefault().ToString(); }
         }
         internal string UV {
-            get { return data.obs[0][2].ToString(); }
+            get { return data.obs[0][2].GetValueOrDefault().ToString(); }
         }
         internal string Rain {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3]).ToString("0.##");
+                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3].GetValueOrDefault()).ToString("0.##");
                 else
-                    return data.obs[0][3].ToString();
+                    return data.obs[0][3].GetValueOrDefault().ToString();
                 }
         }
         internal string WindLull {
-            get { return data.obs[0][4].ToString(); }
+            get { return data.obs[0][4].GetValueOrDefault().ToString(); }
         }
         internal string WindSpeed {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.MS2MPH(data.obs[0][5]).ToString("0.#");
+                    return WeatherFlow_UDP.MS2MPH(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
                 else
-                    return data.obs[0][5].ToString();
+                    return data.obs[0][5].GetValueOrDefault().ToString();
                 }
         }
         internal string GustSpeed {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.MS2MPH(data.obs[0][6]).ToString("0.#");
+                    return WeatherFlow_UDP.MS2MPH(data.obs[0][6].GetValueOrDefault()).ToString("0.#");
                 else
-                    return data.obs[0][5].ToString();
+                    return data.obs[0][5].GetValueOrDefault().ToString();
             }
         }
         internal string WindDirection {
-            get { return data.obs[0][7].ToString(); }
+            get { return data.obs[0][7].GetValueOrDefault().ToString(); }
         }
         internal string Battery {
-            get { return data.obs[0][8].ToString(); }
+            get { return data.obs[0][8].GetValueOrDefault().ToString(); }
         }
         internal string Interval {
-            get { return data.obs[0][9].ToString(); }
+            get { return data.obs[0][9].GetValueOrDefault().ToString(); }
         }
         internal string SolarRadiation {
-            get { return data.obs[0][10].ToString(); }
+            get { return data.obs[0][10].GetValueOrDefault().ToString(); }
         }
         internal string PrecipitationDay {
-            get { return data.obs[0][11].ToString(); }
+            get { return data.obs[0][11].GetValueOrDefault().ToString(); }
         }
         internal string PrecipitationType {
-            get { return data.obs[0][12].ToString(); }
+            get { return data.obs[0][12].GetValueOrDefault().ToString(); }
         }
         internal string WindSampleInterval {
-            get { return data.obs[0][13].ToString(); }
+            get { return data.obs[0][13].GetValueOrDefault().ToString(); }
         }
     }
 
@@ -185,16 +194,26 @@ namespace WFNodeServer {
         internal WeatherFlow_UDP udp_client;
         internal bool SIUnits { get; set; }
 
-        internal NodeServer(string user, string pass, int profile, bool si_units) {
+        internal NodeServer(string host, string user, string pass, int profile, bool si_units) {
             Thread udp_thread;
 
             SIUnits = si_units;
             Profile = profile;
 
-            //ISYDetect.IsyAutoDetect();  // UPNP detection
-            string ISYIP = ISYDetect.FindISY();
+            if (host == "") {
+                //ISYDetect.IsyAutoDetect();  // UPNP detection
+                host = ISYDetect.FindISY();
+                if (host == "") {
+                    Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
+                    WeatherFlowNS.shutdown = true;
+                    return;
+                }
+            } else {
+                Console.WriteLine("Using ISY at " + host);
+            }
 
-            Rest = new rest("http://" + ISYIP + "/rest/");
+
+            Rest = new rest("http://" + host + "/rest/");
             Rest.Username = user;
             Rest.Password = pass;
 

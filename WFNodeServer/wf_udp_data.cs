@@ -62,6 +62,7 @@ namespace WFNodeServer {
             PRESSURE_TREND,
         }
 
+
         public class PreciptData {
             public string serial_number { get; set; }
             public string type { get; set; }
@@ -90,7 +91,7 @@ namespace WFNodeServer {
             public string type { get; set; }
             public string hub_sn { get; set; }
             public int device_id { get; set; }
-            public List<List<double>> obs { get; set; }
+            public List<List<Nullable<double>>> obs { get; set; }
             public int firmware_revision { get; set; }
         }
 
@@ -99,7 +100,7 @@ namespace WFNodeServer {
             public string type { get; set; }
             public string hub_sn { get; set; }
             public int device_id { get; set; }
-            public List<List<double>> obs { get; set; }
+            public List<List<Nullable<double>>> obs { get; set; }
             public int firmware_revision { get; set; }
         }
 
@@ -125,7 +126,7 @@ namespace WFNodeServer {
             public string reset_flags { get; set; }
             public string stack { get; set; }
             public int seq { get; set; }
-            public int fs { get; set; }
+            public string fs { get; set; }
         }
 
         private enum AirIndex {
@@ -396,10 +397,10 @@ namespace WFNodeServer {
                 return 0.0;
                
 
-			ws = SkyObj.obs[0][(int)SkyIndex.WIND_SPEED] / 2.2368; // convert mph to m/s
-			wv = AirObj.obs[0][(int)AirIndex.HUMIDITY] / 100 * 6.105 * Math.Exp(17.27 * AirObj.obs[0][(int)AirIndex.TEMPURATURE] / (237.7 + AirObj.obs[0][(int)AirIndex.TEMPURATURE]));
+			ws = SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault() / 2.2368; // convert mph to m/s
+			wv = AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault() / 100 * 6.105 * Math.Exp(17.27 * AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault() / (237.7 + AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault()));
 
-			return AirObj.obs[0][(int)AirIndex.TEMPURATURE] + (0.33 * wv) - (0.70 * ws) - 4.0;
+			return AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault() + (0.33 * wv) - (0.70 * ws) - 4.0;
 		}
 
         internal static double TempF(double tempc) {
@@ -457,8 +458,8 @@ namespace WFNodeServer {
 
         // Uses and returns temp in C
         internal double CalcDewPoint() {
-            double t = AirObj.obs[0][(int)AirIndex.TEMPURATURE];
-            double h = AirObj.obs[0][(int)AirIndex.HUMIDITY];
+            double t = AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault();
+            double h = AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault();
             double b;
 
             //b = (Math.Log(h / 100) + ((17.27 *  t) / (237.3 + t))) / 17.27;
@@ -468,8 +469,8 @@ namespace WFNodeServer {
 
         // uses and returns temp in F
         internal double CalcHeatIndex() {
-            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE]);
-            double h = AirObj.obs[0][(int)AirIndex.HUMIDITY];
+            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault());
+            double h = AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault();
             double c1 = -42.379;
             double c2 = 2.04901523;
             double c3 = 10.14333127;
@@ -488,8 +489,8 @@ namespace WFNodeServer {
 
         // uses and returns temp in F
         internal double CalcWindChill() {
-            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE]);
-            double v = MS2MPH(SkyObj.obs[0][(int)SkyIndex.WIND_SPEED]);
+            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault());
+            double v = MS2MPH(SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
 
             if ((t < 50.0) && (v > 5.0))
                 return 35.74 + (0.6215 * t) - (35.75 * Math.Pow(v, 0.16)) + (0.4275 * t * Math.Pow(v, 0.16));
@@ -503,7 +504,7 @@ namespace WFNodeServer {
                 DailyPrecipitation = 0;
             }
 
-            DailyPrecipitation += SkyObj.obs[0][(int)SkyIndex.RAIN];
+            DailyPrecipitation += SkyObj.obs[0][(int)SkyIndex.RAIN].GetValueOrDefault();
 
             return DailyPrecipitation;
         }
@@ -522,7 +523,7 @@ namespace WFNodeServer {
             TrendData t = new TrendData();
 
             t.time = DateTime.Now;
-            t.pressure = AirObj.obs[0][(int)AirIndex.PRESSURE];
+            t.pressure = AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault();
 
             Trend.Enqueue(t);
 

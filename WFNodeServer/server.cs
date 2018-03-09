@@ -74,6 +74,7 @@ namespace WFNodeServer {
                 } catch (Exception ex) {
                     Console.WriteLine("Failed to process connection: " + ex.Message);
                 }
+                Thread.Sleep(5000);
             }
         }
 
@@ -136,6 +137,9 @@ namespace WFNodeServer {
             this.port = port;
 
             server_thread = new Thread(this.Listen);
+            server_thread.IsBackground = true;
+            server_thread.Name = "WFNodeServer REST API";
+            server_thread.Priority = ThreadPriority.Normal;
             server_thread.Start();
         }
 

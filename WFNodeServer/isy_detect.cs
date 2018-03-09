@@ -103,6 +103,7 @@ namespace WFNodeServer {
 
             listen_udp = new UdpClient();
             listen_udp.ExclusiveAddressUse = false;
+            listen_udp.EnableBroadcast = true;
             listen_udp.Client.SetSocketOption(SocketOptionLevel.Socket,
                     SocketOptionName.ReuseAddress, true);
 
@@ -113,14 +114,18 @@ namespace WFNodeServer {
             state.client = listen_udp;
             state.ep = group_ep;
 
-            listen_udp.Send(handshake, 24, GetBroadcast(), 20034);
-            Thread.Sleep(50);
+            try {
+                listen_udp.Send(handshake, 24, GetBroadcast(), 20034);
+                Thread.Sleep(50);
 
-            // Wait for 1/2 second for the ISY to respond
-            listen_udp.BeginReceive(new AsyncCallback(callback), state);
-            Thread.Sleep(500);
+                // Wait for 1/2 second for the ISY to respond
+                listen_udp.BeginReceive(new AsyncCallback(callback), state);
+                Thread.Sleep(500);
 
-            listen_udp.Close();
+                listen_udp.Close();
+            } catch {
+                listen_udp.Close();
+            }
 
             return ISYAddress;
         }
