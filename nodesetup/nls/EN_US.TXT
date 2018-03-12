@@ -1,5 +1,7 @@
 ND-WeatherFlow-NAME = Weather Flow Smart Weather Station
 ND-WeatherFlow-ICON = Input
+ND-WeatherFlowSI-NAME = Weather Flow Smart Weather Station
+ND-WeatherFlowSI-ICON = Input
 ST-139W-GV1-NAME = Temperature
 ST-139W-GV2-NAME = Humidity
 ST-139W-GV3-NAME = Barometric Pressure
@@ -12,5 +14,45 @@ ST-139W-GV9-NAME = Wind Speed
 ST-139W-GV10-NAME = Gust Speed
 ST-139W-GV11-NAME = Wind Direction
 ST-139W-GV12-NAME = Rainfall
+ST-139W-GV13-NAME = Air Battery
+ST-139W-GV14-NAME = Sky Battery
+ST-139W-GV15-NAME = DewPoint 
+
+ND-WF_Air-NAME = Weather Flow Smart Weather Station Air (metric)
+ND-WF_Air-ICON = Input
+ND-WF_AirSI-NAME = Weather Flow Smart Weather Station Air (SI)
+ND-WF_AirSI-ICON = Input
+ST-139A-GV0-NAME = Last Update 
+ST-139A-GV1-NAME = Temperature
+ST-139A-GV2-NAME = Humidity
+ST-139A-GV3-NAME = Barometric Pressure
+ST-139A-GV4-NAME = Lightning Strikes
+ST-139A-GV5-NAME = Lightning Distance
+ST-139A-GV6-NAME = Air Battery
+ST-139A-GV7-NAME = DewPoint 
+ST-139A-GV8-NAME = Apparent Temperature
+ST-139A-GV9-NAME = Pressure Trend
+ST-139A-GV10-NAME = Uptime
+ST-139A-GV11-NAME = Signal Strength
+
+ND-WF_Sky-NAME = Weather Flow Smart Weather Station Sky (metric)
+ND-WF_Sky-ICON = Input
+ND-WF_SkySI-NAME = Weather Flow Smart Weather Station Sky (SI)
+ND-WF_SkySI-ICON = Input
+ST-139S-GV0-NAME = Last Update
+ST-139S-GV1-NAME = Illumination
+ST-139S-GV2-NAME = UV Index
+ST-139S-GV3-NAME = Solar Radiation
+ST-139S-GV4-NAME = Wind Speed
+ST-139S-GV5-NAME = Gust Speed
+ST-139S-GV6-NAME = Wind Direction
+ST-139S-GV7-NAME = Rainfall
+ST-139S-GV8-NAME = Sky Battery
+ST-139S-GV9-NAME = Uptime
+ST-139S-GV10-NAME = Signal Strength
+
 CMD-ST-NAME = Query
 
+EN_TREND-0 = Falling
+EN_TREND-1 = Steady
+EN_TREND-2 = Raising
