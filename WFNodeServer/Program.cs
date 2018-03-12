@@ -460,6 +460,7 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Air" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
                 NodeList.Add(address, "WF_Air" + ((SIUnits) ? "SI" : ""));
+                MinutsSinceUpdate.Add(address, 0);
             }
 
             //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
@@ -513,6 +514,7 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Sky" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
                 NodeList.Add(address, "WF_Sky" + ((SIUnits) ? "SI" : ""));
+                MinutsSinceUpdate.Add(address, 0);
             }
 
             //report = prefix + address + "/report/status/GV0/" + sky.TS + "/25";
