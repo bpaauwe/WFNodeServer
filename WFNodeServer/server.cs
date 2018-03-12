@@ -1,4 +1,4 @@
-﻿
+
 //
 // WFNodeServer - ISY Node Server for Weather Flow weather station data
 //
@@ -27,6 +27,7 @@ using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Reflection;
 
 namespace WFNodeServer {
     internal class WFNServer {
@@ -81,6 +82,12 @@ namespace WFNodeServer {
         private void Process(HttpListenerContext context) {
             string filename = context.Request.Url.AbsolutePath;
             Console.WriteLine(" request = " + filename);
+
+            if (filename.Contains("config")) {
+                // Handle configuration
+                ConfigPage(context);
+                return;
+            }
 
             // WeatherFlow/install  - install
             // Weatherflow/nodes/<address>/query - Query the node and report status
@@ -154,6 +161,50 @@ namespace WFNodeServer {
             WeatherFlowNS.NS.RaiseAirEvent(this, new WFNodeServer.AirEventArgs(WeatherFlowNS.NS.udp_client.AirObj));
             WeatherFlowNS.NS.RaiseSkyEvent(this, new WFNodeServer.SkyEventArgs(WeatherFlowNS.NS.udp_client.SkyObj));
         }
+
+        private void ConfigPage(HttpListenerContext context) {
+            string cfg_page;
+            byte[] page;
+
+#if false
+            cfg_page = "<html>\r\n";
+            cfg_page += "<head><title>WeatherFlow Nodeserver Configuration</title>\r\n";
+            cfg_page += "</head>\r\n";
+            cfg_page += "<body>\r\n";
+
+            cfg_page += "<h2>WeatherFlow Nodeserver version 1.0.0.2</h2>\r\n";
+            cfg_page += "<table>\r\n";
+            cfg_page += "<tr><td width=\"50%\">ISY Address</td> <form method=\"post\"> <td width=\"40%\"><input style=\"width:250px\" required pattern=\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5})|(^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\" name=\"sAddress\" value=\"ISY\"></td> <td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></tr></form>\r\n";
+            cfg_page += "<tr><td width=\"50%\" class=\"fieldTitle\">ISY Username</td><form method=\"post\"><td width=\"40%\"><input style=\"width:250px\" type=\"text\" name=\"sUser\" value=\"admin\"></td><td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></form></tr>\r\n";            cfg_page += "<tr><td width=\"50%\" class=\"fieldTitle\">ISY Password</td><form method=\"post\"><td width=\"40%\"><input style=\"width:250px\" type=\"password\" name=\"sPassword\" value=\"********\"></td><td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></form></tr>\r\n";            cfg_page += "</table>\r\n";
+
+
+            var assembly = Assembly.GetExecutingAssembly();
+            foreach (string rn in assembly.GetManifestResourceNames()) {
+                cfg_page += "<br>" + rn + "<br>";
+            }
+
+            cfg_page += "</body>\r\n";
+            cfg_page += "</html>\r\n";
+#endif
+
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "WFNodeServer.config_page.txt";
+            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            using (StreamReader reader = new StreamReader(stream)) {
+                cfg_page = reader.ReadToEnd();
+            }
+
+            page = ASCIIEncoding.ASCII.GetBytes(cfg_page);
+
+            context.Response.ContentType = "text/html";
+            context.Response.ContentLength64 = page.Length;
+            context.Response.AddHeader("Date", DateTime.Now.ToString("r"));
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            context.Response.OutputStream.Write(page, 0, page.Length);
+            context.Response.OutputStream.Flush();
+            context.Response.OutputStream.Close();
+        }
+
     }
  
 }

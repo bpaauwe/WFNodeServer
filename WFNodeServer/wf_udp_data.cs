@@ -170,6 +170,9 @@ namespace WFNodeServer {
             try {
                 DeviceObj = serializer.Deserialize<DeviceData>(json);
 
+                // Add event to update this info.
+                WeatherFlowNS.NS.RaiseDeviceEvent(this, new WFNodeServer.DeviceEventArgs(DeviceObj));
+
                 //Console.WriteLine("Serial Number:     " + DeviceObj.serial_number);
                 //Console.WriteLine("Device Type:       " + DeviceObj.type);
                 //Console.WriteLine("Hub Serial Number: " + DeviceObj.hub_sn);
@@ -227,7 +230,20 @@ namespace WFNodeServer {
                 AirObj = serializer.Deserialize<AirData>(json);
 
                 // Do we just want to raise an event with the data object?
-                WeatherFlowNS.NS.RaiseAirEvent(this, new WFNodeServer.AirEventArgs(AirObj));
+                AirEventArgs evnt = new AirEventArgs(AirObj);
+                try {
+                    evnt.SetDewpoint = CalcDewPoint();
+                    evnt.SetApparentTemp = ApparentTemp_C();
+                    // Trend is -1, 0, 1 while event wants 0, 1, 2
+                    evnt.SetTrend = PressureTrend() + 1;
+                } catch {
+                    evnt.SetDewpoint = 0;
+                    evnt.SetApparentTemp = 0;
+                    evnt.SetTrend = 1;
+                }
+
+                WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
 
                 try {
                     //WFDeviceList[WF.DEWPOINT].SetValue(CalcDewPoint());
@@ -249,6 +265,7 @@ namespace WFNodeServer {
                 SkyObj = serializer.Deserialize<SkyData>(json);
 
                 WeatherFlowNS.NS.RaiseSkyEvent(this, new WFNodeServer.SkyEventArgs(SkyObj));
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
                 //WFDeviceList[WF.WINDCHILL].SetValue(CalcWindChill());
                 //WFDeviceList[WF.DAILY_PRECIPITATION].SetValue(CalcDailyPrecipitation());
             } catch (Exception ex) {
