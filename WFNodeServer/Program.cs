@@ -120,6 +120,9 @@ namespace WFNodeServer {
             get { return data.type; }
         }
 
+        internal int Uptime {
+            get { return data.uptime; }
+        }
         internal string UpTime {
             get { return data.uptime.ToString(); }
         }
@@ -543,19 +546,38 @@ namespace WFNodeServer {
             string report;
             string prefix = "ns/" + Profile.ToString() + "/nodes/";
             string address = "n" + Profile.ToString("000") + "_" + device.SerialNumber;
+            string units;
+            int up;
 
             // Somehow we need to know what type of device this is?
             if (!NodeList.Keys.Contains(address)) {
                 return;
             }
 
+            // Device uptime is in seconds.  Lets make this easier to understand as
+            // the time goes up.
+            if (device.Uptime < 120) {
+                up = device.Uptime;
+                units = "/57";
+            } else if (device.Uptime < (60 * 60 * 2)) {
+                up = device.Uptime / 60;  // Minutes
+                units = "/45";
+            } else if (device.Uptime < (60 * 60 * 24 * 2)) {
+                up = device.Uptime / (60 * 60); // Hours
+                units = "/20";
+            } else {
+                up = device.Uptime / (60 * 60 * 24); // Days
+                units = "/10";
+            }
+
+
             if (NodeList[address].Contains("Air")) {
-                report = prefix + address + "/report/status/GV10/" + device.UpTime + "/25";
+                report = prefix + address + "/report/status/GV10/" + up.ToString("0.#") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV11/" + device.RSSI + "/25";
                 Rest.REST(report);
             } else if (NodeList[address].Contains("Sky")) {
-                report = prefix + address + "/report/status/GV9/" + device.UpTime + "/25";
+                report = prefix + address + "/report/status/GV9/" + up.ToString("0.#") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV10/" + device.RSSI + "/25";
                 Rest.REST(report);
