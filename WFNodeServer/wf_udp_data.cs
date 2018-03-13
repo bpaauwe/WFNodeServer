@@ -256,6 +256,7 @@ namespace WFNodeServer {
                 evnt.SetDewpoint = 0;
                 evnt.SetApparentTemp = 0;
                 evnt.SetTrend = 1;
+                evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), WeatherFlowNS.Elevation);
                 if (SkyObj.valid) {
                     try {
                         evnt.SetDewpoint = CalcDewPoint();
@@ -506,6 +507,10 @@ namespace WFNodeServer {
 
         internal double ApparentTemp_F() {
             return Math.Round((ApparentTemp_C() * 1.8) + 32, 1);
+        }
+
+        internal double SeaLevelPressure(double p, double h) {
+            return p + h / 8.3;
         }
 
         // Uses and returns temp in C

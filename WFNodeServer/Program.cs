@@ -31,6 +31,7 @@ namespace WFNodeServer {
     class WeatherFlowNS {
         internal static NodeServer NS;
         internal static bool shutdown = false;
+        internal static double Elevation = 0;
         private static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         static void Main(string[] args) {
@@ -59,6 +60,9 @@ namespace WFNodeServer {
                         break;
                     case "isy":
                         isy_host = parts[1];
+                        break;
+                    case "elevation":
+                        double.TryParse(parts[1], out Elevation);
                         break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
@@ -142,6 +146,7 @@ namespace WFNodeServer {
         private double dewpoint;
         private double apparent_temp;
         private int trend;
+        private double sealevel;
 
         internal AirEventArgs(WeatherFlow_UDP.AirData d) {
             data = d;
@@ -175,6 +180,16 @@ namespace WFNodeServer {
                 return inhg.ToString("0.##");
             }
         }
+        internal double SetSeaLevel {
+            set { sealevel = value; }
+        }
+        internal string SeaLevel {
+            get {
+                double inhg = sealevel * 0.02952998751;
+                return inhg.ToString("0.##");
+            }
+        }
+
         internal string Temperature {
             get {
                 if (si_units)
@@ -497,7 +512,7 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV2/" + air.Humidity + "/PERCENT";
             Rest.REST(report);
 
-            report = prefix + address + "/report/status/GV3/" + air.Pressure + "/23";
+            report = prefix + address + "/report/status/GV3/" + air.SeaLevel + "/23";
             Rest.REST(report);
 
             report = prefix + address + "/report/status/GV4/" + air.Strikes + "/0";
