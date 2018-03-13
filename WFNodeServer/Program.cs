@@ -560,9 +560,13 @@ namespace WFNodeServer {
             // Currently we just report the rain over 1 minute. If we want the rate
             // this number should be multiplied by 60 to get inches/hour (which is UOM 24)
             // mm/hour is uom 46
-            unit = (SIUnits) ? "/105" : "/82";
-            report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
+            //unit = (SIUnits) ? "/105" : "/82";
+            //report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
+            //Rest.REST(report);
+            unit = (SIUnits) ? "/24" : "/46";
+            report = prefix + address + "/report/status/GV7/" + sky.RainRate + unit;
             Rest.REST(report);
+
             report = prefix + address + "/report/status/GV8/" + sky.Battery + "/72";
             Rest.REST(report);
         }
