@@ -582,7 +582,11 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV7/" + sky.RainRate + unit;
             Rest.REST(report);
 
-            report = prefix + address + "/report/status/GV8/" + sky.Battery + "/72";
+            unit = (SIUnits) ? "/105" : "/82";
+            report = prefix + address + "/report/status/GV8/" + sky.Daily + unit;
+            Rest.REST(report);
+
+            report = prefix + address + "/report/status/GV9/" + sky.Battery + "/72";
             Rest.REST(report);
         }
 
@@ -621,9 +625,9 @@ namespace WFNodeServer {
                 report = prefix + address + "/report/status/GV11/" + device.RSSI + "/25";
                 Rest.REST(report);
             } else if (NodeList[address].Contains("Sky")) {
-                report = prefix + address + "/report/status/GV9/" + up.ToString("0.#") + units;
+                report = prefix + address + "/report/status/GV10/" + up.ToString("0.#") + units;
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV10/" + device.RSSI + "/25";
+                report = prefix + address + "/report/status/GV11/" + device.RSSI + "/25";
                 Rest.REST(report);
             }
         }
