@@ -93,6 +93,16 @@ namespace WFNodeServer {
             public int device_id { get; set; }
             public List<List<Nullable<double>>> obs { get; set; }
             public int firmware_revision { get; set; }
+            public bool valid = false;
+
+            public AirData() {
+                serial_number = "";
+                type = "";
+                hub_sn = "";
+                device_id = 0;
+                firmware_revision = 0;
+                obs = new List<List<Nullable<double>>>();
+            }
         }
 
         public class SkyData {
@@ -102,6 +112,16 @@ namespace WFNodeServer {
             public int device_id { get; set; }
             public List<List<Nullable<double>>> obs { get; set; }
             public int firmware_revision { get; set; }
+            public bool valid = false;
+
+            public SkyData() {
+                serial_number = "";
+                type = "";
+                hub_sn = "";
+                device_id = 0;
+                firmware_revision = 0;
+                obs = new List<List<Nullable<double>>>();
+            }
         }
 
         public class DeviceData {
@@ -222,37 +242,36 @@ namespace WFNodeServer {
 			// obs[0][1] = station pressure (MB)
 			// obs[0][2] = air temp (c)
 			// obs[0][3] = humidity (%)
+
 			// obs[0][4] = lightning count
 			// obs[0][5] = avg lightning dist (km)
 			// obs[0][6] = battery
 			// obs[0][7] = interval (minutes)
             try {
                 AirObj = serializer.Deserialize<AirData>(json);
+                AirObj.valid = true;
 
                 // Do we just want to raise an event with the data object?
                 AirEventArgs evnt = new AirEventArgs(AirObj);
-                try {
-                    evnt.SetDewpoint = CalcDewPoint();
-                    evnt.SetApparentTemp = ApparentTemp_C();
-                    // Trend is -1, 0, 1 while event wants 0, 1, 2
-                    evnt.SetTrend = PressureTrend() + 1;
-                } catch {
-                    evnt.SetDewpoint = 0;
-                    evnt.SetApparentTemp = 0;
-                    evnt.SetTrend = 1;
+                evnt.SetDewpoint = 0;
+                evnt.SetApparentTemp = 0;
+                evnt.SetTrend = 1;
+                if (SkyObj.valid) {
+                    try {
+                        evnt.SetDewpoint = CalcDewPoint();
+                        evnt.SetApparentTemp = FeelsLike(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault(),
+                                                         AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault(),
+                                                         SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
+                        // Trend is -1, 0, 1 while event wants 0, 1, 2
+                        evnt.SetTrend = PressureTrend() + 1;
+                        // Heat index & Windchill ??
+                    } catch {
+                    }
+                } else {
                 }
 
                 WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
-
-                try {
-                    //WFDeviceList[WF.DEWPOINT].SetValue(CalcDewPoint());
-                    //WFDeviceList[WF.APPARENT_TEMPERATURE].SetValue(ApparentTemp_C());
-                    //WFDeviceList[WF.HEATINDEX].SetValue(CalcHeatIndex());
-                    //WFDeviceList[WF.PRESSURE_TREND].SetValue(PressureTrend());
-                } catch {
-                    Console.WriteLine("Skiping calculations, missing sky data.");
-                }
             } catch (Exception ex) {
                 Console.WriteLine("Deserialization failed for air data: " + ex.Message);
             }
@@ -263,11 +282,13 @@ namespace WFNodeServer {
 
             try {
                 SkyObj = serializer.Deserialize<SkyData>(json);
+                SkyObj.valid = true;
 
-                WeatherFlowNS.NS.RaiseSkyEvent(this, new WFNodeServer.SkyEventArgs(SkyObj));
+                WFNodeServer.SkyEventArgs evnt = new SkyEventArgs(SkyObj);
+                evnt.SetDaily = CalcDailyPrecipitation();
+
+                WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
-                //WFDeviceList[WF.WINDCHILL].SetValue(CalcWindChill());
-                //WFDeviceList[WF.DAILY_PRECIPITATION].SetValue(CalcDailyPrecipitation());
             } catch (Exception ex) {
                 Console.WriteLine("Deserialization failed for sky data: " + ex.Message);
                 return;
@@ -400,6 +421,20 @@ namespace WFNodeServer {
         }
 #endif
 
+        // t is temperature C
+        // w is wind speed in m/s
+        // h is humidity
+        // Returns temperature in C
+        internal double FeelsLike(double t, double h, double w) {
+            if (t >= 27.0) { // Heat index returns temperature in F
+                return TempC(CalcHeatIndex(t, h));
+            } else if (t <= 10.0) {
+                return TempC(CalcWindChill(t, w)); // Windchill returns temperature in F
+            }
+
+            return t;
+        }
+
 		//
 		// Formula:
 		//   water_vapor_pressure = relative_humidity / 100 * 6.105 * math.exp(17.27 * temp_c / (237.7 + temp_c))
@@ -485,9 +520,9 @@ namespace WFNodeServer {
         }
 
         // uses and returns temp in F
-        internal double CalcHeatIndex() {
-            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault());
-            double h = AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault();
+        internal double CalcHeatIndex(double t_c, double h) {
+            double t = TempF(t_c);
+            //double h = AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault();
             double c1 = -42.379;
             double c2 = 2.04901523;
             double c3 = 10.14333127;
@@ -505,11 +540,11 @@ namespace WFNodeServer {
         }
 
         // uses and returns temp in F
-        internal double CalcWindChill() {
-            double t = TempF(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault());
-            double v = MS2MPH(SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
+        internal double CalcWindChill(double t_c, double w) {
+            double t = TempF(t_c);
+            double v = MS2MPH(w);
 
-            if ((t < 50.0) && (v > 5.0))
+            if ((t <= 50.0) && (v >= 5.0))
                 return 35.74 + (0.6215 * t) - (35.75 * Math.Pow(v, 0.16)) + (0.4275 * t * Math.Pow(v, 0.16));
             else
                 return t;

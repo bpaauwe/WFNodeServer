@@ -238,6 +238,7 @@ namespace WFNodeServer {
     internal class SkyEventArgs : System.EventArgs {
         internal WeatherFlow_UDP.SkyData data;
         internal bool si_units { get; set; }
+        private double daily;
 
         internal SkyEventArgs(WeatherFlow_UDP.SkyData d) {
             data = d;
@@ -321,6 +322,17 @@ namespace WFNodeServer {
         }
         internal string WindSampleInterval {
             get { return data.obs[0][13].GetValueOrDefault().ToString(); }
+        }
+        internal double SetDaily {
+            set { daily = value; }
+        }
+        internal string Daily {
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.MM2Inch(daily).ToString("0.##");
+                else
+                    return daily.ToString("0.#");
+            }
         }
     }
 
