@@ -273,6 +273,15 @@ namespace WFNodeServer {
                     return data.obs[0][3].GetValueOrDefault().ToString("0.#");
                 }
         }
+        internal string RainRate {
+            get {
+                double rate = data.obs[0][4].GetValueOrDefault() * 60;
+                if (si_units)
+                    return WeatherFlow_UDP.MM2Inch(rate).ToString("0.##");
+                else
+                    return rate.ToString("0.#");
+                }
+        }
         internal string WindLull {
             get { return data.obs[0][4].GetValueOrDefault().ToString(); }
         }
@@ -535,6 +544,10 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV6/" + sky.WindDirection + "/25";
             Rest.REST(report);
+
+            // Currently we just report the rain over 1 minute. If we want the rate
+            // this number should be multiplied by 60 to get inches/hour (which is UOM 24)
+            // mm/hour is uom 46
             unit = (SIUnits) ? "/105" : "/82";
             report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
             Rest.REST(report);
