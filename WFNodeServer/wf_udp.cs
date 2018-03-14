@@ -72,10 +72,11 @@ namespace WFNodeServer {
                         } else if (json.Contains("obs_sky")) {
                             SkyObservations(json);
                         } else if (json.Contains("rapid_wind")) {
+                            RapidWindEvt(json);
                         } else if (json.Contains("evt_strike")) {
-                            //LigtningStrikeEvt(json);
+                            LigtningStrikeEvt(json);
                         } else if (json.Contains("evt_precip")) {
-                            //PrecipitationEvt(json);
+                            PrecipitationEvt(json);
                         } else if (json.Contains("device_status")) {
                             DeviceStatus(json);
                         } else if (json.Contains("hub_status")) {

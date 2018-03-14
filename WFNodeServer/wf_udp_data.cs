@@ -79,9 +79,9 @@ namespace WFNodeServer {
         }
 
         public class WindData {
+            public int device_id { get; set; }
             public string serial_number { get; set; }
             public string type { get; set; }
-            public int device_id { get; set; }
             public string hub_sn { get; set; }
             public List<double> ob { get; set; }
         }
@@ -218,6 +218,7 @@ namespace WFNodeServer {
 
             try {
                 HubObj = serializer.Deserialize<HubData>(json);
+                WeatherFlowNS.NS.RaiseHubEvent(this, new WFNodeServer.HubEventArgs(HubObj));
 
                 //Console.WriteLine("Serial Number:     " + HubObj.serial_number);
                 //Console.WriteLine("Device Type:       " + HubObj.type);
@@ -297,41 +298,16 @@ namespace WFNodeServer {
 
 		}
 
-#if false
         internal void LigtningStrikeEvt(string json) {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
-            IPlugInAPI.strTrigActInfo[] HSTriggers;
 
             try {
                 // evt[0] = timestamp
                 // evt[1] = distance (km)
                 // evt[2] = energy
                 StrikeObj = serializer.Deserialize<StrikeData>(json);
+                WeatherFlowNS.NS.RaiseLightningEvent(this, new LightningEventArgs(StrikeObj));
 
-                // Get list of matching triggers to check
-                HSTriggers = WeatherFlow.callback.TriggerMatches(WeatherFlow.IFACE_NAME, 1, -1);
-                foreach (IPlugInAPI.strTrigActInfo tinfo in HSTriggers) {
-                    TriggerData d = TriggerFromData(tinfo.DataIn);
-
-                    switch (d.Condition) {
-                        case 1: // equal
-                            if (StrikeObj.evt[1] == d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 2: // not equal
-                            if (StrikeObj.evt[1] != d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 3: // less than
-                            if (StrikeObj.evt[1] < d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 4: // greater than
-                            if (StrikeObj.evt[1] > d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                    }
-                }
             } catch (Exception ex) {
                 Console.WriteLine("Failed to deserialize strike event: " + ex.Message);
             }
@@ -339,17 +315,11 @@ namespace WFNodeServer {
 
         internal void PrecipitationEvt(string json) {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
-            IPlugInAPI.strTrigActInfo[] HSTriggers;
 
             try {
                 // evt[0] = timestamp
-                StrikeObj = serializer.Deserialize<StrikeData>(json);
-
-                // Get list of matching triggers to check
-                HSTriggers = WeatherFlow.callback.TriggerMatches(WeatherFlow.IFACE_NAME, 2, -1);
-                foreach (IPlugInAPI.strTrigActInfo tinfo in HSTriggers) {
-                    WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                }
+                PreciptObj = serializer.Deserialize<PreciptData>(json);
+                WeatherFlowNS.NS.RaiseRainEvent(this, new RainEventArgs(PreciptObj));
             } catch (Exception ex) {
                 Console.WriteLine("Failed to deserialize precipitation event: " + ex.Message);
             }
@@ -357,70 +327,18 @@ namespace WFNodeServer {
 
         internal void RapidWindEvt(string json) {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
-            IPlugInAPI.strTrigActInfo[] HSTriggers;
 
             try {
                 // evt[0] = timestamp
                 // evt[1] = speed (m/s)
                 // evt[2] = direction 
                 WindObj = serializer.Deserialize<WindData>(json);
-
-                // Get list of matching wind speed triggers to check
-                HSTriggers = WeatherFlow.callback.TriggerMatches(WeatherFlow.IFACE_NAME, 3, -1);
-                foreach (IPlugInAPI.strTrigActInfo tinfo in HSTriggers) {
-                    TriggerData d = TriggerFromData(tinfo.DataIn);
-
-                    switch (d.Condition) {
-                        case 1: // equal
-                            if (WindObj.ob[1] == d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 2: // not equal
-                            if (WindObj.ob[1] != d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 3: // less than
-                            if (WindObj.ob[1] < d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 4: // greater than
-                            if (WindObj.ob[1] > d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                    }
-                    WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                }
-
-                // Get list of matching wind direction triggers to check
-                HSTriggers = WeatherFlow.callback.TriggerMatches(WeatherFlow.IFACE_NAME, 4, -1);
-                foreach (IPlugInAPI.strTrigActInfo tinfo in HSTriggers) {
-                    TriggerData d = TriggerFromData(tinfo.DataIn);
-
-                    switch (d.Condition) {
-                        case 1: // equal
-                            if (WindObj.ob[2] == d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 2: // not equal
-                            if (WindObj.ob[2] != d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 3: // less than
-                            if (WindObj.ob[2] < d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                        case 4: // greater than
-                            if (WindObj.ob[2] > d.Value)
-                                WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                            break;
-                    }
-                    WeatherFlow.callback.TriggerFire(WeatherFlow.IFACE_NAME, tinfo);
-                }
+                WeatherFlowNS.NS.RaiseRapidEvent(this, new RapidEventArgs(WindObj));
             } catch (Exception ex) {
                 Console.WriteLine("Failed to deserialize rapid wind event: " + ex.Message);
+                Console.WriteLine(json);
             }
         }
-#endif
 
         // t is temperature C
         // w is wind speed in m/s

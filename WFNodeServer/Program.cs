@@ -40,6 +40,7 @@ namespace WFNodeServer {
             string isy_host = "";
             int profile = 0;
             bool si_units = false;
+            bool hub_node = false;
 
             foreach (string Cmd in args) {
                 string[] parts;
@@ -64,6 +65,9 @@ namespace WFNodeServer {
                     case "elevation":
                         double.TryParse(parts[1], out Elevation);
                         break;
+                    case "hub":
+                        hub_node = true;
+                        break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
                         Console.WriteLine("                    [isy=<is ip address/hostname>] [si]");
@@ -73,7 +77,7 @@ namespace WFNodeServer {
 
             Console.WriteLine("WeatherFlow Node Server " + VERSION);
 
-            NS = new NodeServer(isy_host, username, password, profile, si_units);
+            NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node);
 
             while (!shutdown) {
                 Thread.Sleep(30000);
@@ -85,6 +89,149 @@ namespace WFNodeServer {
     internal delegate void SkyEvent(Object sender, SkyEventArgs e);
     internal delegate void DeviceEvent(Object sender, DeviceEventArgs e);
     internal delegate void UpdateEvent(Object sender, UpdateEventArgs e);
+    internal delegate void HubEvent(Object sender, HubEventArgs e);
+    internal delegate void RapidEvent(Object sender, RapidEventArgs e);
+    internal delegate void LightningEvent(Object sender, LightningEventArgs e);
+    internal delegate void RainEvent(Object sender, RainEventArgs e);
+
+    internal class RapidEventArgs : System.EventArgs {
+        internal WeatherFlow_UDP.WindData data;
+        internal bool si_units { get; set; }
+        internal RapidEventArgs(WeatherFlow_UDP.WindData d) {
+            data = d;
+        }
+        internal string SerialNumber {
+            get {
+                string d = data.serial_number.Replace('-', '_');
+                return d.ToLower();
+            }
+        }
+        internal string TimeStamp {
+            get { return data.ob[0].ToString(); }
+        }
+        internal string Speed {
+            get {
+                if (si_units)
+                    return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#");
+                else
+                    return data.ob[1].ToString();
+            }
+        }
+        // Cardinal directions
+        internal int Direction {
+            get {
+                if (data.ob[2] >= 348.75 && data.ob[2] < 11.25)
+                    return 0;
+                else if (data.ob[2] >= 11.25 && data.ob[2] < 33.75)
+                    return 1;
+                else if (data.ob[2] >= 33.75 && data.ob[2] < 56.25)
+                    return 2;
+                else if (data.ob[2] >= 56.25 && data.ob[2] < 78.75)
+                    return 3;
+                else if (data.ob[2] >= 78.75 && data.ob[2] < 101.25)
+                    return 4;
+                else if (data.ob[2] >= 101.25 && data.ob[2] < 123.75)
+                    return 5;
+                else if (data.ob[2] >= 123.75 && data.ob[2] < 146.25)
+                    return 6;
+                else if (data.ob[2] >= 146.25 && data.ob[2] < 168.75)
+                    return 7;
+                else if (data.ob[2] >= 168.75 && data.ob[2] < 191.25)
+                    return 8;
+                else if (data.ob[2] >= 191.25 && data.ob[2] < 213.75)
+                    return 9;
+                else if (data.ob[2] >= 213.75 && data.ob[2] < 236.25)
+                    return 10;
+                else if (data.ob[2] >= 236.25 && data.ob[2] < 258.75)
+                    return 11;
+                else if (data.ob[2] >= 258.75 && data.ob[2] < 281.25)
+                    return 12;
+                else if (data.ob[2] >= 281.25 && data.ob[2] < 303.75)
+                    return 13;
+                else if (data.ob[2] >= 303.75 && data.ob[2] < 326.25)
+                    return 14;
+                else if (data.ob[2] >= 326.25 && data.ob[2] < 348.75)
+                    return 15;
+            return -1;
+            }
+        }
+    }
+
+    internal class LightningEventArgs : System.EventArgs {
+        internal bool si_units { get; set; }
+        internal WeatherFlow_UDP.StrikeData data;
+        internal LightningEventArgs(WeatherFlow_UDP.StrikeData d) {
+            data = d;
+        }
+        internal string SerialNumber {
+            get {
+                string d = data.serial_number.Replace('-', '_');
+                return d.ToLower();
+            }
+        }
+        internal string TimeStamp {
+            get { return data.evt[0].ToString(); }
+        }
+        internal string Distance {
+            get { return data.evt[1].ToString(); }
+        }
+        internal string Energy {
+            get { return data.evt[2].ToString(); }
+        }
+    }
+
+    internal class RainEventArgs : System.EventArgs {
+        internal WeatherFlow_UDP.PreciptData data;
+        internal RainEventArgs(WeatherFlow_UDP.PreciptData d) {
+            data = d;
+        }
+        internal string SerialNumber {
+            get {
+                string d = data.serial_number.Replace('-', '_');
+                return d.ToLower();
+            }
+        }
+        internal string TimeStamp {
+            get { return data.evt[0].ToString(); }
+        }
+    }
+
+    internal class HubEventArgs : System.EventArgs {
+        internal WeatherFlow_UDP.HubData data;
+
+        internal HubEventArgs(WeatherFlow_UDP.HubData d) {
+            data = d;
+        }
+
+        internal string SerialNumber {
+            get {
+                string d = data.serial_number.Replace('-', '_');
+                return d.ToLower();
+            }
+        }
+        internal string ResetFlags {
+            get { return data.reset_flags; }
+        }
+        internal string Firmware {
+            get { return data.firmware_revision; }
+        }
+        internal string FS {
+            get { return data.fs; }
+        }
+        internal string RSSI {
+            get { return data.rssi.ToString(); }
+        }
+        internal string Stack {
+            get { return data.stack; }
+        }
+        internal string TimeStamp {
+            get { return data.timestamp.ToString(); }
+        }
+        internal string Uptime {
+            get { return data.uptime.ToString(); }
+        }
+        
+    }
 
     internal class UpdateEventArgs : System.EventArgs {
         internal int update_time;
@@ -357,6 +504,10 @@ namespace WFNodeServer {
         internal event AirEvent WFAirSubscribers = null;
         internal event DeviceEvent WFDeviceSubscribers = null;
         internal event UpdateEvent WFUpdateSubscribers = null;
+        internal event HubEvent WFHubSubscribers = null;
+        internal event RapidEvent WFRapidSubscribers = null;
+        internal event LightningEvent WFLightningSubscribers = null;
+        internal event RainEvent WFRainSubscribers = null;
         internal bool active = false;
         internal Dictionary<string, string> NodeList = new Dictionary<string, string>();
         internal Dictionary<string, int> MinutsSinceUpdate = new Dictionary<string, int>();
@@ -364,7 +515,7 @@ namespace WFNodeServer {
         internal WeatherFlow_UDP udp_client;
         internal bool SIUnits { get; set; }
 
-        internal NodeServer(string host, string user, string pass, int profile, bool si_units) {
+        internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node) {
             Thread udp_thread;
 
             SIUnits = si_units;
@@ -440,6 +591,13 @@ namespace WFNodeServer {
             WFSkySubscribers += new SkyEvent(HandleSky);
             WFDeviceSubscribers += new DeviceEvent(HandleDevice);
             WFUpdateSubscribers += new UpdateEvent(GetUpdate);
+            WFRapidSubscribers += new RapidEvent(HandleWind);
+            WFRainSubscribers += new RainEvent(HandleRain);
+            WFLightningSubscribers += new LightningEvent(HandleLightning);
+
+            // TODO: Make this configuraboe
+            if (hub_node)
+                WFHubSubscribers += new HubEvent(HandleHub);
 
             // Start a thread to monitor the UDP port
             Console.WriteLine("Starting WeatherFlow data collection thread.");
@@ -481,6 +639,22 @@ namespace WFNodeServer {
         internal void RaiseUpdateEvent(Object sender, WFNodeServer.UpdateEventArgs e) {
             if (WFUpdateSubscribers != null)
                 WFUpdateSubscribers(sender, e);
+        }
+        internal void RaiseHubEvent(Object sender, WFNodeServer.HubEventArgs e) {
+            if (WFHubSubscribers != null)
+                WFHubSubscribers(sender, e);
+        }
+        internal void RaiseRapidEvent(Object sender, WFNodeServer.RapidEventArgs e) {
+            if (WFRapidSubscribers != null)
+                WFRapidSubscribers(sender, e);
+        }
+        internal void RaiseLightningEvent(Object sender, WFNodeServer.LightningEventArgs e) {
+            if (WFLightningSubscribers != null)
+                WFLightningSubscribers(sender, e);
+        }
+        internal void RaiseRainEvent(Object sender, WFNodeServer.RainEventArgs e) {
+            if (WFRainSubscribers != null)
+                WFRainSubscribers(sender, e);
         }
 
         // Handler that is called when we receive Air data
@@ -632,6 +806,67 @@ namespace WFNodeServer {
             }
         }
 
+        internal void HandleWind(object sender, RapidEventArgs wind) {
+            string report;
+            string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            string address = "n" + Profile.ToString("000") + "_" + wind.SerialNumber;
+            string unit;
+
+            if (!NodeList.Keys.Contains(address))
+                return;
+
+            wind.si_units = SIUnits;
+            Console.WriteLine("Wind event: " + wind.Direction.ToString() + " at " + wind.Speed);
+
+            unit = (SIUnits) ? "/48" : "/49";
+            report = prefix + address + "/report/status/GV4/" + wind.Speed + unit;
+            Rest.REST(report);
+            report = prefix + address + "/report/status/GV6/" + wind.Direction.ToString() + "/25";
+            Rest.REST(report);
+        }
+
+        internal void HandleLightning(object sender, LightningEventArgs strike) {
+            string report;
+            string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            string address = "n" + Profile.ToString("000") + "_" + strike.SerialNumber;
+
+            if (!NodeList.Keys.Contains(address))
+                return;
+        }
+
+        internal void HandleRain(object sender, RainEventArgs rain) {
+            //string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            string address = "n" + Profile.ToString("000") + "_" + rain.SerialNumber;
+
+            if (!NodeList.Keys.Contains(address))
+                return;
+
+            Console.WriteLine("Rain Start Event at : " + rain.TimeStamp);
+        }
+
+        internal void HandleHub(object sender, HubEventArgs hub) {
+            string report;
+            string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            string address = "n" + Profile.ToString("000") + "_" + hub.SerialNumber;
+
+            if (!NodeList.Keys.Contains(address)) {
+                // Add it
+                Console.WriteLine("Device " + hub.SerialNumber + " doesn't exist, create it.");
+
+                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
+                    "/add/WF_Hub/?name=WeatherFlow%20(" + hub.SerialNumber + ")");
+                NodeList.Add(address, "WF_Hub");
+            }
+
+            Console.WriteLine("HUB: firmware    = " + hub.Firmware);
+            Console.WriteLine("HUB: reset flags = " + hub.ResetFlags);
+            Console.WriteLine("HUB: stack       = " + hub.Stack);
+            Console.WriteLine("HUB: fs          = " + hub.FS);
+            Console.WriteLine("HUB: rssi        = " + hub.RSSI);
+            Console.WriteLine("HUB: timestamp   = " + hub.TimeStamp);
+            Console.WriteLine("HUB: uptime      = " + hub.Uptime);
+        }
+
         internal void GetUpdate(object sender, UpdateEventArgs update) {
             string address = "n" + Profile.ToString("000") + "_" + update.SerialNumber;
 
@@ -657,8 +892,8 @@ namespace WFNodeServer {
             XmlNode root;
             XmlNodeList list;
 
-            xml = Rest.REST(query);
             try {
+                xml = Rest.REST(query);
                 xmld = new XmlDocument();
                 xmld.LoadXml(xml);
 
