@@ -1,23 +1,3 @@
-ND-WeatherFlow-NAME = Weather Flow Smart Weather Station
-ND-WeatherFlow-ICON = Input
-ND-WeatherFlowSI-NAME = Weather Flow Smart Weather Station
-ND-WeatherFlowSI-ICON = Input
-ST-139W-GV1-NAME = Temperature
-ST-139W-GV2-NAME = Humidity
-ST-139W-GV3-NAME = Barometric Pressure
-ST-139W-GV4-NAME = Lightning Strikes
-ST-139W-GV5-NAME = Lightning Distance
-ST-139W-GV6-NAME = Illumination
-ST-139W-GV7-NAME = UV Index
-ST-139W-GV8-NAME = Solar Radiation
-ST-139W-GV9-NAME = Wind Speed
-ST-139W-GV10-NAME = Gust Speed
-ST-139W-GV11-NAME = Wind Direction
-ST-139W-GV12-NAME = Rainfall
-ST-139W-GV13-NAME = Air Battery
-ST-139W-GV14-NAME = Sky Battery
-ST-139W-GV15-NAME = DewPoint 
-
 ND-WF_Air-NAME = Weather Flow Smart Weather Station Air (metric)
 ND-WF_Air-ICON = Input
 ND-WF_AirSI-NAME = Weather Flow Smart Weather Station Air (SI)
@@ -46,13 +26,44 @@ ST-139S-GV3-NAME = Solar Radiation
 ST-139S-GV4-NAME = Wind Speed
 ST-139S-GV5-NAME = Gust Speed
 ST-139S-GV6-NAME = Wind Direction
-ST-139S-GV7-NAME = Rainfall
-ST-139S-GV8-NAME = Sky Battery
-ST-139S-GV9-NAME = Uptime
-ST-139S-GV10-NAME = Signal Strength
+ST-139S-GV7-NAME = Rain Rate
+ST-139S-GV8-NAME = Daily Rainfall
+ST-139S-GV9-NAME = Sky Battery
+ST-139S-GV10-NAME = Uptime
+ST-139S-GV11-NAME = Signal Strength
+
+ND-WF_Hub-name = Weather Flow Smart Weather Station Hub
+ND-WF_Hub-ICON = Input
+ST-139H-GV0-NAME = Firmware Revision
+ST-139H-GV1-NAME = Uptime
+ST-139H-GV2-NAME = Signal Strength
+ST-139H-GV3-NAME = Sequence
+
+ND-WF_Lightning-name = Weather Flow Smart Weather Station Lightning
+ND-WF_Lightning-ICON = Input
+ST-139L-GV0-NAME = Time
+ST-139L-GV1-NAME = Distance
+ST-139L-GV2-NAME = Energy
 
 CMD-ST-NAME = Query
 
 EN_TREND-0 = Falling
 EN_TREND-1 = Steady
-EN_TREND-2 = Raising
+EN_TREND-2 = Rising
+
+EN_CARDINAL-0 = N
+EN_CARDINAL-1 = NNE
+EN_CARDINAL-2 = NE
+EN_CARDINAL-3 = ENE
+EN_CARDINAL-4 = E
+EN_CARDINAL-5 = ESE
+EN_CARDINAL-6 = SE
+EN_CARDINAL-7 = SSE
+EN_CARDINAL-8 = S
+EN_CARDINAL-9 = SSW
+EN_CARDINAL-10 = SW
+EN_CARDINAL-11 = WSW
+EN_CARDINAL-12 = W
+EN_CARDINAL-13 = WNW
+EN_CARDINAL-14 = NW
+EN_CARDINAL-15 = NNW
