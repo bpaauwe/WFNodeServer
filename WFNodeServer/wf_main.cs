@@ -42,6 +42,7 @@ namespace WFNodeServer {
             int profile = 0;
             bool si_units = false;
             bool hub_node = false;
+            int port = 50222;
 
             foreach (string Cmd in args) {
                 string[] parts;
@@ -69,6 +70,9 @@ namespace WFNodeServer {
                     case "hub":
                         hub_node = true;
                         break;
+                    case "udp_port":
+                        int.TryParse(parts[1], out port);
+                        break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
                         Console.WriteLine("                    [isy=<is ip address/hostname>] [si]");
@@ -78,7 +82,7 @@ namespace WFNodeServer {
 
             Console.WriteLine("WeatherFlow Node Server " + VERSION);
 
-            NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node);
+            NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node, port);
 
             while (!shutdown) {
                 Thread.Sleep(30000);
@@ -516,7 +520,7 @@ namespace WFNodeServer {
         internal WeatherFlow_UDP udp_client;
         internal bool SIUnits { get; set; }
 
-        internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node) {
+        internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
             Thread udp_thread;
 
             SIUnits = si_units;
@@ -602,7 +606,7 @@ namespace WFNodeServer {
 
             // Start a thread to monitor the UDP port
             Console.WriteLine("Starting WeatherFlow data collection thread.");
-            udp_client = new WeatherFlow_UDP();
+            udp_client = new WeatherFlow_UDP(port);
             udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
             udp_thread.IsBackground = true;
             udp_thread.Start();
