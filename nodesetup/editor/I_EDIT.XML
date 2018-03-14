@@ -29,6 +29,9 @@
    <editor id="I_TREND">
       <range uom="25" subset="0-2" nls="EN_TREND" />
    </editor>
+   <editor id="I_CARDINAL">
+      <range uom="25" subset="0-15" nls="EN_CARDINAL" />
+   </editor>
    <editor id="I_10DAYS">
       <range uom="25" min="0" max="10" prec="0" />
    </editor>
