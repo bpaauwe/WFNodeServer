@@ -54,10 +54,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="isy_detect.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="rest.cs" />
-    <Compile Include="server.cs" />
+    <Compile Include="wf_main.cs" />
+    <Compile Include="wf_rest.cs" />
+    <Compile Include="wf_server.cs" />
     <Compile Include="wf_udp.cs" />
     <Compile Include="wf_udp_data.cs" />
   </ItemGroup>
