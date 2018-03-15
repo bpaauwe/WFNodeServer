@@ -58,6 +58,8 @@
 			<st id="GV9" editor="I_FLOAT1" />
 			<st id="GV10" editor="I_INTEGER" />
 			<st id="GV11" editor="I_FLOAT1" />
+			<st id="GV12" editor="I_WIND_DIRECTION" />
+			<st id="GV13" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -80,6 +82,8 @@
 			<st id="GV9" editor="I_FLOAT1" />
 			<st id="GV10" editor="I_INTEGER" />
 			<st id="GV11" editor="I_FLOAT1" />
+			<st id="GV12" editor="I_WIND_DIRECTION" />
+			<st id="GV13" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>
