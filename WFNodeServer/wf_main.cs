@@ -125,7 +125,7 @@ namespace WFNodeServer {
         // Cardinal directions
         internal int Direction {
             get {
-                if (data.ob[2] >= 348.75 && data.ob[2] < 11.25)
+                if (data.ob[2] >= 348.75 || data.ob[2] < 11.25)
                     return 0;
                 else if (data.ob[2] >= 11.25 && data.ob[2] < 33.75)
                     return 1;
@@ -157,7 +157,7 @@ namespace WFNodeServer {
                     return 14;
                 else if (data.ob[2] >= 326.25 && data.ob[2] < 348.75)
                     return 15;
-            return -1;
+            return (int)data.ob[2];
             }
         }
     }
@@ -171,6 +171,7 @@ namespace WFNodeServer {
         internal string SerialNumber {
             get {
                 string d = data.serial_number.Replace('-', '_');
+                d += "l";
                 return d.ToLower();
             }
         }
@@ -821,12 +822,11 @@ namespace WFNodeServer {
                 return;
 
             wind.si_units = SIUnits;
-            Console.WriteLine("Wind event: " + wind.Direction.ToString() + " at " + wind.Speed);
 
             unit = (SIUnits) ? "/48" : "/49";
-            report = prefix + address + "/report/status/GV4/" + wind.Speed + unit;
+            report = prefix + address + "/report/status/GV13/" + wind.Speed + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV6/" + wind.Direction.ToString() + "/25";
+            report = prefix + address + "/report/status/GV12/" + wind.Direction.ToString() + "/25";
             Rest.REST(report);
         }
 
@@ -835,8 +835,26 @@ namespace WFNodeServer {
             string prefix = "ns/" + Profile.ToString() + "/nodes/";
             string address = "n" + Profile.ToString("000") + "_" + strike.SerialNumber;
 
-            if (!NodeList.Keys.Contains(address))
-                return;
+            strike.si_units = SIUnits;
+
+            if (!NodeList.Keys.Contains(address)) {
+                Console.WriteLine("Device " + strike.SerialNumber + " doesn't exist, create it.");
+
+                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
+                    "/add/WF_Lightning/?name=WeatherFlow%20(" + strike.SerialNumber + ")");
+                NodeList.Add(address, "WF_Lightning");
+                //MinutsSinceUpdate.Add(address, 0);
+            }
+            report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
+            Rest.REST(report);
+
+            string unit = (SIUnits) ? "/0" : "/KM";
+            report = prefix + address + "/report/status/GV1/" + strike.Distance + unit;
+            Rest.REST(report);
+
+            report = prefix + address + "/report/status/GV2/" + strike.Energy + "/0";
+            Rest.REST(report);
+
         }
 
         internal void HandleRain(object sender, RainEventArgs rain) {
