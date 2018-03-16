@@ -300,6 +300,7 @@ namespace WFNodeServer {
         private double apparent_temp;
         private int trend;
         private double sealevel;
+        private string raw_packet;
 
         internal AirEventArgs(WeatherFlow_UDP.AirData d) {
             data = d;
@@ -401,12 +402,18 @@ namespace WFNodeServer {
                     return trend.ToString();
             }
         }
+
+        internal string Raw {
+            get { return raw_packet; }
+            set { raw_packet = value; }
+        }
     }
 
     internal class SkyEventArgs : System.EventArgs {
         internal WeatherFlow_UDP.SkyData data;
         internal bool si_units { get; set; }
         private double daily;
+        private string raw_packet;
 
         internal SkyEventArgs(WeatherFlow_UDP.SkyData d) {
             data = d;
@@ -501,6 +508,11 @@ namespace WFNodeServer {
                 else
                     return daily.ToString("0.#");
             }
+        }
+
+        internal string Raw {
+            get { return raw_packet; }
+            set { raw_packet = value; }
         }
     }
 
@@ -675,6 +687,8 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + air.SerialNumber + " doesn't exist, create it.");
+                Console.WriteLine("Debug");
+                Console.WriteLine(air.Raw);
 
                 Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Air" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
@@ -729,6 +743,8 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + sky.SerialNumber + " doesn't exist, create it.");
+                Console.WriteLine("Debug");
+                Console.WriteLine(sky.Raw);
 
                 Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Sky" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");

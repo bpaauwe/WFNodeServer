@@ -258,6 +258,7 @@ namespace WFNodeServer {
                 evnt.SetApparentTemp = 0;
                 evnt.SetTrend = 1;
                 evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), WeatherFlowNS.Elevation);
+                evnt.Raw = json;
                 if (SkyObj.valid) {
                     try {
                         evnt.SetDewpoint = CalcDewPoint();
@@ -288,6 +289,7 @@ namespace WFNodeServer {
 
                 WFNodeServer.SkyEventArgs evnt = new SkyEventArgs(SkyObj);
                 evnt.SetDaily = CalcDailyPrecipitation();
+                evnt.Raw = json;
 
                 WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
