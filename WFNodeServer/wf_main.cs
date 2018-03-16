@@ -25,24 +25,90 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Xml;
+using System.IO;
 using System.Web;
 using System.Reflection;
+using System.Web.Script.Serialization;
 
 namespace WFNodeServer {
+    static class WF_Config {
+        internal static string Username { get; set; }
+        internal static string Password { get; set; }
+        internal static string ISY { get; set; }
+        internal static int StationID { get; set; }
+        internal static int Profile { get; set; }
+        internal static int Port { get; set; }
+        internal static int UDPPort { get; set; }
+        internal static double Elevation { get; set; }
+        internal static bool Hub { get; set; }
+        internal static bool SI { get; set; }
+    }
+
+    public class cfgstate {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string ISY { get; set; }
+        public int StationID { get; set; }
+        public int Profile { get; set; }
+        public int Port { get; set; }
+        public int UDPPort { get; set; }
+        public double Elevation { get; set; }
+        public bool Hub { get; set; }
+        public bool SI { get; set; }
+
+        public cfgstate() {
+            Username = WF_Config.Username;
+            Password = WF_Config.Password;
+            ISY = WF_Config.ISY;
+            StationID = WF_Config.StationID;
+            Profile = WF_Config.Profile;
+            Port = WF_Config.Port;
+            UDPPort = WF_Config.UDPPort;
+            Elevation = WF_Config.Elevation;
+            Hub = WF_Config.Hub;
+            SI = WF_Config.SI;
+        }
+
+        internal void LoadState() {
+            WF_Config.Username = Username;
+            WF_Config.Password = Password;
+            WF_Config.ISY = ISY;
+            WF_Config.StationID = StationID;
+            WF_Config.Profile = Profile;
+            WF_Config.Port = Port;
+            WF_Config.UDPPort = UDPPort;
+            WF_Config.Elevation = Elevation;
+            WF_Config.Hub = Hub;
+            WF_Config.SI = SI;
+        }
+    }
+
+
     class WeatherFlowNS {
         internal static NodeServer NS;
         internal static bool shutdown = false;
         internal static double Elevation = 0;
-        private static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
         static void Main(string[] args) {
             string username = "";
             string password = "";
             string isy_host = "";
             int profile = 0;
-            bool si_units = false;
-            bool hub_node = false;
             int port = 50222;
+
+            WF_Config.ISY = "";
+            WF_Config.Username = "admin";
+            WF_Config.Password = "";
+            WF_Config.Profile = 0;
+            WF_Config.Elevation = 0;
+            WF_Config.Hub = false;
+            WF_Config.Port = 8288;
+            WF_Config.SI = false;
+            WF_Config.StationID = 0;
+            WF_Config.UDPPort = 50222;
+
+            ReadConfiguration();
 
             foreach (string Cmd in args) {
                 string[] parts;
@@ -51,27 +117,33 @@ namespace WFNodeServer {
                 switch (parts[0].ToLower()) {
                     case "username":
                         username = parts[1];
+                        WF_Config.Username = parts[1];
                         break;
                     case "password":
                         password = parts[1];
+                        WF_Config.Password = parts[1];
                         break;
                     case "profile":
                         int.TryParse(parts[1], out profile);
+                        WF_Config.Profile = profile;
                         break;
                     case "si":
-                        si_units = true;
+                        WF_Config.SI = true;
                         break;
                     case "isy":
                         isy_host = parts[1];
+                        WF_Config.ISY = parts[1];
                         break;
                     case "elevation":
                         double.TryParse(parts[1], out Elevation);
+                        WF_Config.Elevation = Elevation;
                         break;
                     case "hub":
-                        hub_node = true;
+                        WF_Config.Hub = true;
                         break;
                     case "udp_port":
                         int.TryParse(parts[1], out port);
+                        WF_Config.UDPPort = port;
                         break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
@@ -82,10 +154,50 @@ namespace WFNodeServer {
 
             Console.WriteLine("WeatherFlow Node Server " + VERSION);
 
-            NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node, port);
+            //NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node, port);
+            NS = new NodeServer();
 
             while (!shutdown) {
                 Thread.Sleep(30000);
+            }
+        }
+
+        internal static void SaveConfiguration() {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            cfgstate s = new cfgstate();
+
+            try {
+                StreamWriter sw = new StreamWriter("wfnodeserver.json");
+                sw.Write(serializer.Serialize(s));
+                sw.Close();
+            } catch {
+                Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+            }
+        }
+
+        internal static void ReadConfiguration() {
+            cfgstate cfgObj;
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            char[] buf = new char[2048];
+            int len;
+
+            try {
+                StreamReader sr = new StreamReader("wfnodeserver.json");
+                len = sr.Read(buf, 0, 2048);
+                sr.Close();
+            } catch {
+                Console.WriteLine("Failed to read configuration file wfnodeserver.json");
+                return;
+            }
+
+            try {
+                string json = new string(buf);
+                cfgObj = serializer.Deserialize<cfgstate>(json.Substring(0, len));
+                cfgObj.LoadState();
+                Console.WriteLine(cfgObj.Username + " vs. " + WF_Config.Username);
+            } catch (Exception ex) {
+                Console.WriteLine("Failed to import configuration.");
+                Console.WriteLine(ex.Message);
             }
         }
     }
@@ -451,7 +563,12 @@ namespace WFNodeServer {
         }
         internal string RainRate {
             get {
-                double rate = data.obs[0][4].GetValueOrDefault() * 60;
+                double interval = data.obs[0][9].GetValueOrDefault();
+                double rate = data.obs[0][3].GetValueOrDefault() * 60;
+
+                if (interval > 0)
+                    rate = rate / interval;
+
                 if (si_units)
                     return WeatherFlow_UDP.MM2Inch(rate).ToString("0.##");
                 else
@@ -529,32 +646,27 @@ namespace WFNodeServer {
         internal bool active = false;
         internal Dictionary<string, string> NodeList = new Dictionary<string, string>();
         internal Dictionary<string, int> MinutsSinceUpdate = new Dictionary<string, int>();
-        internal int Profile = 0;
         internal WeatherFlow_UDP udp_client;
-        internal bool SIUnits { get; set; }
 
-        internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
+        //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
+        internal NodeServer() {
             Thread udp_thread;
 
-            SIUnits = si_units;
-            Profile = profile;
-
-            if (host == "") {
+            if (WF_Config.ISY == "") {
                 //ISYDetect.IsyAutoDetect();  // UPNP detection
-                host = ISYDetect.FindISY();
-                if (host == "") {
+                WF_Config.ISY = ISYDetect.FindISY();
+                if (WF_Config.ISY == "") {
                     Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
+                    //  TODO: Wait on configuration here.  
                     WeatherFlowNS.shutdown = true;
                     return;
                 }
-            } else {
-                Console.WriteLine("Using ISY at " + host);
             }
+            Console.WriteLine("Using ISY at " + WF_Config.ISY);
 
-
-            Rest = new rest("http://" + host + "/rest/");
-            Rest.Username = user;
-            Rest.Password = pass;
+            Rest = new rest("http://" + WF_Config.ISY + "/rest/");
+            Rest.Username = WF_Config.Username;
+            Rest.Password = WF_Config.Password;
 
             // Is there some way to detect what profile we're installed at?
             //  We can look at the nodes "/rest/nodes" and search the output
@@ -562,9 +674,11 @@ namespace WFNodeServer {
             // will tell us which profile we're using.
             FindOurNodes();
             if (NodeList.Count > 0) {
+                int Profile;
                 // Parse profile from node address
                 int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
                 Console.WriteLine("Detected profile number " + Profile.ToString());
+                WF_Config.Profile = Profile;
             } else {
                 // Should we try and create a node?  No, let's do this in the event handlers
                 // so we can use the serial number as the node address
@@ -578,23 +692,24 @@ namespace WFNodeServer {
             // If we don't know the profile number, we shouldn't do
             // anything at this point.  Goal may be to get profile
             // number from command line so we can continue
-            if (Profile == 0)
+            // TODO: Wait on config here too?
+            if (WF_Config.Profile == 0)
                 return;
 
             // If si units, switch the nodedef 
             foreach (string address in NodeList.Keys) {
-                if (si_units && (NodeList[address] == "WF_Air")) {
-                    Rest.REST("ns/" + profile.ToString() + "/nodes/" + address + "/change/WF_AirSI");
-                } else if (!si_units && (NodeList[address] == "WF_AirSI")) {
-                    Rest.REST("ns/" + profile.ToString() + "/nodes/" + address + "/change/WF_Air");
-                } else if (si_units && (NodeList[address] == "WF_Sky")) {
-                    Rest.REST("ns/" + profile.ToString() + "/nodes/" + address + "/change/WF_SkySI");
-                } else if (!si_units && (NodeList[address] == "WF_SkySI")) {
-                    Rest.REST("ns/" + profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
-                } else if (!si_units && (NodeList[address] == "WF_Sky")) {
-                } else if (!si_units && (NodeList[address] == "WF_Air")) {
-                } else if (si_units && (NodeList[address] == "WF_SkySI")) {
-                } else if (si_units && (NodeList[address] == "WF_AirSI")) {
+                if (WF_Config.SI && (NodeList[address] == "WF_Air")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirSI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Air");
+                } else if (WF_Config.SI && (NodeList[address] == "WF_Sky")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkySI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_Sky")) {
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
                 } else {
                     Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
@@ -602,8 +717,8 @@ namespace WFNodeServer {
                 MinutsSinceUpdate.Add(address, 0);
             }
 
-            WFNServer wfn = new WFNServer("/WeatherFlow", 8288, profile);
-            Console.WriteLine("Started on port 8288");
+            WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, WF_Config.Profile);
+            Console.WriteLine("Started on port " + WF_Config.Port.ToString());
 
             WFAirSubscribers += new AirEvent(HandleAir);
             WFSkySubscribers += new SkyEvent(HandleSky);
@@ -614,16 +729,17 @@ namespace WFNodeServer {
             WFLightningSubscribers += new LightningEvent(HandleLightning);
 
             // TODO: Make this configuraboe
-            if (hub_node)
+            if (WF_Config.Hub)
                 WFHubSubscribers += new HubEvent(HandleHub);
 
             // Start a thread to monitor the UDP port
             Console.WriteLine("Starting WeatherFlow data collection thread.");
-            udp_client = new WeatherFlow_UDP(port);
+            udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
             udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
             udp_thread.IsBackground = true;
             udp_thread.Start();
 
+            // Start a timer to track time since Last Update 
             System.Timers.Timer UpdateTimer = new System.Timers.Timer();
             UpdateTimer.AutoReset = true;
             UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
@@ -633,7 +749,7 @@ namespace WFNodeServer {
 
         void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
             string report;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
 
             foreach (string address in NodeList.Keys) {
                 report = prefix + address + "/report/status/GV0/" + MinutsSinceUpdate[address].ToString() + "/45";
@@ -679,10 +795,10 @@ namespace WFNodeServer {
         internal void HandleAir(object sender, AirEventArgs air) {
             string report;
             string unit;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + air.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber;
 
-            air.si_units = SIUnits;
+            air.si_units = WF_Config.SI;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -690,16 +806,16 @@ namespace WFNodeServer {
                 Console.WriteLine("Debug");
                 Console.WriteLine(air.Raw);
 
-                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Air" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
-                NodeList.Add(address, "WF_Air" + ((SIUnits) ? "SI" : ""));
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
+                    "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
+                NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
                 MinutsSinceUpdate.Add(address, 0);
             }
 
             //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
             //Rest.REST(report);
 
-            unit = (SIUnits) ? "/F" : "/C";
+            unit = (WF_Config.SI) ? "/F" : "/C";
             report = prefix + address + "/report/status/GV1/" + air.Temperature + unit;
             Rest.REST(report);
 
@@ -712,18 +828,18 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV4/" + air.Strikes + "/0";
             Rest.REST(report);
 
-            unit = (SIUnits) ? "/0" : "/KM";
+            unit = (WF_Config.SI) ? "/0" : "/KM";
             report = prefix + address + "/report/status/GV5/" + air.Distance + unit;
             Rest.REST(report);
 
             report = prefix + address + "/report/status/GV6/" + air.Battery + "/72";
             Rest.REST(report);
 
-            unit = (SIUnits) ? "/F" : "/C";
+            unit = (WF_Config.SI) ? "/F" : "/C";
             report = prefix + address + "/report/status/GV7/" + air.Dewpoint + unit;
             Rest.REST(report);
 
-            unit = (SIUnits) ? "/F" : "/C";
+            unit = (WF_Config.SI) ? "/F" : "/C";
             report = prefix + address + "/report/status/GV8/" + air.ApparentTemp + unit;
             Rest.REST(report);
 
@@ -735,10 +851,10 @@ namespace WFNodeServer {
         internal void HandleSky(object sender, SkyEventArgs sky) {
             string report;
             string unit;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + sky.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber;
 
-            sky.si_units = SIUnits;
+            sky.si_units = WF_Config.SI;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -746,9 +862,9 @@ namespace WFNodeServer {
                 Console.WriteLine("Debug");
                 Console.WriteLine(sky.Raw);
 
-                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Sky" + ((SIUnits) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
-                NodeList.Add(address, "WF_Sky" + ((SIUnits) ? "SI" : ""));
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
+                    "/add/WF_Sky" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
+                NodeList.Add(address, "WF_Sky" + ((WF_Config.SI) ? "SI" : ""));
                 MinutsSinceUpdate.Add(address, 0);
             }
 
@@ -760,7 +876,7 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV3/" + sky.SolarRadiation + "/74";
             Rest.REST(report);
-            unit = (SIUnits) ? "/48" : "/49";
+            unit = (WF_Config.SI) ? "/48" : "/49";
             report = prefix + address + "/report/status/GV4/" + sky.WindSpeed + unit;
             Rest.REST(report);
             report = prefix + address + "/report/status/GV5/" + sky.GustSpeed + unit;
@@ -771,14 +887,14 @@ namespace WFNodeServer {
             // Currently we just report the rain over 1 minute. If we want the rate
             // this number should be multiplied by 60 to get inches/hour (which is UOM 24)
             // mm/hour is uom 46
-            //unit = (SIUnits) ? "/105" : "/82";
+            //unit = (WF_Config.SI) ? "/105" : "/82";
             //report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
             //Rest.REST(report);
-            unit = (SIUnits) ? "/24" : "/46";
+            unit = (WF_Config.SI) ? "/24" : "/46";
             report = prefix + address + "/report/status/GV7/" + sky.RainRate + unit;
             Rest.REST(report);
 
-            unit = (SIUnits) ? "/105" : "/82";
+            unit = (WF_Config.SI) ? "/105" : "/82";
             report = prefix + address + "/report/status/GV8/" + sky.Daily + unit;
             Rest.REST(report);
 
@@ -788,8 +904,8 @@ namespace WFNodeServer {
 
         internal void HandleDevice(object sender, DeviceEventArgs device) {
             string report;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + device.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
             string units;
             int up;
 
@@ -830,16 +946,16 @@ namespace WFNodeServer {
 
         internal void HandleWind(object sender, RapidEventArgs wind) {
             string report;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + wind.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
             string unit;
 
             if (!NodeList.Keys.Contains(address))
                 return;
 
-            wind.si_units = SIUnits;
+            wind.si_units = WF_Config.SI;
 
-            unit = (SIUnits) ? "/48" : "/49";
+            unit = (WF_Config.SI) ? "/48" : "/49";
             report = prefix + address + "/report/status/GV13/" + wind.Speed + unit;
             Rest.REST(report);
             report = prefix + address + "/report/status/GV12/" + wind.Direction.ToString() + "/25";
@@ -848,15 +964,15 @@ namespace WFNodeServer {
 
         internal void HandleLightning(object sender, LightningEventArgs strike) {
             string report;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + strike.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.SerialNumber;
 
-            strike.si_units = SIUnits;
+            strike.si_units = WF_Config.SI;
 
             if (!NodeList.Keys.Contains(address)) {
                 Console.WriteLine("Device " + strike.SerialNumber + " doesn't exist, create it.");
 
-                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Lightning/?name=WeatherFlow%20(" + strike.SerialNumber + ")");
                 NodeList.Add(address, "WF_Lightning");
                 //MinutsSinceUpdate.Add(address, 0);
@@ -864,7 +980,7 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
             Rest.REST(report);
 
-            string unit = (SIUnits) ? "/0" : "/KM";
+            string unit = (WF_Config.SI) ? "/0" : "/KM";
             report = prefix + address + "/report/status/GV1/" + strike.Distance + unit;
             Rest.REST(report);
 
@@ -874,8 +990,8 @@ namespace WFNodeServer {
         }
 
         internal void HandleRain(object sender, RainEventArgs rain) {
-            //string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + rain.SerialNumber;
+            //string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + rain.SerialNumber;
 
             if (!NodeList.Keys.Contains(address))
                 return;
@@ -885,14 +1001,14 @@ namespace WFNodeServer {
 
         internal void HandleHub(object sender, HubEventArgs hub) {
             string report;
-            string prefix = "ns/" + Profile.ToString() + "/nodes/";
-            string address = "n" + Profile.ToString("000") + "_" + hub.SerialNumber;
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + hub.SerialNumber;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + hub.SerialNumber + " doesn't exist, create it.");
 
-                Rest.REST("ns/" + Profile.ToString() + "/nodes/" + address +
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Hub/?name=WeatherFlow%20(" + hub.SerialNumber + ")");
                 NodeList.Add(address, "WF_Hub");
             }
@@ -907,7 +1023,7 @@ namespace WFNodeServer {
         }
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {
-            string address = "n" + Profile.ToString("000") + "_" + update.SerialNumber;
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + update.SerialNumber;
 
             if (MinutsSinceUpdate.Keys.Contains(address)) {
                 MinutsSinceUpdate[address] = 0;

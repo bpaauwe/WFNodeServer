@@ -166,11 +166,6 @@ namespace WFNodeServer {
             string cfg_page;
             byte[] page;
             byte[] post = new byte[1024];
-            string ipaddress = "";
-            string username = "admin";
-            string password = "";
-            string elevation = "0";
-            string profile = "0";
 
 
 #if false
@@ -206,35 +201,58 @@ namespace WFNodeServer {
                 pair = resp.Split('=');
                 switch (pair[0]) {
                     case "sAddress":
-                        ipaddress = pair[1];
+                        WF_Config.ISY = pair[1];
                         break;
                     case "sUsername":
-                        username = pair[1];
+                        WF_Config.Username = pair[1];
                         break;
                     case "sPassword":
-                        password = pair[1];
+                        WF_Config.Password = pair[1];
                         break;
                     case "sProfile":
-                        profile = pair[1];
+                        int p = 0;;
+                        int.TryParse(pair[1], out p);
+                        WF_Config.Profile = p;
+                        break;
+                    case "sId":
+                        int i = 0;;
+                        int.TryParse(pair[1], out i);
+                        WF_Config.StationID = i;
+                        break;
+                    case "webPort":
+                        int w = 0;;
+                        int.TryParse(pair[1], out w);
+                        WF_Config.Port = w;
                         break;
                     case "sElevation":
-                        elevation = pair[1];
+                        double e = 0;
+                        double.TryParse(pair[1], out e);
+                        WF_Config.Elevation = e;
+                        break;
+                    case "sSI":
+                        Console.WriteLine("SI Units = " + pair[1]);
+                        break;
+                    case "sHub":
+                        Console.WriteLine("SI Units = " + pair[1]);
                         break;
                 }
 
-                //Console.WriteLine("Got: " + Encoding.Default.GetString(post));
+                WeatherFlowNS.SaveConfiguration();
             }
 
+            cfg_page = MakeConfigPage();
             // How can we substitute values into the page?  May need to dynamically
             // generate the page instead of storing it as a resource.  That would
             // be a bit of a pain.
 
+#if false
             var assembly = Assembly.GetExecutingAssembly();
             var resourceName = "WFNodeServer.config_page.txt";
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             using (StreamReader reader = new StreamReader(stream)) {
                 cfg_page = reader.ReadToEnd();
             }
+#endif
 
             page = ASCIIEncoding.ASCII.GetBytes(cfg_page);
 
@@ -245,6 +263,82 @@ namespace WFNodeServer {
             context.Response.OutputStream.Write(page, 0, page.Length);
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+        }
+
+        private string ConfigBoolItem(string title, string varname, bool flag) {
+            string item;
+            string v = (flag) ? "1" : "0";
+            string check = (flag) ? "checked" : "unchecked";
+
+            item = "<tr>\n";
+            item += "<form method=\"post\" action=\"/config\">\n";
+            item += "<input type=\"hidden\" name=\"" + varname + "\" value=\"" + v + "\">\n";
+            item += "<td><b>" + title + "</b></td>\n";
+            item += "<td width=\"5%\"><input " + check + " type=\"checkbox\" name=\"" + varname + "\" value=\"" + v + "\" onClick=\"this.form.submit();\"></td>\n";
+            item += "</form></tr>\n";
+
+            return item;
+        }
+
+        private string ConfigItem(string title, string varname, string varvalue, int type) {
+            string item;
+
+            item = "<tr>\n";
+            item += "<td width=\"50%\" class=\"fieldTitle\">" + title + "</td>\n";
+            item += "<form method=\"post\">\n";
+            item += "<td width=\"40%\"><input style=\"width:250px\" type=\"";
+            if (type == 0)
+                item += "number\" step=\"any\"";
+            else if (type == 1)
+                item += "text\"";
+            else if (type == 2)
+                item += "password\"";
+            else if (type == 3)
+                item += "required pattern=\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5})|(^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"";
+            item += " name=\"" + varname + "\" value=\"" + varvalue +"\"></td>\n";
+            item += "<td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td>\n";
+            item += "</form>\n";
+            item += "<td></td>\n";
+            item += "</tr>\n";
+
+            return item;
+        }
+
+        private string MakeConfigPage() {
+            string page;
+
+            page = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html\">\n";
+            page += "<meta http-equiv=\"cache-control\" content=\"no-cache\">\n";
+            page += "<meta http-equiv=\"expires\" content=\"0\">\n";
+            page += "<meta http-equiv=\"pragma\" content=\"no-cache\">\n";
+            page += "<meta http-equiv=\"Content-Language\" content=\"en\">\n";
+            page += "<meta charset=\"UTF-8\">\n";
+            page += "<meta name=\"google\" content=\"notranslate\">\n";
+            page += "<style>\n";
+            page += "	body { font-family: Sans-Serif; }\n";
+            page += "</style>\n";
+            page += "<title>WeatherFlow Nodeserver Web Interface</title>\n";
+            page += "</head><body>\n";
+            page += "<form name=\"root\" action=\"/config\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
+            page += "<table border=\"0\" width=\"100%\">\n";
+            page += "<tr><td align=\"center\"><h1>WeatherFlow Nodeserver v" + WeatherFlowNS.VERSION + "</h1></td></tr>\n";
+            page += "<div align=\"center\">\n";
+            page += "<table border=\"0\" width=\"600\" id=\"tblBody\" style=\"padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px\">\n";
+            page += "<tr><td colspan=\"3\" Class=\"sectionTitle\"><br><h2>Configuration</h2><br></td></tr>\n";
+
+            page += ConfigItem("Port", "webPort", WF_Config.Port.ToString(), 0);
+            page += ConfigItem("ISY Address", "sAddress", WF_Config.ISY, 3);
+            page += ConfigItem("ISY Username", "sUsername", WF_Config.Username, 1);
+            page += ConfigItem("ISY Password", "sPassword", WF_Config.Password, 2);
+            page += ConfigItem("Station ID", "sId", WF_Config.StationID.ToString(), 0);
+            page += ConfigItem("Profile Number", "sProfile", WF_Config.Profile.ToString(), 0);
+            page += ConfigItem("Station Elevation (meters)", "sElevation", WF_Config.Elevation.ToString(), 0);
+            page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
+            page += ConfigBoolItem("Include Hub data node", "sHub", WF_Config.Hub);
+
+            page += "</table> </div> </table> </form> </body> </html> \n";
+
+            return page;
         }
 
     }
