@@ -429,8 +429,22 @@ namespace WFNodeServer {
             return Math.Round((ApparentTemp_C() * 1.8) + 32, 1);
         }
 
-        internal double SeaLevelPressure(double p, double h) {
+        internal double SeaLevelPressureApprox(double p, double h) {
             return p + h / 8.3;
+        }
+        internal double SeaLevelPressure(double Ps, double Alt) {
+            double i = 287.05;
+            double a = 9.80665;
+            double r = .0065;
+            double s = 1013.25; // pressure at sealeval
+            double n = 288.15;  // Temperature 
+
+            double l = a / (i * r);
+            double c = i * r / a;
+
+            double u = Math.Pow(1 + Math.Pow(s / Ps, c) * (r * Alt / n), l);
+
+            return (Ps * u);
         }
 
         // Uses and returns temp in C
