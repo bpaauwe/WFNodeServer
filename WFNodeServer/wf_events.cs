@@ -56,39 +56,7 @@ namespace WFNodeServer {
         // Cardinal directions
         internal int Direction {
             get {
-                if (data.ob[2] >= 348.75 || data.ob[2] < 11.25)
-                    return 0;
-                else if (data.ob[2] >= 11.25 && data.ob[2] < 33.75)
-                    return 1;
-                else if (data.ob[2] >= 33.75 && data.ob[2] < 56.25)
-                    return 2;
-                else if (data.ob[2] >= 56.25 && data.ob[2] < 78.75)
-                    return 3;
-                else if (data.ob[2] >= 78.75 && data.ob[2] < 101.25)
-                    return 4;
-                else if (data.ob[2] >= 101.25 && data.ob[2] < 123.75)
-                    return 5;
-                else if (data.ob[2] >= 123.75 && data.ob[2] < 146.25)
-                    return 6;
-                else if (data.ob[2] >= 146.25 && data.ob[2] < 168.75)
-                    return 7;
-                else if (data.ob[2] >= 168.75 && data.ob[2] < 191.25)
-                    return 8;
-                else if (data.ob[2] >= 191.25 && data.ob[2] < 213.75)
-                    return 9;
-                else if (data.ob[2] >= 213.75 && data.ob[2] < 236.25)
-                    return 10;
-                else if (data.ob[2] >= 236.25 && data.ob[2] < 258.75)
-                    return 11;
-                else if (data.ob[2] >= 258.75 && data.ob[2] < 281.25)
-                    return 12;
-                else if (data.ob[2] >= 281.25 && data.ob[2] < 303.75)
-                    return 13;
-                else if (data.ob[2] >= 303.75 && data.ob[2] < 326.25)
-                    return 14;
-                else if (data.ob[2] >= 326.25 && data.ob[2] < 348.75)
-                    return 15;
-            return (int)data.ob[2];
+                return ((int)Math.Floor((data.ob[2] + 11.25) / 22.5)) % 16;
             }
         }
     }
@@ -103,6 +71,12 @@ namespace WFNodeServer {
             get {
                 string d = data.serial_number.Replace('-', '_');
                 d += "l";
+                return d.ToLower();
+            }
+        }
+        internal string Parent {
+            get {
+                string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
         }
