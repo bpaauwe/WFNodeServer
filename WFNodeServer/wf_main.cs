@@ -281,7 +281,13 @@ namespace WFNodeServer {
                     }
                     heartbeat = !heartbeat;
                     Rest.REST(report);
+
+                    // CHECKME: Should we have a last update value for the hub?
+                } else if (NodeList[address] == "WF_AirD") {
+                } else if (NodeList[address] == "WF_SkyD") {
+                } else if (NodeList[address] == "WF_Lightning") {
                 } else {
+                    // this should only sky & air nodes
                     report = prefix + address + "/report/status/GV0/" + SecondsSinceUpdate[address].ToString() + "/58";
                     Rest.REST(report);
                     SecondsSinceUpdate[address] += 30;
@@ -509,9 +515,6 @@ namespace WFNodeServer {
             unit = (WF_Config.SI) ? "/105" : "/82";
             report = prefix + address + "/report/status/GV8/" + sky.Daily + unit;
             Rest.REST(report);
-
-            //report = prefix + address + "/report/status/GV9/" + sky.Battery + "/72";
-            //Rest.REST(report);
 
             if (!NodeList.Keys.Contains(sec_address)) {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
