@@ -38,6 +38,9 @@ namespace WFNodeServer {
         internal string Base;
         internal string AuthHeader = "";
 
+        internal rest() {
+        }
+
         internal rest(string base_url) {
             Base = base_url;
         }

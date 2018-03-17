@@ -75,15 +75,15 @@ namespace WFNodeServer {
                 } catch (Exception ex) {
                     Console.WriteLine("Failed to process connection: " + ex.Message);
                 }
-                Thread.Sleep(5000);
+                //Thread.Sleep(5000);
             }
         }
 
         private void Process(HttpListenerContext context) {
             string filename = context.Request.Url.AbsolutePath;
-            Console.WriteLine(" request = " + filename);
+            //Console.WriteLine(" request = " + filename);
 
-            if (filename.Contains("config")) {
+            if (filename.Contains("config") || filename == "/") {
                 // Handle configuration
                 ConfigPage(context);
                 return;
@@ -127,7 +127,8 @@ namespace WFNodeServer {
             } else if (filename.Contains("report/remove")) {
             } else if (filename.Contains("report/enable")) {
             } else if (filename.Contains("report/disable")) {
-            } else {
+            } else if (filename.Contains("favicon.ico")) {
+            } else { 
                 Console.WriteLine("Unknown Request: " + filename);
             }
 
@@ -167,74 +168,65 @@ namespace WFNodeServer {
             byte[] page;
             byte[] post = new byte[1024];
 
-
-#if false
-            cfg_page = "<html>\r\n";
-            cfg_page += "<head><title>WeatherFlow Nodeserver Configuration</title>\r\n";
-            cfg_page += "</head>\r\n";
-            cfg_page += "<body>\r\n";
-
-            cfg_page += "<h2>WeatherFlow Nodeserver version 1.0.0.2</h2>\r\n";
-            cfg_page += "<table>\r\n";
-            cfg_page += "<tr><td width=\"50%\">ISY Address</td> <form method=\"post\"> <td width=\"40%\"><input style=\"width:250px\" required pattern=\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5})|(^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\" name=\"sAddress\" value=\"ISY\"></td> <td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></tr></form>\r\n";
-            cfg_page += "<tr><td width=\"50%\" class=\"fieldTitle\">ISY Username</td><form method=\"post\"><td width=\"40%\"><input style=\"width:250px\" type=\"text\" name=\"sUser\" value=\"admin\"></td><td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></form></tr>\r\n";
-            cfg_page += "<tr><td width=\"50%\" class=\"fieldTitle\">ISY Password</td><form method=\"post\"><td width=\"40%\"><input style=\"width:250px\" type=\"password\" name=\"sPassword\" value=\"********\"></td><td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td></form></tr>\r\n";
-
-            cfg_page += "</table>\r\n";
-
-
-            var assembly = Assembly.GetExecutingAssembly();
-            foreach (string rn in assembly.GetManifestResourceNames()) {
-                cfg_page += "<br>" + rn + "<br>";
-            }
-
-            cfg_page += "</body>\r\n";
-            cfg_page += "</html>\r\n";
-#endif
-
             //Console.WriteLine("content length = " + context.Request.ContentLength64.ToString());
             if (context.Request.ContentLength64 > 0) {
+                string[] list;
                 string[] pair;
-                context.Request.InputStream.Read(post, 0, (int)context.Request.ContentLength64);
-                string resp = Encoding.Default.GetString(post);
+                int len = (int)context.Request.ContentLength64;
 
-                pair = resp.Split('=');
-                switch (pair[0]) {
-                    case "sAddress":
-                        WF_Config.ISY = pair[1];
-                        break;
-                    case "sUsername":
-                        WF_Config.Username = pair[1];
-                        break;
-                    case "sPassword":
-                        WF_Config.Password = pair[1];
-                        break;
-                    case "sProfile":
-                        int p = 0;;
-                        int.TryParse(pair[1], out p);
-                        WF_Config.Profile = p;
-                        break;
-                    case "sId":
-                        int i = 0;;
-                        int.TryParse(pair[1], out i);
-                        WF_Config.StationID = i;
-                        break;
-                    case "webPort":
-                        int w = 0;;
-                        int.TryParse(pair[1], out w);
-                        WF_Config.Port = w;
-                        break;
-                    case "sElevation":
-                        double e = 0;
-                        double.TryParse(pair[1], out e);
-                        WF_Config.Elevation = e;
-                        break;
-                    case "sSI":
-                        Console.WriteLine("SI Units = " + pair[1]);
-                        break;
-                    case "sHub":
-                        Console.WriteLine("SI Units = " + pair[1]);
-                        break;
+                context.Request.InputStream.Read(post, 0, len);
+                string resp = Encoding.Default.GetString(post);
+                resp = resp.Substring(0, len);
+
+                list = resp.Split('&');
+                foreach (string item in list) {
+
+                    pair = item.Split('=');
+                    switch (pair[0]) {
+                        case "sAddress":
+                            WF_Config.ISY = pair[1];
+                            break;
+                        case "sUsername":
+                            WF_Config.Username = pair[1];
+                            break;
+                        case "sPassword":
+                            WF_Config.Password = pair[1];
+                            break;
+                        case "sProfile":
+                            int p = 0; ;
+                            int.TryParse(pair[1], out p);
+                            WF_Config.Profile = p;
+                            break;
+                        case "sId":
+                            int i = 0; ;
+                            int.TryParse(pair[1], out i);
+                            WF_Config.StationID = i;
+                            break;
+                        case "webPort":
+                            int w = 0; ;
+                            int.TryParse(pair[1], out w);
+                            WF_Config.Port = w;
+                            break;
+                        case "sElevation":
+                            double e = 0;
+                            double.TryParse(pair[1], out e);
+                            WF_Config.Elevation = e;
+                            break;
+                        case "sSI":
+                            WF_Config.SI = (pair[1] == "1");
+                            break;
+                        case "sHub":
+                            WF_Config.Hub = (pair[1] == "1");
+                            break;
+                        case "restart":
+                            WeatherFlowNS.NS.SetupRest();
+                            WeatherFlowNS.NS.ConfigureNodes();
+                            WeatherFlowNS.NS.StartUDPMonitor();
+                            WeatherFlowNS.NS.StartHeartbeat();
+                            break;
+                        default:
+                            break;
+                    }
                 }
 
                 WeatherFlowNS.SaveConfiguration();
@@ -244,15 +236,6 @@ namespace WFNodeServer {
             // How can we substitute values into the page?  May need to dynamically
             // generate the page instead of storing it as a resource.  That would
             // be a bit of a pain.
-
-#if false
-            var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "WFNodeServer.config_page.txt";
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream)) {
-                cfg_page = reader.ReadToEnd();
-            }
-#endif
 
             page = ASCIIEncoding.ASCII.GetBytes(cfg_page);
 
@@ -272,9 +255,9 @@ namespace WFNodeServer {
 
             item = "<tr>\n";
             item += "<form method=\"post\" action=\"/config\">\n";
-            item += "<input type=\"hidden\" name=\"" + varname + "\" value=\"" + v + "\">\n";
+            item += "<input type=\"hidden\" name=\"" + varname + "\" value=\"" + "0" + "\">\n";
             item += "<td><b>" + title + "</b></td>\n";
-            item += "<td width=\"5%\"><input " + check + " type=\"checkbox\" name=\"" + varname + "\" value=\"" + v + "\" onClick=\"this.form.submit();\"></td>\n";
+            item += "<td width=\"5%\"><input " + check + " type=\"checkbox\" name=\"" + varname + "\" value=\"" + "1" + "\" onClick=\"this.form.submit();\"></td>\n";
             item += "</form></tr>\n";
 
             return item;
@@ -335,6 +318,16 @@ namespace WFNodeServer {
             page += ConfigItem("Station Elevation (meters)", "sElevation", WF_Config.Elevation.ToString(), 0);
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data node", "sHub", WF_Config.Hub);
+
+            page += "<tr>\n";
+            page += "<td width=\"50%\" class=\"fieldTitle\">Start Node Server with these settings</td>\n";
+            page += "<form method=\"post\">\n";
+            page += "<input type=\"hidden\" name=\"restart\" value=\"" + "1" + "\">\n";
+            page += "<td width=\"40%\"><input style=\"width:250px\" type=\"submit\" value=\" Start Node Server \"></td>";
+            page += "<td width=\"10%\"></td>\n";
+            page += "</form>\n";
+            page += "<td></td>\n";
+            page += "</tr>\n";
 
             page += "</table> </div> </table> </form> </body> </html> \n";
 

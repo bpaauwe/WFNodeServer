@@ -42,6 +42,7 @@ namespace WFNodeServer {
         internal static double Elevation { get; set; }
         internal static bool Hub { get; set; }
         internal static bool SI { get; set; }
+        internal static bool Valid { get; set; }
     }
 
     public class cfgstate {
@@ -80,6 +81,9 @@ namespace WFNodeServer {
             WF_Config.Elevation = Elevation;
             WF_Config.Hub = Hub;
             WF_Config.SI = SI;
+
+            if ((Password != "") && (Username != "") && (Profile != 0))
+                WF_Config.Valid = true;
         }
     }
 
@@ -107,6 +111,7 @@ namespace WFNodeServer {
             WF_Config.SI = false;
             WF_Config.StationID = 0;
             WF_Config.UDPPort = 50222;
+            WF_Config.Valid = false;
 
             ReadConfiguration();
 
@@ -154,7 +159,11 @@ namespace WFNodeServer {
 
             Console.WriteLine("WeatherFlow Node Server " + VERSION);
 
-            //NS = new NodeServer(isy_host, username, password, profile, si_units, hub_node, port);
+            if ((WF_Config.Password != "") && (WF_Config.Username != "") && (WF_Config.Profile != 0))
+                WF_Config.Valid = true;
+            else 
+                WF_Config.Valid = false;
+
             NS = new NodeServer();
 
             while (!shutdown) {
@@ -220,76 +229,12 @@ namespace WFNodeServer {
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
-            Thread udp_thread;
 
-            if (WF_Config.ISY == "") {
-                //ISYDetect.IsyAutoDetect();  // UPNP detection
-                WF_Config.ISY = ISYDetect.FindISY();
-                if (WF_Config.ISY == "") {
-                    Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
-                    //  TODO: Wait on configuration here.  
-                    WeatherFlowNS.shutdown = true;
-                    return;
-                }
-            }
-            Console.WriteLine("Using ISY at " + WF_Config.ISY);
-
-            Rest = new rest("http://" + WF_Config.ISY + "/rest/");
-            Rest.Username = WF_Config.Username;
-            Rest.Password = WF_Config.Password;
-
-            // Is there some way to detect what profile we're installed at?
-            //  We can look at the nodes "/rest/nodes" and search the output
-            // for a node with nodedef=WeatherFlow. The node address prefix
-            // will tell us which profile we're using.
-            FindOurNodes();
-            if (NodeList.Count > 0) {
-                int Profile;
-                // Parse profile from node address
-                int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
-                Console.WriteLine("Detected profile number " + Profile.ToString());
-                WF_Config.Profile = Profile;
-            } else {
-                // Should we try and create a node?  No, let's do this in the event handlers
-                // so we can use the serial number as the node address
-                //string address = "n" + profile.ToString("000") + "_weatherflow1";
-
-                //Rest.REST("ns/" + profile.ToString() + "/nodes/" + address +
-                //    "/add/WeatherFlow/?name=WeatherFlow");
-                //NodeList.Add(address, si_units);
-            }
-                
-            // If we don't know the profile number, we shouldn't do
-            // anything at this point.  Goal may be to get profile
-            // number from command line so we can continue
-            // TODO: Wait on config here too?
-            if (WF_Config.Profile == 0)
-                return;
-
-            // If si units, switch the nodedef 
-            foreach (string address in NodeList.Keys) {
-                if (WF_Config.SI && (NodeList[address] == "WF_Air")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirSI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Air");
-                } else if (WF_Config.SI && (NodeList[address] == "WF_Sky")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkySI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_Sky")) {
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                } else if (NodeList[address] == "WF_Heartbeat") {
-                } else {
-                    Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
-                }
-
-                SecondsSinceUpdate.Add(address, 0);
-            }
-
+            // Start server to handle config and ISY queries
             WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, WF_Config.Profile);
             Console.WriteLine("Started on port " + WF_Config.Port.ToString());
+
+            Rest = new rest();
 
             WFAirSubscribers += new AirEvent(HandleAir);
             WFSkySubscribers += new SkyEvent(HandleSky);
@@ -299,17 +244,23 @@ namespace WFNodeServer {
             WFRainSubscribers += new RainEvent(HandleRain);
             WFLightningSubscribers += new LightningEvent(HandleLightning);
 
-            // TODO: Make this configuraboe
             if (WF_Config.Hub)
                 WFHubSubscribers += new HubEvent(HandleHub);
 
-            // Start a thread to monitor the UDP port
-            Console.WriteLine("Starting WeatherFlow data collection thread.");
-            udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
-            udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
-            udp_thread.IsBackground = true;
-            udp_thread.Start();
+            // At this point we should check to see if we have a valid 
+            // configuration and can continue to initialize things
 
+            if (WF_Config.Valid) {
+                SetupRest();
+                ConfigureNodes();
+                StartUDPMonitor();
+                StartHeartbeat();
+            } else {
+                Console.WriteLine("Please point your browser at http://localhost:" + WF_Config.Port.ToString() + "/config to configure the node server.");
+            }
+        }
+
+        internal void StartHeartbeat() {
             // Start a timer to track time since Last Update 
             System.Timers.Timer UpdateTimer = new System.Timers.Timer();
             UpdateTimer.AutoReset = true;
@@ -336,6 +287,75 @@ namespace WFNodeServer {
                     Rest.REST(report);
                     SecondsSinceUpdate[address] += 30;
                 }
+            }
+        }
+
+        internal void StartUDPMonitor() {
+            Thread udp_thread;
+            // Start a thread to monitor the UDP port
+            Console.WriteLine("Starting WeatherFlow data collection thread.");
+            udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
+            udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
+            udp_thread.IsBackground = true;
+            udp_thread.Start();
+        }
+
+        internal void SetupRest() {
+            if (WF_Config.ISY == "") {
+                //ISYDetect.IsyAutoDetect();  // UPNP detection
+                WF_Config.ISY = ISYDetect.FindISY();
+                if (WF_Config.ISY == "") {
+                    Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
+                    //  TODO: Wait on configuration here.  
+                    WeatherFlowNS.shutdown = true;
+                    return;
+                }
+            }
+            Console.WriteLine("Using ISY at " + WF_Config.ISY);
+
+            Rest.Base = "http://" + WF_Config.ISY + "/rest/";
+            Rest.Username = WF_Config.Username;
+            Rest.Password = WF_Config.Password;
+        }
+
+        internal void ConfigureNodes() {
+            FindOurNodes();
+            if (NodeList.Count > 0) {
+                int Profile;
+                // Parse profile from node address
+                int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
+                Console.WriteLine("Detected profile number " + Profile.ToString());
+                WF_Config.Profile = Profile;
+            } else {
+                // Should we try and create a node?  No, let's do this in the event handlers
+                // so we can use the serial number as the node address
+                //string address = "n" + profile.ToString("000") + "_weatherflow1";
+
+                //Rest.REST("ns/" + profile.ToString() + "/nodes/" + address +
+                //    "/add/WeatherFlow/?name=WeatherFlow");
+                //NodeList.Add(address, si_units);
+            }
+                
+            // If si units, switch the nodedef 
+            foreach (string address in NodeList.Keys) {
+                if (WF_Config.SI && (NodeList[address] == "WF_Air")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirSI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Air");
+                } else if (WF_Config.SI && (NodeList[address] == "WF_Sky")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkySI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_Sky")) {
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
+                } else if (NodeList[address] == "WF_Heartbeat") {
+                } else {
+                    Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
+                }
+
+                SecondsSinceUpdate.Add(address, 0);
             }
         }
 
