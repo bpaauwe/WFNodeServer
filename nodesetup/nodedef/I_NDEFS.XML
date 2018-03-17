@@ -8,12 +8,9 @@
 			<st id="GV3" editor="I_FLOAT2" />
 			<st id="GV4" editor="I_INTEGER" />
 			<st id="GV5" editor="I_FLOAT1" />
-			<st id="GV6" editor="I_FLOAT1" />
+			<st id="GV6" editor="I_TEMP_C" />
 			<st id="GV7" editor="I_TEMP_C" />
-			<st id="GV8" editor="I_TEMP_C" />
-			<st id="GV9" editor="I_TREND" />
-			<st id="GV10" editor="I_INTEGER" />
-			<st id="GV11" editor="I_FLOAT1" />
+			<st id="GV8" editor="I_TREND" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -30,12 +27,9 @@
 			<st id="GV3" editor="I_FLOAT2" />
 			<st id="GV4" editor="I_INTEGER" />
 			<st id="GV5" editor="I_FLOAT1" />
-			<st id="GV6" editor="I_FLOAT1" />
+			<st id="GV6" editor="I_TEMP_F" />
 			<st id="GV7" editor="I_TEMP_F" />
-			<st id="GV8" editor="I_TEMP_F" />
-			<st id="GV9" editor="I_TREND" />
-			<st id="GV10" editor="I_INTEGER" />
-			<st id="GV11" editor="I_FLOAT1" />
+			<st id="GV8" editor="I_TREND" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -44,22 +38,27 @@
 		</cmds>
 	</nodeDef>
 
+	<nodeDef id="WF_AirD" nodeType="139" nls="139D" >
+		<sts>
+			<st id="GV0" editor="I_FLOAT1" />
+			<st id="GV1" editor="I_INTEGER" />
+			<st id="GV2" editor="I_FLOAT1" />
+		</sts>
+	</nodeDef>
+
     <nodeDef id="WF_Sky" nodeType="139" nls="139S" >
 		<sts>
 			<st id="GV0" editor="I_LAST_UPDATE" />
+			<st id="GV7" editor="I_FLOAT2" />
+			<st id="GV8" editor="I_FLOAT2" />
 			<st id="GV1" editor="I_FLOAT1" />
 			<st id="GV2" editor="I_INTEGER" />
 			<st id="GV3" editor="I_FLOAT1" />
 			<st id="GV4" editor="I_FLOAT1" />
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_DEGREE" />
-			<st id="GV7" editor="I_FLOAT2" />
-			<st id="GV8" editor="I_FLOAT2" />
-			<st id="GV9" editor="I_FLOAT1" />
-			<st id="GV10" editor="I_INTEGER" />
-			<st id="GV11" editor="I_FLOAT1" />
-			<st id="GV12" editor="I_WIND_DIRECTION" />
-			<st id="GV13" editor="I_FLOAT1" />
+			<st id="GV9" editor="I_WIND_DIRECTION" />
+			<st id="GV10" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -71,19 +70,16 @@
     <nodeDef id="WF_SkySI" nodeType="139" nls="139S" >
 		<sts>
 			<st id="GV0" editor="I_LAST_UPDATE" />
+			<st id="GV7" editor="I_FLOAT2" />
+			<st id="GV8" editor="I_FLOAT2" />
 			<st id="GV1" editor="I_FLOAT1" />
 			<st id="GV2" editor="I_INTEGER" />
 			<st id="GV3" editor="I_FLOAT1" />
 			<st id="GV4" editor="I_FLOAT1" />
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_DEGREE" />
-			<st id="GV7" editor="I_FLOAT2" />
-			<st id="GV8" editor="I_FLOAT2" />
-			<st id="GV9" editor="I_FLOAT1" />
-			<st id="GV10" editor="I_INTEGER" />
-			<st id="GV11" editor="I_FLOAT1" />
-			<st id="GV12" editor="I_WIND_DIRECTION" />
-			<st id="GV13" editor="I_FLOAT1" />
+			<st id="GV9" editor="I_WIND_DIRECTION" />
+			<st id="GV10" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -92,12 +88,21 @@
 		</cmds>
 	</nodeDef>
 
+	<nodeDef id="WF_SkyD" nodeType="139" nls="139D" >
+		<sts>
+			<st id="GV0" editor="I_FLOAT1" />
+			<st id="GV1" editor="I_INTEGER" />
+			<st id="GV2" editor="I_FLOAT1" />
+		</sts>
+	</nodeDef>
+
 	<nodeDef id="WF_Hub" nodeType="139" nls="139H" >
 		<sts>
-			<st id="GV0" editor="I_LAST_UPDATE" />
-			<st id="GV1" editor="I_INTEGER" />
+			<st id="GV0" editor="I_INTEGER" />
+			<st id="GV1" editor="I_LAST_UPDATE" />
 			<st id="GV2" editor="I_INTEGER" />
 			<st id="GV3" editor="I_INTEGER" />
+			<st id="GV4" editor="I_INTEGER" />
 		</sts>
 	</nodeDef>
 
@@ -108,5 +113,6 @@
 			<st id="GV2" editor="I_FLOAT2" />
 		</sts>
 	</nodeDef>
+
 </nodeDefs>
 
