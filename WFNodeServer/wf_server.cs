@@ -317,7 +317,7 @@ namespace WFNodeServer {
             page += ConfigItem("Profile Number", "sProfile", WF_Config.Profile.ToString(), 0);
             page += ConfigItem("Station Elevation (meters)", "sElevation", WF_Config.Elevation.ToString(), 0);
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
-            page += ConfigBoolItem("Include Hub data node", "sHub", WF_Config.Hub);
+            page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
 
             page += "<tr>\n";
             page += "<td width=\"50%\" class=\"fieldTitle\">Start Node Server with these settings</td>\n";
@@ -329,7 +329,18 @@ namespace WFNodeServer {
             page += "<td></td>\n";
             page += "</tr>\n";
 
-            page += "</table> </div> </table> </form> </body> </html> \n";
+            page += "</table> </div> </table> </form>\n";
+
+            page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
+            page += "<table width=\"400px\" border=\"1\">\n";
+            page += "<tr><th>Node Address</th><th>Node Type</th></tr>\n";
+            foreach (string n in WeatherFlowNS.NS.NodeList.Keys) {
+                page += "<tr><td>" + n + "</td><td>" + WeatherFlowNS.NS.NodeList[n] + "</td></tr>\n";
+            }
+            page += "</table>\n";
+            page += "</div>\n";
+
+            page += "</body> </html> \n";
 
             return page;
         }
