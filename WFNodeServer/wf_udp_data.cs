@@ -149,6 +149,24 @@ namespace WFNodeServer {
             public string fs { get; set; }
         }
 
+        public class Summary {
+            public double precip_total_1h { get; set; }
+            public double precip_total_24h { get; set; }
+            public double precip_high_24h { get; set; }
+            public int precip_high_epoch_24h { get; set; }
+        }
+        public class ObsData {
+            public Summary summary { get; set; }
+            public string serial_number { get; set; }
+            public string hub_sn { get; set; }
+            public string type { get; set; }
+            public string source { get; set; }
+            public List<List<double?>> obs { get; set; }
+            public int device_id { get; set; }
+            public int firmware_revision { get; set; }
+        }
+
+
         private enum AirIndex {
             TS = 0,
             PRESSURE,
@@ -341,6 +359,69 @@ namespace WFNodeServer {
                 Console.WriteLine(json);
             }
         }
+
+		internal void WSObservations(string json) {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            ObsData obs;
+
+            try {
+                obs = serializer.Deserialize<ObsData>(json);
+                if (json.Contains("obs_sky")) {
+                    //SkyObj = new SkyData();
+                    SkyObj.device_id = obs.device_id;
+                    SkyObj.firmware_revision = obs.firmware_revision;
+                    SkyObj.hub_sn = obs.hub_sn;
+                    SkyObj.obs = obs.obs;
+                    SkyObj.serial_number = obs.serial_number;
+                    SkyObj.type = obs.type;
+                    SkyObj.valid = true;
+
+                    WFNodeServer.SkyEventArgs evnt = new SkyEventArgs(SkyObj);
+                    evnt.SetDaily = CalcDailyPrecipitation();
+                    evnt.Raw = json;
+
+                    WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
+                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
+                } else if (json.Contains("obs_air")) {
+                    //AirObj = new AirData();
+                    AirObj.device_id = obs.device_id;
+                    AirObj.firmware_revision = obs.firmware_revision;
+                    AirObj.hub_sn = obs.hub_sn;
+                    AirObj.obs = obs.obs;
+                    AirObj.serial_number = obs.serial_number;
+                    AirObj.type = obs.type;
+                    AirObj.valid = true;
+
+                    AirEventArgs evnt = new AirEventArgs(AirObj);
+                    evnt.SetDewpoint = 0;
+                    evnt.SetApparentTemp = 0;
+                    evnt.SetTrend = 1;
+                    evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), WeatherFlowNS.Elevation);
+                    evnt.Raw = json;
+                    if (SkyObj.valid) {
+                        try {
+                            evnt.SetDewpoint = CalcDewPoint();
+                            evnt.SetApparentTemp = FeelsLike(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault(),
+                                                         AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault(),
+                                                         SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
+                            // Trend is -1, 0, 1 while event wants 0, 1, 2
+                            evnt.SetTrend = PressureTrend() + 1;
+                            // Heat index & Windchill ??
+                        } catch {
+                        }
+                    } else {
+                    }
+
+                    WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
+                }
+
+            } catch (Exception ex) {
+                Console.WriteLine("Deserialization failed for WebSocket data: " + ex.Message);
+                return;
+            }
+
+		}
+
 
         // t is temperature C
         // w is wind speed in m/s
