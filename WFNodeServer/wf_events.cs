@@ -42,6 +42,10 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
+
         internal string TimeStamp {
             get { return data.ob[0].ToString(); }
         }
@@ -74,6 +78,9 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
         internal string Parent {
             get {
                 string d = data.serial_number.Replace('-', '_');
@@ -102,6 +109,9 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
         internal string TimeStamp {
             get { return data.evt[0].ToString(); }
         }
@@ -119,6 +129,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
         internal string ResetFlags {
             get { return data.reset_flags; }
@@ -158,7 +171,6 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
-
         internal int UpdateTime {
             get { return update_time; }
         }
@@ -176,6 +188,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
 
         internal string Type {
@@ -220,6 +235,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
 
         internal string TimeStamp {
@@ -308,6 +326,10 @@ namespace WFNodeServer {
             }
         }
 
+        internal int DeviceID {
+            get { return data.device_id; }
+        }
+
         internal string Raw {
             get { return raw_packet; }
             set { raw_packet = value; }
@@ -329,6 +351,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
         internal string TimeStamp {
             get {
@@ -418,6 +443,10 @@ namespace WFNodeServer {
                 else
                     return daily.ToString("0.#");
             }
+        }
+
+        internal int DeviceID {
+            get { return data.device_id; }
         }
 
         internal string Raw {

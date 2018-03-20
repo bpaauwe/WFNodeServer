@@ -35,13 +35,12 @@ namespace WFNodeServer {
         internal static string Username { get; set; }
         internal static string Password { get; set; }
         internal static string ISY { get; set; }
-        internal static int StationID { get; set; }
         internal static int Profile { get; set; }
         internal static int Port { get; set; }
         internal static int UDPPort { get; set; }
-        internal static double Elevation { get; set; }
         internal static bool Hub { get; set; }
         internal static bool SI { get; set; }
+        internal static List<StationInfo> WFStationInfo { get; set; }
         internal static bool Valid { get; set; }
     }
 
@@ -49,50 +48,67 @@ namespace WFNodeServer {
         public string Username { get; set; }
         public string Password { get; set; }
         public string ISY { get; set; }
-        public int StationID { get; set; }
         public int Profile { get; set; }
         public int Port { get; set; }
         public int UDPPort { get; set; }
-        public double Elevation { get; set; }
         public bool Hub { get; set; }
         public bool SI { get; set; }
+        public List<StationInfo> WFStationInfo { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
             Password = WF_Config.Password;
             ISY = WF_Config.ISY;
-            StationID = WF_Config.StationID;
             Profile = WF_Config.Profile;
             Port = WF_Config.Port;
             UDPPort = WF_Config.UDPPort;
-            Elevation = WF_Config.Elevation;
             Hub = WF_Config.Hub;
             SI = WF_Config.SI;
+            WFStationInfo = WF_Config.WFStationInfo;
         }
 
         internal void LoadState() {
             WF_Config.Username = Username;
             WF_Config.Password = Password;
             WF_Config.ISY = ISY;
-            WF_Config.StationID = StationID;
             WF_Config.Profile = Profile;
             WF_Config.Port = Port;
             WF_Config.UDPPort = UDPPort;
-            WF_Config.Elevation = Elevation;
             WF_Config.Hub = Hub;
             WF_Config.SI = SI;
+            WF_Config.WFStationInfo = WFStationInfo;
 
-            if ((Password != "") && (Username != "") && (Profile != 0))
+            if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;
         }
     }
 
+    public class StationInfo {
+        public int station_id { get; set; }
+        public int air_id { get; set; }
+        public int sky_id { get; set; }
+        public string air_sn { get; set; }
+        public string sky_sn { get; set; }
+        public double latitude { get; set; }
+        public double longitude { get; set; }
+        public double elevation { get; set; }
+        public bool remote { get; set; }
+        public bool rapid { get; set; }
+
+        public StationInfo() {
+        }
+
+        public StationInfo(int id) {
+            station_id = id;
+        }
+    }
 
     partial class WeatherFlowNS {
         internal static NodeServer NS;
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        internal static bool Debug = false;
 
         static void Main(string[] args) {
             string username = "";
@@ -105,13 +121,12 @@ namespace WFNodeServer {
             WF_Config.Username = "admin";
             WF_Config.Password = "";
             WF_Config.Profile = 0;
-            WF_Config.Elevation = 0;
             WF_Config.Hub = false;
             WF_Config.Port = 8288;
             WF_Config.SI = false;
-            WF_Config.StationID = 0;
             WF_Config.UDPPort = 50222;
             WF_Config.Valid = false;
+            WF_Config.WFStationInfo = new List<StationInfo>();
 
             ReadConfiguration();
 
@@ -139,10 +154,6 @@ namespace WFNodeServer {
                         isy_host = parts[1];
                         WF_Config.ISY = parts[1];
                         break;
-                    case "elevation":
-                        double.TryParse(parts[1], out Elevation);
-                        WF_Config.Elevation = Elevation;
-                        break;
                     case "hub":
                         WF_Config.Hub = true;
                         break;
@@ -150,9 +161,12 @@ namespace WFNodeServer {
                         int.TryParse(parts[1], out port);
                         WF_Config.UDPPort = port;
                         break;
+                    case "debug":
+                        Debug = true;
+                        break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
-                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si]");
+                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si] [hub]");
                         break;
                 }
             }
@@ -175,12 +189,13 @@ namespace WFNodeServer {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             cfgstate s = new cfgstate();
 
-            try {
-                StreamWriter sw = new StreamWriter("wfnodeserver.json");
-                sw.Write(serializer.Serialize(s));
-                sw.Close();
-            } catch {
-                Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+            using ( StreamWriter sw = new StreamWriter("wfnodeserver.json")) {
+                try {
+                    sw.Write(serializer.Serialize(s));
+                    //sw.Close();
+                } catch {
+                    Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+                }
             }
         }
 
@@ -190,13 +205,14 @@ namespace WFNodeServer {
             char[] buf = new char[2048];
             int len;
 
-            try {
-                StreamReader sr = new StreamReader("wfnodeserver.json");
-                len = sr.Read(buf, 0, 2048);
-                sr.Close();
-            } catch {
-                Console.WriteLine("Failed to read configuration file wfnodeserver.json");
-                return;
+            using (StreamReader sr = new StreamReader("wfnodeserver.json")) {
+                try {
+                    len = sr.Read(buf, 0, 2048);
+                    //sr.Close();
+                } catch {
+                    Console.WriteLine("Failed to read configuration file wfnodeserver.json");
+                    return;
+                }
             }
 
             try {
@@ -211,7 +227,7 @@ namespace WFNodeServer {
         }
     }
 
-    internal class NodeServer {
+    internal partial class NodeServer {
         internal rest Rest;
         internal event SkyEvent WFSkySubscribers = null;
         internal event AirEvent WFAirSubscribers = null;
@@ -226,12 +242,15 @@ namespace WFNodeServer {
         internal Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
         internal WeatherFlow_UDP udp_client;
         private bool heartbeat = false;
+        private wf_websocket wsi = new wf_websocket();
+        private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
+        private Thread udp_thread = null;
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
 
             // Start server to handle config and ISY queries
-            WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, WF_Config.Profile);
+            WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, api_key);
             Console.WriteLine("Started on port " + WF_Config.Port.ToString());
 
             Rest = new rest();
@@ -261,11 +280,12 @@ namespace WFNodeServer {
 
         internal void StartHeartbeat() {
             // Start a timer to track time since Last Update 
-            System.Timers.Timer UpdateTimer = new System.Timers.Timer();
-            UpdateTimer.AutoReset = true;
-            UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
-            UpdateTimer.Interval = 30000;
-            UpdateTimer.Start();
+            if (!UpdateTimer.Enabled) {
+                UpdateTimer.AutoReset = true;
+                UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
+                UpdateTimer.Interval = 30000;
+                UpdateTimer.Start();
+            }
         }
 
         void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
@@ -296,8 +316,10 @@ namespace WFNodeServer {
         }
 
         internal void StartUDPMonitor() {
-            Thread udp_thread;
-            // Start a thread to monitor the UDP port
+            if (udp_thread != null) {
+                udp_thread.Abort();
+            }
+
             Console.WriteLine("Starting WeatherFlow data collection thread.");
             udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
             udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
@@ -324,6 +346,9 @@ namespace WFNodeServer {
         }
 
         internal void ConfigureNodes() {
+            NodeList.Clear();
+            SecondsSinceUpdate.Clear();
+
             FindOurNodes();
             if (NodeList.Count > 0) {
                 int Profile;
@@ -355,7 +380,7 @@ namespace WFNodeServer {
                 } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                } else if (NodeList[address] == "WF_Heartbeat") {
+                } else if (NodeList[address] == "WF_Lightning") {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
@@ -363,9 +388,112 @@ namespace WFNodeServer {
                     Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
 
-                SecondsSinceUpdate.Add(address, 0);
+                if (!SecondsSinceUpdate.ContainsKey(address))
+                    SecondsSinceUpdate.Add(address, 0);
             }
         }
+
+        internal void StartWebSocket() {
+            if (wsi.Started)
+                wsi.Shutdown();
+
+            wsi = new wf_websocket("ws.weatherflow.com", 80, "/swd/data?api_key=" + api_key);
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.remote) {
+                    if (s.air_id > 0)
+                        wsi.StartListen(s.air_id.ToString());
+                    if (s.sky_id > 0) {
+                        wsi.StartListen(s.sky_id.ToString());
+                        if (s.rapid)
+                            wsi.StartListenRapid(s.sky_id.ToString());
+                    }
+                }
+            }
+            //wsi.StartListenRapid("4286");
+        }
+
+        internal void DeleteStation(int id) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    WF_Config.WFStationInfo.Remove(s);
+                    return;
+                }
+            }
+        }
+
+        internal void AddStation(int id, double elevation, int air, int sky, bool remote, string air_sn, string sky_sn, bool rapid) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    s.remote = remote;
+                    s.elevation = elevation;
+                    s.air_id = air;
+                    s.sky_id = sky;
+                    if (sky_sn != "")
+                        s.sky_sn = sky_sn;
+                    if (air_sn != "")
+                        s.air_sn = air_sn;
+                    s.rapid = rapid;
+                    return;
+                }
+            }
+
+            // Doesn't exist yet, add it
+            StationInfo si = new StationInfo(id);
+            si.remote = remote;
+            si.elevation = elevation;
+            si.air_id = air;
+            si.sky_id = sky;
+            si.sky_sn = sky_sn;
+            si.air_sn = air_sn;
+            si.rapid = rapid;
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+        internal void AddStationAir(int id, int air, string air_sn) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    Console.WriteLine("AddStationAir: Found station " + id.ToString());
+                    s.air_id = air;
+                    s.air_sn = air_sn;
+                    return;
+                }
+            }
+
+            StationInfo si = new StationInfo(id);
+            si.remote = false;
+            si.elevation = 0;
+            si.air_id = air;
+            si.sky_id = -1;
+            si.sky_sn = "";
+            si.air_sn = air_sn;
+            si.rapid = false;
+            Console.WriteLine("AddStationAir: Adding station " + id.ToString());
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+        internal void AddStationSky(int id, int sky, string sky_sn) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    Console.WriteLine("AddStationSky: Found station " + id.ToString());
+                    s.sky_id = sky;
+                    s.sky_sn = sky_sn;
+                    return;
+                }
+            }
+
+            StationInfo si = new StationInfo(id);
+            si.remote = false;
+            si.elevation = 0;
+            si.air_id = -1;
+            si.sky_id = sky;
+            si.sky_sn = sky_sn;
+            si.air_sn = "";
+            si.rapid = false;
+            Console.WriteLine("AddStationSky: Adding station " + id.ToString());
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+
 
         internal void RaiseAirEvent(Object sender, WFNodeServer.AirEventArgs e) {
             if (WFAirSubscribers != null)
@@ -413,13 +541,19 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + air.SerialNumber + " doesn't exist, create it.");
-                Console.WriteLine("Debug");
-                Console.WriteLine(air.Raw);
+                if (WeatherFlowNS.Debug) {
+                    Console.WriteLine("Debug:");
+                    Console.WriteLine(air.Raw);
+                }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
                 NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
                 SecondsSinceUpdate.Add(address, 0);
+            }
+
+            if (wf_station.FindStationAir(air.serial_number) == null) {
+                AddStationAir(0, air.DeviceID, air.serial_number);
             }
 
             //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
@@ -475,8 +609,10 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + sky.SerialNumber + " doesn't exist, create it.");
-                Console.WriteLine("Debug");
-                Console.WriteLine(sky.Raw);
+                if (WeatherFlowNS.Debug) {
+                    Console.WriteLine("Debug:");
+                    Console.WriteLine(sky.Raw);
+                }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Sky" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
@@ -484,6 +620,10 @@ namespace WFNodeServer {
                 SecondsSinceUpdate.Add(address, 0);
 
                 // Do we want to add a secondary diagnostic node?
+            }
+
+            if (wf_station.FindStationSky(sky.serial_number) == null) {
+                AddStationSky(0, sky.DeviceID, sky.serial_number);
             }
 
             //report = prefix + address + "/report/status/GV0/" + sky.TS + "/25";
@@ -633,32 +773,31 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + hub.SerialNumber + " doesn't exist, create it.");
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
+                        "/add/WF_Hub/?name=WeatherFlow%20(" + hub.SerialNumber + ")");
+                    NodeList.Add(address, "WF_Hub");
+                }
 
-                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Hub/?name=WeatherFlow%20(" + hub.SerialNumber + ")");
-                NodeList.Add(address, "WF_Hub");
+
+                if (WF_Config.Hub) {
+                    report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/0";
+                    Rest.REST(report);
+                    report = prefix + address + "/report/status/GV2/" + hub.Uptime + "/58";
+                    Rest.REST(report);
+                    report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/0";
+                    Rest.REST(report);
+                    report = prefix + address + "/report/status/GV4/" + hub.TimeStamp + "/58";
+                    Rest.REST(report);
+                }
+
+                Console.WriteLine("HUB: firmware    = " + hub.Firmware);
+                Console.WriteLine("HUB: reset flags = " + hub.ResetFlags);
+                Console.WriteLine("HUB: stack       = " + hub.Stack);
+                Console.WriteLine("HUB: fs          = " + hub.FS);
+                Console.WriteLine("HUB: rssi        = " + hub.RSSI);
+                Console.WriteLine("HUB: timestamp   = " + hub.TimeStamp);
+                Console.WriteLine("HUB: uptime      = " + hub.Uptime);
             }
-
-
-            if (WF_Config.Hub) {
-                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/0";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + hub.Uptime + "/58";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/0";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + hub.TimeStamp + "/58";
-                Rest.REST(report);
-            }
-
-            Console.WriteLine("HUB: firmware    = " + hub.Firmware);
-            Console.WriteLine("HUB: reset flags = " + hub.ResetFlags);
-            Console.WriteLine("HUB: stack       = " + hub.Stack);
-            Console.WriteLine("HUB: fs          = " + hub.FS);
-            Console.WriteLine("HUB: rssi        = " + hub.RSSI);
-            Console.WriteLine("HUB: timestamp   = " + hub.TimeStamp);
-            Console.WriteLine("HUB: uptime      = " + hub.Uptime);
-        }
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + update.SerialNumber;
@@ -723,6 +862,9 @@ namespace WFNodeServer {
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_AirD") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirD");
+                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
