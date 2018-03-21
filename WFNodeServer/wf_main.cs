@@ -779,7 +779,6 @@ namespace WFNodeServer {
                 NodeList.Add(address, "WF_Hub");
             }
 
-
             if (WF_Config.Hub) {
                 report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/0";
                 Rest.REST(report);
@@ -787,7 +786,7 @@ namespace WFNodeServer {
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/0";
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + hub.TimeStamp + "/58";
+                report = prefix + address + "/report/status/GV4/" + hub.Sequence + "/0";
                 Rest.REST(report);
             }
 

@@ -148,6 +148,9 @@ namespace WFNodeServer {
         internal string Stack {
             get { return data.stack; }
         }
+        internal string Sequence {
+            get { return data.seq.ToString(); }
+        }
         internal string TimeStamp {
             get { return data.timestamp.ToString(); }
         }
