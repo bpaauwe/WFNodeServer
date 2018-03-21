@@ -180,54 +180,91 @@ namespace WFNodeServer {
                 string resp = Encoding.Default.GetString(post);
                 resp = resp.Substring(0, len);
 
-                list = resp.Split('&');
-                foreach (string item in list) {
+                if (resp.Contains("AddStation")) {
+                    string id = "";
+                    int sid = 0;
+                    int sk = 0;
+                    int ar = 0;
+                    double el = 0;
+                    bool remote = false;
+                    bool rapid = false;
 
-                    pair = item.Split('=');
-                    switch (pair[0]) {
-                        case "sAddress":
-                            WF_Config.ISY = pair[1];
-                            break;
-                        case "sUsername":
-                            WF_Config.Username = pair[1];
-                            break;
-                        case "sPassword":
-                            WF_Config.Password = pair[1];
-                            break;
-                        case "sProfile":
-                            int p = 0; ;
-                            int.TryParse(pair[1], out p);
-                            WF_Config.Profile = p;
-                            break;
-                        case "sId":
-                            int i = 0; ;
-                            int.TryParse(pair[1], out i);
-                            WF_Config.StationID = i;
-                            break;
-                        case "webPort":
-                            int w = 0; ;
-                            int.TryParse(pair[1], out w);
-                            WF_Config.Port = w;
-                            break;
-                        case "sElevation":
-                            double e = 0;
-                            double.TryParse(pair[1], out e);
-                            WF_Config.Elevation = e;
-                            break;
-                        case "sSI":
-                            WF_Config.SI = (pair[1] == "1");
-                            break;
-                        case "sHub":
-                            WF_Config.Hub = (pair[1] == "1");
-                            break;
-                        case "restart":
-                            WeatherFlowNS.NS.SetupRest();
-                            WeatherFlowNS.NS.ConfigureNodes();
-                            WeatherFlowNS.NS.StartUDPMonitor();
-                            WeatherFlowNS.NS.StartHeartbeat();
-                            break;
-                        default:
-                            break;
+                    list = resp.Split('&');
+                    foreach (string p in list) {
+                        string[] pr = p.Split('=');
+                        switch (pr[0]) {
+                            case "station_id":
+                                id = pr[1];
+                                int.TryParse(id, out sid);
+                                break;
+                            case "air_id": int.TryParse(pr[1], out ar); break;
+                            case "sky_id": int.TryParse(pr[1], out sk); break;
+                            case "elevation": double.TryParse(pr[1], out el); break;
+                            case "remote": remote = true; break;
+                            case "rapid": rapid = true; break;
+                        }
+                    }
+
+                    if (id != "") {
+                        wf_station station = new wf_station(api_key);
+                        station.GetStationMeta(id);
+
+                        ar = (ar == 0) ? station.Air : ar;
+                        sk = (sk == 0) ? station.Sky : sk;
+                        el = (el == 0) ? station.Elevation : el;
+
+                        WeatherFlowNS.NS.AddStation(sid, el, ar, sk, remote, station.AirSN, station.SkySN, rapid);
+                    }
+                } else if (resp.Contains("DeleteStation")) {
+                    string[] pr = resp.Split('=');
+                    try {
+                        int sid = int.Parse(pr[1]);
+                        Console.WriteLine("Remove station " + pr[1] + " from list");
+                        WeatherFlowNS.NS.DeleteStation(sid);
+                    } catch {
+                    }
+                } else {
+                    list = resp.Split('&');
+                    foreach (string item in list) {
+                        pair = item.Split('=');
+                        switch (pair[0]) {
+                            case "sAddress":
+                                WF_Config.ISY = pair[1];
+                                break;
+                            case "sUsername":
+                                WF_Config.Username = pair[1];
+                                break;
+                            case "sPassword":
+                                WF_Config.Password = pair[1];
+                                break;
+                            case "sProfile":
+                                int p = 0; ;
+                                int.TryParse(pair[1], out p);
+                                WF_Config.Profile = p;
+                                break;
+                            case "webPort":
+                                int w = 0; ;
+                                int.TryParse(pair[1], out w);
+                                WF_Config.Port = w;
+                                break;
+                            case "sSI":
+                                WF_Config.SI = (pair[1] == "1");
+                                break;
+                            case "sHub":
+                                WF_Config.Hub = (pair[1] == "1");
+                                break;
+                            case "restart":
+                                WeatherFlowNS.NS.SetupRest();
+                                WeatherFlowNS.NS.ConfigureNodes();
+                                WeatherFlowNS.NS.StartUDPMonitor();
+                                WeatherFlowNS.NS.StartHeartbeat();
+                                break;
+                            case "websocket":
+                                WeatherFlowNS.NS.StartWebSocket();
+                                break;
+                            default:
+                                break;
+                        }
                     }
                 }
 
@@ -291,6 +328,21 @@ namespace WFNodeServer {
 
         private string MakeConfigPage() {
             string page;
+            bool remote_configured = false;
+            bool nodeserver_configured = false;
+
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.remote && (s.air_id != 0 || s.sky_id != 0))
+                    remote_configured = true;
+            }
+
+            if ((WF_Config.Profile > 0) &&
+                (WF_Config.Password != "") &&
+                (WF_Config.Username != "") &&
+                (WF_Config.Port > 0) &&
+                (WF_Config.ISY != "")) {
+                nodeserver_configured = true;
+            }
 
             page = "<html><head><meta http-equiv=\"Content-Type\" content=\"text/html\">\n";
             page += "<meta http-equiv=\"cache-control\" content=\"no-cache\">\n";
@@ -315,29 +367,78 @@ namespace WFNodeServer {
             page += ConfigItem("ISY Address", "sAddress", WF_Config.ISY, 3);
             page += ConfigItem("ISY Username", "sUsername", WF_Config.Username, 1);
             page += ConfigItem("ISY Password", "sPassword", WF_Config.Password, 2);
-            page += ConfigItem("Station ID", "sId", WF_Config.StationID.ToString(), 0);
             page += ConfigItem("Profile Number", "sProfile", WF_Config.Profile.ToString(), 0);
-            page += ConfigItem("Station Elevation (meters)", "sElevation", WF_Config.Elevation.ToString(), 0);
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
 
-            page += "<tr>\n";
-            page += "<td width=\"50%\" class=\"fieldTitle\">Start Node Server with these settings</td>\n";
-            page += "<form method=\"post\">\n";
-            page += "<input type=\"hidden\" name=\"restart\" value=\"" + "1" + "\">\n";
-            page += "<td width=\"40%\"><input style=\"width:250px\" type=\"submit\" value=\" Start Node Server \"></td>";
-            page += "<td width=\"10%\"></td>\n";
-            page += "</form>\n";
-            page += "<td></td>\n";
-            page += "</tr>\n";
-
+            page += "<tr><th colspan=\"3\">&nbsp;</th></tr>\n";
             page += "</table> </div> </table> </form>\n";
 
+            page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
+            page += "<table border=\"0\">\n";
+            page += "<tr><th>Station ID</th><th>Sky ID</th><th>Air ID</th><th>Elevation (meters)</th><th>Remote</th><th>Rapid</th><th>&nbsp;</th></tr>\n";
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                page += "<tr>";
+                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.station_id.ToString() + "\"></td>";
+                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.sky_id.ToString() + "\"></td>";
+                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.air_id.ToString() + "\"></td>";
+                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.elevation.ToString() + "\"></td>";
+                page += "<td><input style=\"width:50px\" disabled=\"disabled\" ";
+                page += (s.remote) ? "checked" : "unchecked";
+                page += " type=\"checkbox\" name=\"" + s.station_id.ToString() + "\" value=\"1\"></td>";
+                page += "<td><input style=\"width:50px\" disabled=\"disabled\" ";
+                page += (s.rapid) ? "checked" : "unchecked";
+                page += " type=\"checkbox\" name=\"" + s.station_id.ToString() + "\" value=\"2\"></td>";
+                page += "<form method=\"post\"><input type=\"hidden\" name=\"DeleteStation\" value=\"" + s.station_id.ToString() + "\">";
+                page += "<td><input type=\"submit\" value=\"  Del  \"></td>";
+                page += "</form></tr>\n";
+            }
+            // Add input row
+            page += "<form name=\"stations\" action=\"/config\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
+            page += "<input type=\"hidden\" name=\"AddStation\" value=\"" + "1" + "\">\n";
+            page += "<tr>";
+            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"station_id\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"sky_id\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"air_id\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"elevation\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:50px\" type=\"checkbox\"  name=\"remote\" value=\"1\"></td>\n";
+            page += "<td><input style=\"width:50px\" type=\"checkbox\"  name=\"rapid\" value=\"1\"></td>\n";
+            page += "<td><input type=\"submit\" value=\"  Add  \"></td>\n";
+            page += "</tr>";
+            page += "</form>\n";
+            page += "</table>\n";
+            page += "</div>\n";
+
+            // Make the start buttons in a separate table and only enable them when there's valid configuration
+            page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
+            page += "<table border=\"0\">\n";
+            page += "<tr>\n";
+            page += "<td width=\"40%\">";
+            page += "<form method=\"post\">\n";
+            page += "<input type=\"hidden\" name=\"restart\" value=\"" + "1" + "\">\n";
+            if (nodeserver_configured)
+                page += "<input style=\"width:250px\" type=\"submit\" value=\" Start Node Server \">";
+            page += "</form>\n";
+            page += "</td>\n";
+            page += "<td width=\"20%\">&nbsp;</td>\n";
+            page += "<td width=\"40%\">";
+            page += "<form method=\"post\">\n";
+            page += "<input type=\"hidden\" name=\"websocket\" value=\"" + "1" + "\">\n";
+            if (remote_configured)
+                page += "<input style=\"width:250px\" type=\"submit\" value=\" Start WebSocket Client \">";
+            page += "</form>\n";
+            page += "</td>\n";
+            page += "</tr>\n";
+            page += "</table>\n";
+            page += "</div>\n";
+
+            // Display a table of nodes that were found on the ISY
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
             page += "<table width=\"400px\" border=\"1\">\n";
             page += "<tr><th>Node Address</th><th>Node Type</th></tr>\n";
             foreach (string n in WeatherFlowNS.NS.NodeList.Keys) {
-                page += "<tr><td>" + n + "</td><td>" + WeatherFlowNS.NS.NodeList[n] + "</td></tr>\n";
+                page += "<tr><td style=\"padding: 1px 1px 1px 5px;\">" + n + "</td>";
+                page += "<td style=\"padding: 1px 1px 1px 5px;\">" + NodeDefs[WeatherFlowNS.NS.NodeList[n]] + "</td></tr>\n";
             }
             page += "</table>\n";
             page += "</div>\n";

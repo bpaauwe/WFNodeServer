@@ -327,6 +327,10 @@ namespace WFNodeServer {
             }
         }
 
+        internal int DeviceID {
+            get { return data.device_id; }
+        }
+
         internal string Raw {
             get { return raw_packet; }
             set { raw_packet = value; }
@@ -440,6 +444,10 @@ namespace WFNodeServer {
                 else
                     return daily.ToString("0.#");
             }
+        }
+
+        internal int DeviceID {
+            get { return data.device_id; }
         }
 
         internal string Raw {

@@ -42,6 +42,7 @@ namespace WFNodeServer {
         internal static double Elevation { get; set; }
         internal static bool Hub { get; set; }
         internal static bool SI { get; set; }
+        internal static List<StationInfo> WFStationInfo { get; set; }
         internal static bool Valid { get; set; }
     }
 
@@ -56,6 +57,7 @@ namespace WFNodeServer {
         public double Elevation { get; set; }
         public bool Hub { get; set; }
         public bool SI { get; set; }
+        public List<StationInfo> WFStationInfo { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
@@ -68,6 +70,7 @@ namespace WFNodeServer {
             Elevation = WF_Config.Elevation;
             Hub = WF_Config.Hub;
             SI = WF_Config.SI;
+            WFStationInfo = WF_Config.WFStationInfo;
         }
 
         internal void LoadState() {
@@ -81,12 +84,32 @@ namespace WFNodeServer {
             WF_Config.Elevation = Elevation;
             WF_Config.Hub = Hub;
             WF_Config.SI = SI;
+            WF_Config.WFStationInfo = WFStationInfo;
 
-            if ((Password != "") && (Username != "") && (Profile != 0))
+            if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;
         }
     }
 
+    public class StationInfo {
+        public int station_id { get; set; }
+        public int air_id { get; set; }
+        public int sky_id { get; set; }
+        public string air_sn { get; set; }
+        public string sky_sn { get; set; }
+        public double latitude { get; set; }
+        public double longitude { get; set; }
+        public double elevation { get; set; }
+        public bool remote { get; set; }
+        public bool rapid { get; set; }
+
+        public StationInfo() {
+        }
+
+        public StationInfo(int id) {
+            station_id = id;
+        }
+    }
 
     partial class WeatherFlowNS {
         internal static NodeServer NS;
@@ -112,6 +135,7 @@ namespace WFNodeServer {
             WF_Config.StationID = 0;
             WF_Config.UDPPort = 50222;
             WF_Config.Valid = false;
+            WF_Config.WFStationInfo = new List<StationInfo>();
 
             ReadConfiguration();
 
@@ -363,9 +387,112 @@ namespace WFNodeServer {
                     Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
 
-                SecondsSinceUpdate.Add(address, 0);
+                if (!SecondsSinceUpdate.ContainsKey(address))
+                    SecondsSinceUpdate.Add(address, 0);
             }
         }
+
+        internal void StartWebSocket() {
+            if (wsi.Started)
+                wsi.Shutdown();
+
+            wsi = new wf_websocket("ws.weatherflow.com", 80, "/swd/data?api_key=" + api_key);
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.remote) {
+                    if (s.air_id > 0)
+                        wsi.StartListen(s.air_id.ToString());
+                    if (s.sky_id > 0) {
+                        wsi.StartListen(s.sky_id.ToString());
+                        if (s.rapid)
+                            wsi.StartListenRapid(s.sky_id.ToString());
+                    }
+                }
+            }
+            //wsi.StartListenRapid("4286");
+        }
+
+        internal void DeleteStation(int id) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    WF_Config.WFStationInfo.Remove(s);
+                    return;
+                }
+            }
+        }
+
+        internal void AddStation(int id, double elevation, int air, int sky, bool remote, string air_sn, string sky_sn, bool rapid) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    s.remote = remote;
+                    s.elevation = elevation;
+                    s.air_id = air;
+                    s.sky_id = sky;
+                    if (sky_sn != "")
+                        s.sky_sn = sky_sn;
+                    if (air_sn != "")
+                        s.air_sn = air_sn;
+                    s.rapid = rapid;
+                    return;
+                }
+            }
+
+            // Doesn't exist yet, add it
+            StationInfo si = new StationInfo(id);
+            si.remote = remote;
+            si.elevation = elevation;
+            si.air_id = air;
+            si.sky_id = sky;
+            si.sky_sn = sky_sn;
+            si.air_sn = air_sn;
+            si.rapid = rapid;
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+        internal void AddStationAir(int id, int air, string air_sn) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    Console.WriteLine("AddStationAir: Found station " + id.ToString());
+                    s.air_id = air;
+                    s.air_sn = air_sn;
+                    return;
+                }
+            }
+
+            StationInfo si = new StationInfo(id);
+            si.remote = false;
+            si.elevation = 0;
+            si.air_id = air;
+            si.sky_id = -1;
+            si.sky_sn = "";
+            si.air_sn = air_sn;
+            si.rapid = false;
+            Console.WriteLine("AddStationAir: Adding station " + id.ToString());
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+        internal void AddStationSky(int id, int sky, string sky_sn) {
+            foreach (StationInfo s in WF_Config.WFStationInfo) {
+                if (s.station_id == id) {
+                    Console.WriteLine("AddStationSky: Found station " + id.ToString());
+                    s.sky_id = sky;
+                    s.sky_sn = sky_sn;
+                    return;
+                }
+            }
+
+            StationInfo si = new StationInfo(id);
+            si.remote = false;
+            si.elevation = 0;
+            si.air_id = -1;
+            si.sky_id = sky;
+            si.sky_sn = sky_sn;
+            si.air_sn = "";
+            si.rapid = false;
+            Console.WriteLine("AddStationSky: Adding station " + id.ToString());
+            WF_Config.WFStationInfo.Add(si);
+        }
+
+
 
         internal void RaiseAirEvent(Object sender, WFNodeServer.AirEventArgs e) {
             if (WFAirSubscribers != null)
@@ -420,6 +547,10 @@ namespace WFNodeServer {
                     "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
                 NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
                 SecondsSinceUpdate.Add(address, 0);
+            }
+
+            if (wf_station.FindStationAir(air.serial_number) == null) {
+                AddStationAir(0, air.DeviceID, air.serial_number);
             }
 
             //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
@@ -484,6 +615,10 @@ namespace WFNodeServer {
                 SecondsSinceUpdate.Add(address, 0);
 
                 // Do we want to add a secondary diagnostic node?
+            }
+
+            if (wf_station.FindStationSky(sky.serial_number) == null) {
+                AddStationSky(0, sky.DeviceID, sky.serial_number);
             }
 
             //report = prefix + address + "/report/status/GV0/" + sky.TS + "/25";

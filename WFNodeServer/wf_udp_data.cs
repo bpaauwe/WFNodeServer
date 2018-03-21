@@ -267,15 +267,23 @@ namespace WFNodeServer {
 			// obs[0][6] = battery
 			// obs[0][7] = interval (minutes)
             try {
+                double elevation = 0;
+
                 AirObj = serializer.Deserialize<AirData>(json);
                 AirObj.valid = true;
 
+                // Look up elevation
+                StationInfo si = wf_station.FindStationAir(AirObj.serial_number);
+                if (si != null) {
+                    elevation = si.elevation;
+                }
+                    
                 // Do we just want to raise an event with the data object?
                 AirEventArgs evnt = new AirEventArgs(AirObj);
                 evnt.SetDewpoint = 0;
                 evnt.SetApparentTemp = 0;
                 evnt.SetTrend = 1;
-                evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), WeatherFlowNS.Elevation);
+                evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), elevation);
                 evnt.Raw = json;
                 if (SkyObj.valid) {
                     try {
