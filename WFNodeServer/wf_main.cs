@@ -250,6 +250,9 @@ namespace WFNodeServer {
         internal Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
         internal WeatherFlow_UDP udp_client;
         private bool heartbeat = false;
+        private wf_websocket wsi = new wf_websocket();
+        private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
+        private Thread udp_thread = null;
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
@@ -285,11 +288,12 @@ namespace WFNodeServer {
 
         internal void StartHeartbeat() {
             // Start a timer to track time since Last Update 
-            System.Timers.Timer UpdateTimer = new System.Timers.Timer();
-            UpdateTimer.AutoReset = true;
-            UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
-            UpdateTimer.Interval = 30000;
-            UpdateTimer.Start();
+            if (!UpdateTimer.Enabled) {
+                UpdateTimer.AutoReset = true;
+                UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
+                UpdateTimer.Interval = 30000;
+                UpdateTimer.Start();
+            }
         }
 
         void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
@@ -320,8 +324,10 @@ namespace WFNodeServer {
         }
 
         internal void StartUDPMonitor() {
-            Thread udp_thread;
-            // Start a thread to monitor the UDP port
+            if (udp_thread != null) {
+                udp_thread.Abort();
+            }
+
             Console.WriteLine("Starting WeatherFlow data collection thread.");
             udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
             udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
@@ -348,6 +354,9 @@ namespace WFNodeServer {
         }
 
         internal void ConfigureNodes() {
+            NodeList.Clear();
+            SecondsSinceUpdate.Clear();
+
             FindOurNodes();
             if (NodeList.Count > 0) {
                 int Profile;
