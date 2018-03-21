@@ -40,6 +40,12 @@ namespace WFNodeServer {
         private static ManualResetEvent receiveDone = new ManualResetEvent(false);
         private static bool finished = false;
         private static Thread receive_thread;
+        private Dictionary<string, bool> started = new Dictionary<string, bool>();
+        private Dictionary<string, bool> started_rapid = new Dictionary<string, bool>();
+        internal bool Started = false;
+
+        internal wf_websocket() {
+        }
 
         internal wf_websocket(string host, int port, string path) {
             byte[] buf = new byte[512];
@@ -51,6 +57,8 @@ namespace WFNodeServer {
             if (!client.Connected) {
                 Console.WriteLine("Client not connected to " + host);
             }
+
+            Started = true;
 
             // Send header
             var seckeybytes = Encoding.UTF8.GetBytes(seckey);
@@ -98,6 +106,7 @@ namespace WFNodeServer {
             message += ", \"id\":\"random-id-23456\" }";
 
             SendMessage(client, message, 0x01);
+            started.Add(device_id, true);
         }
 
         internal void StopListen(string device_id) {
@@ -106,6 +115,7 @@ namespace WFNodeServer {
             message += ", \"id\":\"random-id-23456\" }";
 
             SendMessage(client, message, 0x01);
+            started.Remove(device_id);
         }
 
         internal void StartListenRapid(string device_id) {
@@ -114,6 +124,7 @@ namespace WFNodeServer {
             message += ", \"id\":\"random-id-23456\" }";
 
             SendMessage(client, message, 0x01);
+            started.Add(device_id, true);
         }
 
         internal void StopListenRapid(string device_id) {
@@ -122,6 +133,18 @@ namespace WFNodeServer {
             message += ", \"id\":\"random-id-23456\" }";
 
             SendMessage(client, message, 0x01);
+            started_rapid.Remove(device_id);
+        }
+
+        internal void Shutdown() {
+            string message = "close";
+            foreach (string key in started.Keys)
+                StopListen(key);
+            foreach (string key in started_rapid.Keys)
+                StopListenRapid(key);
+
+            SendMessage(client, message, 0x08);
+            finished = true;
         }
 
         private static void ProcessWSData(string json) {
