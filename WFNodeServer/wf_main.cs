@@ -379,7 +379,7 @@ namespace WFNodeServer {
                 } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                } else if (NodeList[address] == "WF_Heartbeat") {
+                } else if (NodeList[address] == "WF_Lightning") {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
@@ -858,6 +858,9 @@ namespace WFNodeServer {
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_AirD") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirD");
+                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
