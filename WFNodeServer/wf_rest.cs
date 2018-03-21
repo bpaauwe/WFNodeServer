@@ -37,6 +37,7 @@ namespace WFNodeServer {
         internal string Username { get; set; }
         internal string Base;
         internal string AuthHeader = "";
+        internal bool AuthRequired = true;
 
         internal rest() {
         }
@@ -91,12 +92,13 @@ namespace WFNodeServer {
                 return "";
             }
 
-            if (AuthHeader == "")
+            if (AuthHeader == "" && AuthRequired)
                 AuthHeader = Authorize();
 
             //Console.WriteLine(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
-            request.Headers.Add("Authorization", AuthHeader);
+            if (AuthRequired)
+                request.Headers.Add("Authorization", AuthHeader);
             request.Proxy = null;
             request.KeepAlive = false;
 
