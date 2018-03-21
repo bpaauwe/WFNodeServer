@@ -42,6 +42,10 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
+
         internal string TimeStamp {
             get { return data.ob[0].ToString(); }
         }
@@ -74,6 +78,9 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
         internal string Parent {
             get {
                 string d = data.serial_number.Replace('-', '_');
@@ -102,6 +109,9 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
         internal string TimeStamp {
             get { return data.evt[0].ToString(); }
         }
@@ -119,6 +129,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
         internal string ResetFlags {
             get { return data.reset_flags; }
@@ -177,6 +190,9 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
+        internal string serial_number {
+            get { return data.serial_number; }
+        }
 
         internal string Type {
             get { return data.type; }
@@ -220,6 +236,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
 
         internal string TimeStamp {
@@ -329,6 +348,9 @@ namespace WFNodeServer {
                 string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
+        }
+        internal string serial_number {
+            get { return data.serial_number; }
         }
         internal string TimeStamp {
             get {
