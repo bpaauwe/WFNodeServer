@@ -154,8 +154,10 @@ namespace WFNodeServer {
         private void AddNodes() {
             string str;
 
-            str = "ns/" + profile.ToString() + "/nodes/n" + profile.ToString("000") + "_weather_flow/add/WeatherFlow/?name=WeatherFlow";
-            WeatherFlowNS.NS.Rest.REST(str);
+            if (WF_Config.Profile > 0) {
+                str = "ns/" + WF_Config.Profile.ToString() + "/nodes/n" + WF_Config.Profile.ToString("000") + "_weather_flow/add/WeatherFlow/?name=WeatherFlow";
+                WeatherFlowNS.NS.Rest.REST(str);
+            }
         }
 
         private void NodeStatus() {
