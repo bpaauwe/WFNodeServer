@@ -288,7 +288,14 @@ namespace WFNodeServer {
                 WeatherFlowNS.SaveConfiguration();
             }
 
-            cfg_page = MakeConfigPage();
+            try {
+                cfg_page = MakeConfigPage();
+            } catch (Exception ex) {
+                Console.WriteLine("Failed to make configuration web page.");
+                Console.WriteLine(ex.Message);
+                context.Response.Close();
+                return;
+            }
             // How can we substitute values into the page?  May need to dynamically
             // generate the page instead of storing it as a resource.  That would
             // be a bit of a pain.
@@ -310,11 +317,9 @@ namespace WFNodeServer {
             string check = (flag) ? "checked" : "unchecked";
 
             item = "<tr>\n";
-            item += "<form method=\"post\" action=\"/config\">\n";
             item += "<input type=\"hidden\" name=\"" + varname + "\" value=\"" + "0" + "\">\n";
             item += "<td><b>" + title + "</b></td>\n";
             item += "<td width=\"5%\"><input " + check + " type=\"checkbox\" name=\"" + varname + "\" value=\"" + "1" + "\" onClick=\"this.form.submit();\"></td>\n";
-            item += "</form></tr>\n";
 
             return item;
         }
@@ -323,8 +328,7 @@ namespace WFNodeServer {
             string item;
 
             item = "<tr>\n";
-            item += "<td width=\"50%\" class=\"fieldTitle\">" + title + "</td>\n";
-            item += "<form method=\"post\">\n";
+            item += "<td width=\"50%\">" + title + "</td>\n";
             item += "<td width=\"40%\"><input style=\"width:250px\" type=\"";
             if (type == 0)
                 item += "number\" step=\"any\"";
@@ -336,7 +340,6 @@ namespace WFNodeServer {
                 item += "required pattern=\"(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}:\\d{1,5})|(^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})\"";
             item += " name=\"" + varname + "\" value=\"" + varvalue +"\"></td>\n";
             item += "<td width=\"10%\"><input type=\"submit\" value=\"  Set  \"></td>\n";
-            item += "</form>\n";
             item += "<td></td>\n";
             item += "</tr>\n";
 
