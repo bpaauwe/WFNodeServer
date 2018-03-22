@@ -361,7 +361,10 @@ namespace WFNodeServer {
                 // evt[1] = speed (m/s)
                 // evt[2] = direction 
                 WindObj = serializer.Deserialize<WindData>(json);
-                WeatherFlowNS.NS.RaiseRapidEvent(this, new RapidEventArgs(WindObj));
+
+                StationInfo si = wf_station.FindStationSky(WindObj.serial_number);
+                if (si == null || si.rapid)
+                    WeatherFlowNS.NS.RaiseRapidEvent(this, new RapidEventArgs(WindObj));
             } catch (Exception ex) {
                 Console.WriteLine("Failed to deserialize rapid wind event: " + ex.Message);
                 Console.WriteLine(json);
