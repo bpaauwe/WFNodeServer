@@ -37,6 +37,17 @@ namespace WFNodeServer {
         private int port;
         private int profile;
 
+        private Dictionary<string, string> NodeDefs = new Dictionary<string, string> {
+            {"WF_Sky", "Sky Sensor - metric"},
+            {"WF_Air", "Air Sensor - metric"},
+            {"WF_SkySI", "Sky Sensor - imperial"},
+            {"WF_AirSI", "Air Sensor - imperial"},
+            {"WF_SkyD", "Sky Sensor - device data"},
+            {"WF_AirD", "Air Sensor - device data"},
+            {"WF_Hub", "Hub data / heartbeat"},
+            {"WF_Lightning", "Lightning event data"},
+        };
+
         internal int Port {
             get {
                 return port;
