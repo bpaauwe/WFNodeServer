@@ -166,7 +166,7 @@ namespace WFNodeServer {
                         break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
-                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si]");
+                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si] [hub]");
                         break;
                 }
             }
