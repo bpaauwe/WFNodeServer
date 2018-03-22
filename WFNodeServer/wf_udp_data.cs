@@ -376,9 +376,20 @@ namespace WFNodeServer {
             ObsData obs;
 
             try {
-                obs = serializer.Deserialize<ObsData>(json);
+                try {
+                    obs = serializer.Deserialize<ObsData>(json);
+                } catch (Exception ex) {
+                    Console.WriteLine("Deserialization failed for WebSocket data: " + ex.Message);
+                    Console.WriteLine(json);
+                    return;
+                }
                 if (json.Contains("obs_sky")) {
                     //SkyObj = new SkyData();
+                    // The first websocket packet seems to be cached data and it
+                    // doesn't include some things like the device serial number.
+                    // Without the serial number, we can't really process it
+                    if (obs.source == "cache")
+                        return;
                     SkyObj.device_id = obs.device_id;
                     SkyObj.firmware_revision = obs.firmware_revision;
                     SkyObj.hub_sn = obs.hub_sn;
@@ -391,10 +402,13 @@ namespace WFNodeServer {
                     evnt.SetDaily = CalcDailyPrecipitation();
                     evnt.Raw = json;
 
+                    // This fails the first time, why?
                     WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
                     WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
                 } else if (json.Contains("obs_air")) {
                     //AirObj = new AirData();
+                    if (obs.source == "cache")
+                        return;
                     AirObj.device_id = obs.device_id;
                     AirObj.firmware_revision = obs.firmware_revision;
                     AirObj.hub_sn = obs.hub_sn;
@@ -427,7 +441,7 @@ namespace WFNodeServer {
                 }
 
             } catch (Exception ex) {
-                Console.WriteLine("Deserialization failed for WebSocket data: " + ex.Message);
+                Console.WriteLine("Failed to process websocket observation data: " + ex.Message);
                 return;
             }
 
