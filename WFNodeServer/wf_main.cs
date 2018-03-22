@@ -189,12 +189,13 @@ namespace WFNodeServer {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             cfgstate s = new cfgstate();
 
-            try {
-                StreamWriter sw = new StreamWriter("wfnodeserver.json");
-                sw.Write(serializer.Serialize(s));
-                sw.Close();
-            } catch {
-                Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+            using ( StreamWriter sw = new StreamWriter("wfnodeserver.json")) {
+                try {
+                    sw.Write(serializer.Serialize(s));
+                    //sw.Close();
+                } catch {
+                    Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+                }
             }
         }
 
@@ -204,13 +205,14 @@ namespace WFNodeServer {
             char[] buf = new char[2048];
             int len;
 
-            try {
-                StreamReader sr = new StreamReader("wfnodeserver.json");
-                len = sr.Read(buf, 0, 2048);
-                sr.Close();
-            } catch {
-                Console.WriteLine("Failed to read configuration file wfnodeserver.json");
-                return;
+            using (StreamReader sr = new StreamReader("wfnodeserver.json")) {
+                try {
+                    len = sr.Read(buf, 0, 2048);
+                    //sr.Close();
+                } catch {
+                    Console.WriteLine("Failed to read configuration file wfnodeserver.json");
+                    return;
+                }
             }
 
             try {
