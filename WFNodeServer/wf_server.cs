@@ -35,7 +35,7 @@ namespace WFNodeServer {
         private string root_directory;
         private HttpListener listener;
         private int port;
-        private int profile;
+        private string api_key;
 
         private Dictionary<string, string> NodeDefs = new Dictionary<string, string> {
             {"WF_Sky", "Sky Sensor - metric"},
@@ -55,14 +55,13 @@ namespace WFNodeServer {
             private set { }
         }
 
-        internal WFNServer(string path, int port, int profile) {
-            this.profile = profile;
+        internal WFNServer(string path, int port, string api_key) {
+            this.api_key = api_key;
             this.Initialize(path, port);
         }
 
         // Auto assign port. Can probably remove this
-        internal WFNServer(string path, int profile) {
-            this.profile = profile;
+        internal WFNServer(string path) {
             TcpListener l = new TcpListener(IPAddress.Loopback, 0);
             l.Start();
             int port = ((IPEndPoint)l.LocalEndpoint).Port;

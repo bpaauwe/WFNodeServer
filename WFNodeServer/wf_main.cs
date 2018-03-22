@@ -227,7 +227,7 @@ namespace WFNodeServer {
         }
     }
 
-    internal class NodeServer {
+    internal partial class NodeServer {
         internal rest Rest;
         internal event SkyEvent WFSkySubscribers = null;
         internal event AirEvent WFAirSubscribers = null;
@@ -250,7 +250,7 @@ namespace WFNodeServer {
         internal NodeServer() {
 
             // Start server to handle config and ISY queries
-            WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, WF_Config.Profile);
+            WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, api_key);
             Console.WriteLine("Started on port " + WF_Config.Port.ToString());
 
             Rest = new rest();
