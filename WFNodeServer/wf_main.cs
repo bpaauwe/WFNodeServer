@@ -108,6 +108,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        internal static bool Debug = false;
 
         static void Main(string[] args) {
             string username = "";
@@ -159,6 +160,9 @@ namespace WFNodeServer {
                     case "udp_port":
                         int.TryParse(parts[1], out port);
                         WF_Config.UDPPort = port;
+                        break;
+                    case "debug":
+                        Debug = true;
                         break;
                     default:
                         Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
@@ -535,8 +539,10 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + air.SerialNumber + " doesn't exist, create it.");
-                Console.WriteLine("Debug");
-                Console.WriteLine(air.Raw);
+                if (WeatherFlowNS.Debug) {
+                    Console.WriteLine("Debug:");
+                    Console.WriteLine(air.Raw);
+                }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
@@ -601,8 +607,10 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
                 Console.WriteLine("Device " + sky.SerialNumber + " doesn't exist, create it.");
-                Console.WriteLine("Debug");
-                Console.WriteLine(sky.Raw);
+                if (WeatherFlowNS.Debug) {
+                    Console.WriteLine("Debug:");
+                    Console.WriteLine(sky.Raw);
+                }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Sky" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
