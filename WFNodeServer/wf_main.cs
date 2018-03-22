@@ -344,6 +344,7 @@ namespace WFNodeServer {
             Console.WriteLine("Using ISY at " + WF_Config.ISY);
 
             Rest.Base = "http://" + WF_Config.ISY + "/rest/";
+            Rest.AuthRequired = true;
             Rest.Username = WF_Config.Username;
             Rest.Password = WF_Config.Password;
         }
