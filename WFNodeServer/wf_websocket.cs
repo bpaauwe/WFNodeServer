@@ -124,7 +124,7 @@ namespace WFNodeServer {
             message += ", \"id\":\"random-id-23456\" }";
 
             SendMessage(client, message, 0x01);
-            started.Add(device_id, true);
+            started_rapid.Add(device_id, true);
         }
 
         internal void StopListenRapid(string device_id) {
