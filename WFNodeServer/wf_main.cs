@@ -240,8 +240,8 @@ namespace WFNodeServer {
         internal bool active = false;
         internal Dictionary<string, string> NodeList = new Dictionary<string, string>();
         internal Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
+        private Dictionary<string, bool> HeartBeat = new Dictionary<string, bool>();
         internal WeatherFlow_UDP udp_client;
-        private bool heartbeat = false;
         private wf_websocket wsi = new wf_websocket();
         private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
         private Thread udp_thread = null;
@@ -294,12 +294,15 @@ namespace WFNodeServer {
 
             foreach (string address in NodeList.Keys) {
                 if (NodeList[address] == "WF_Hub") {
-                    if (heartbeat) {
+                    if (!HeartBeat.ContainsKey(address))
+                        HeartBeat.Add(address, true);
+
+                    if (HeartBeat[address]) {
                         report = prefix + address + "/report/status/GV0/1/0";
                     } else {
                         report = prefix + address + "/report/status/GV0/-1/0";
                     }
-                    heartbeat = !heartbeat;
+                    HeartBeat[address] = !HeartBeat[address];
                     Rest.REST(report);
 
                     // CHECKME: Should we have a last update value for the hub?
@@ -348,6 +351,7 @@ namespace WFNodeServer {
         internal void ConfigureNodes() {
             NodeList.Clear();
             SecondsSinceUpdate.Clear();
+            HeartBeat.Clear();
 
             FindOurNodes();
             if (NodeList.Count > 0) {
@@ -384,6 +388,7 @@ namespace WFNodeServer {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
+                    HeartBeat.Add(address, true);
                 } else {
                     Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
