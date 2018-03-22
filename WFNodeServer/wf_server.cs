@@ -75,17 +75,24 @@ namespace WFNodeServer {
         }
 
         private void Listen() {
-            listener = new HttpListener();
-            listener.Prefixes.Add("http://*:" + port.ToString() + "/");
-            listener.Start();
-            while (true) {
+            using (listener = new HttpListener()) {
                 try {
-                    HttpListenerContext context = listener.GetContext();
-                    Process(context);
+                    listener.Prefixes.Add("http://*:" + port.ToString() + "/");
+                    listener.Start();
                 } catch (Exception ex) {
-                    Console.WriteLine("Failed to process connection: " + ex.Message);
+                    Console.WriteLine("Failed to start web server on port " + port.ToString());
+                    Console.WriteLine("  Error was: " + ex.Message);
+                    return;
                 }
-                //Thread.Sleep(5000);
+                while (true) {
+                    try {
+                        HttpListenerContext context = listener.GetContext();
+                        Process(context);
+                    } catch (Exception ex) {
+                        Console.WriteLine("Failed to process connection: " + ex.Message);
+                    }
+                    //Thread.Sleep(5000);
+                }
             }
         }
 
