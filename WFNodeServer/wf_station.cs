@@ -109,6 +109,7 @@ namespace WFNodeServer {
             SkySN = "";
         }
 
+
         internal void GetStationMeta(string station_id) {
             string resp;
             RootObject root;
@@ -158,7 +159,7 @@ namespace WFNodeServer {
                     return s;
             }
 
-            return null;
+            return new StationInfo();
         }
         internal static StationInfo FindStationSky(string serial) {
             foreach (StationInfo s in WF_Config.WFStationInfo) {
@@ -166,7 +167,7 @@ namespace WFNodeServer {
                     return s;
             }
 
-            return null;
+            return new StationInfo();
         }
     }
 }

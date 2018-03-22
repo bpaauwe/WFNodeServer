@@ -96,6 +96,14 @@ namespace WFNodeServer {
         public bool rapid { get; set; }
 
         public StationInfo() {
+            station_id = -1;
+            elevation = 0;
+            remote = false;
+            rapid = true;
+            air_sn = "";
+            air_id = -1;
+            sky_sn = "";
+            sky_id = -1;
         }
 
         public StationInfo(int id) {
@@ -558,9 +566,9 @@ namespace WFNodeServer {
                 SecondsSinceUpdate.Add(address, 0);
             }
 
-            if (wf_station.FindStationAir(air.serial_number) == null) {
+            StationInfo sinfo = wf_station.FindStationAir(air.serial_number);
+            if (sinfo.station_id == -1)
                 AddStationAir(0, air.DeviceID, air.serial_number);
-            }
 
             //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
             //Rest.REST(report);
@@ -628,9 +636,9 @@ namespace WFNodeServer {
                 // Do we want to add a secondary diagnostic node?
             }
 
-            if (wf_station.FindStationSky(sky.serial_number) == null) {
+            StationInfo sinfo = wf_station.FindStationSky(sky.serial_number);
+            if (sinfo.station_id == -1)
                 AddStationSky(0, sky.DeviceID, sky.serial_number);
-            }
 
             //report = prefix + address + "/report/status/GV0/" + sky.TS + "/25";
             //Rest.REST(report);
