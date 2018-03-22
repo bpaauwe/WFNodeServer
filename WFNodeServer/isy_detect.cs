@@ -101,30 +101,31 @@ namespace WFNodeServer {
                           0x7c, 0xe8, 0xa5, 0xa9, 0x36, 0x7a, 0x12, 0x34,
                           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
-            listen_udp = new UdpClient();
-            listen_udp.ExclusiveAddressUse = false;
-            listen_udp.EnableBroadcast = true;
-            listen_udp.Client.SetSocketOption(SocketOptionLevel.Socket,
-                    SocketOptionName.ReuseAddress, true);
+            using (listen_udp = new UdpClient()) {
+                listen_udp.ExclusiveAddressUse = false;
+                listen_udp.EnableBroadcast = true;
+                listen_udp.Client.SetSocketOption(SocketOptionLevel.Socket,
+                        SocketOptionName.ReuseAddress, true);
 
 
-            group_ep = new IPEndPoint(IPAddress.Any, 20034);
+                group_ep = new IPEndPoint(IPAddress.Any, 20034);
 
-            state = new UdpState();
-            state.client = listen_udp;
-            state.ep = group_ep;
+                state = new UdpState();
+                state.client = listen_udp;
+                state.ep = group_ep;
 
-            try {
-                listen_udp.Send(handshake, 24, GetBroadcast(), 20034);
-                Thread.Sleep(50);
+                try {
+                    listen_udp.Send(handshake, 24, GetBroadcast(), 20034);
+                    Thread.Sleep(50);
 
-                // Wait for 1/2 second for the ISY to respond
-                listen_udp.BeginReceive(new AsyncCallback(callback), state);
-                Thread.Sleep(500);
+                    // Wait for 1/2 second for the ISY to respond
+                    listen_udp.BeginReceive(new AsyncCallback(callback), state);
+                    Thread.Sleep(500);
 
-                listen_udp.Close();
-            } catch {
-                listen_udp.Close();
+                    //listen_udp.Close();
+                } catch {
+                    //listen_udp.Close();
+                }
             }
 
             return ISYAddress;
@@ -148,65 +149,66 @@ namespace WFNodeServer {
 			string buf = "";
 			int tries = 100;
 
-			listen_udp = new UdpClient();
-			listen_udp.ExclusiveAddressUse = false;
-			listen_udp.Client.SetSocketOption(SocketOptionLevel.Socket,
-					SocketOptionName.ReuseAddress, true);
-			group_ip = IPAddress.Parse("239.255.255.250");
-			//group_ep = new IPEndPoint(IPAddress.Any, 1900);
-			group_ep = new IPEndPoint(IPAddress.Any, 20034);
+            using (listen_udp = new UdpClient()) {
+                listen_udp.ExclusiveAddressUse = false;
+                listen_udp.Client.SetSocketOption(SocketOptionLevel.Socket,
+                        SocketOptionName.ReuseAddress, true);
+                group_ip = IPAddress.Parse("239.255.255.250");
+                //group_ep = new IPEndPoint(IPAddress.Any, 1900);
+                group_ep = new IPEndPoint(IPAddress.Any, 20034);
 
-			try {
-				listen_udp.Client.Bind(group_ep);
-			} catch (Exception e) {
-                Console.WriteLine("Failed to bind to broadcast address");
-                Console.WriteLine(e.Message);
-				return "";
-			}
+                try {
+                    listen_udp.Client.Bind(group_ep);
+                } catch (Exception e) {
+                    Console.WriteLine("Failed to bind to broadcast address");
+                    Console.WriteLine(e.Message);
+                    return "";
+                }
 
-			listen_udp.EnableBroadcast = true;
+                listen_udp.EnableBroadcast = true;
 
-			try {
-				listen_udp.JoinMulticastGroup(group_ip);
-			} catch (Exception e) {
-                Console.WriteLine("Failed to join Multicast group: " + e.Message);
-				listen_udp.Close();
-				return "";
-			}
+                try {
+                    listen_udp.JoinMulticastGroup(group_ip);
+                } catch (Exception e) {
+                    Console.WriteLine("Failed to join Multicast group: " + e.Message);
+                    //listen_udp.Close();
+                    return "";
+                }
 
-			// Set the timeout at 90 seconds.  If we haven't received anything in
-			// that time, we probably won't.
-			listen_udp.Client.ReceiveTimeout = 90000;
+                // Set the timeout at 90 seconds.  If we haven't received anything in
+                // that time, we probably won't.
+                listen_udp.Client.ReceiveTimeout = 90000;
 
-			while ((ip == "")) {
-				try {
-					recv_data = listen_udp.Receive(ref group_ep);
-				} catch {
-                    Console.WriteLine("Timed out trying to discover ISY.");
-					return "";
-				}
-				if (recv_data.Length != 0) {
-					// Found somelthing
-					buf = Encoding.ASCII.GetString(recv_data);
+                while ((ip == "")) {
+                    try {
+                        recv_data = listen_udp.Receive(ref group_ep);
+                    } catch {
+                        Console.WriteLine("Timed out trying to discover ISY.");
+                        return "";
+                    }
+                    if (recv_data.Length != 0) {
+                        // Found somelthing
+                        buf = Encoding.ASCII.GetString(recv_data);
 
-					// Now see if this is really an ISY
-					if (buf.Contains("X_Insteon") == false) {
-						if (--tries == 0) {
-                            Console.WriteLine("Failed to detect ISY on the network.");
-							return "";
-						}
-					} else {
-						// This really is an ISY.  Pull the location field
-						// from the string.
-						i = buf.IndexOf("LOCATION:");
-						if ((i > 0)) {
-							ip = buf.Substring((i + 9)).Split('\r')[0];
-						}
-					}
-				}
-			}
-			listen_udp.DropMulticastGroup(group_ip);
-			listen_udp.Close();
+                        // Now see if this is really an ISY
+                        if (buf.Contains("X_Insteon") == false) {
+                            if (--tries == 0) {
+                                Console.WriteLine("Failed to detect ISY on the network.");
+                                return "";
+                            }
+                        } else {
+                            // This really is an ISY.  Pull the location field
+                            // from the string.
+                            i = buf.IndexOf("LOCATION:");
+                            if ((i > 0)) {
+                                ip = buf.Substring((i + 9)).Split('\r')[0];
+                            }
+                        }
+                    }
+                }
+                listen_udp.DropMulticastGroup(group_ip);
+                //listen_udp.Close();
+            }
 
 			Console.WriteLine(("Found an ISY: " + ip));
 			return ip;
