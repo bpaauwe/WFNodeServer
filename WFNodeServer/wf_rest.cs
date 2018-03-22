@@ -67,6 +67,7 @@ namespace WFNodeServer {
             return ("Basic " + auth);
         }
 
+        [Serializable]
         internal class RestException : Exception {
             internal RestException() : base() { }
             internal RestException(string message) : base(message) { }
