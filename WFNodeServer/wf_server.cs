@@ -36,6 +36,7 @@ namespace WFNodeServer {
         private HttpListener listener;
         private int port;
         private string api_key;
+        private string cfg_file_status = "";
 
         private Dictionary<string, string> NodeDefs = new Dictionary<string, string> {
             {"WF_Sky", "Sky Sensor - metric"},
@@ -285,7 +286,7 @@ namespace WFNodeServer {
                     }
                 }
 
-                WeatherFlowNS.SaveConfiguration();
+                cfg_file_status = WeatherFlowNS.SaveConfiguration();
             }
 
             try {
@@ -450,6 +451,12 @@ namespace WFNodeServer {
             page += "</td>\n";
             page += "</tr>\n";
             page += "</table>\n";
+            page += "</div>\n";
+
+            page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
+            page += "<div style=\"border: 1px solid; background-color: #D8D8D8; padding: 2px 2px 2px 2px\">";
+            page += "Status: " + cfg_file_status;
+            page += "</div>";
             page += "</div>\n";
 
             // Display a table of nodes that were found on the ISY

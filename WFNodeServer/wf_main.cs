@@ -193,7 +193,7 @@ namespace WFNodeServer {
             }
         }
 
-        internal static void SaveConfiguration() {
+        internal static string SaveConfiguration() {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             cfgstate s = new cfgstate();
 
@@ -202,9 +202,11 @@ namespace WFNodeServer {
                     sw.Write(serializer.Serialize(s));
                 }
                 //sw.Close();
-            } catch {
-                Console.WriteLine("Failed to save configuration to wfnodeserver.json");
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+                return ex.Message;
             }
+            return "Configuration Saved";
         }
 
         internal static void ReadConfiguration() {
