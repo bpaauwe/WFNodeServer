@@ -171,7 +171,6 @@ namespace WFNodeServer {
                 return d.ToLower();
             }
         }
-
         internal int UpdateTime {
             get { return update_time; }
         }
