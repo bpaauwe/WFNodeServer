@@ -35,11 +35,9 @@ namespace WFNodeServer {
         internal static string Username { get; set; }
         internal static string Password { get; set; }
         internal static string ISY { get; set; }
-        internal static int StationID { get; set; }
         internal static int Profile { get; set; }
         internal static int Port { get; set; }
         internal static int UDPPort { get; set; }
-        internal static double Elevation { get; set; }
         internal static bool Hub { get; set; }
         internal static bool SI { get; set; }
         internal static List<StationInfo> WFStationInfo { get; set; }
@@ -50,11 +48,9 @@ namespace WFNodeServer {
         public string Username { get; set; }
         public string Password { get; set; }
         public string ISY { get; set; }
-        public int StationID { get; set; }
         public int Profile { get; set; }
         public int Port { get; set; }
         public int UDPPort { get; set; }
-        public double Elevation { get; set; }
         public bool Hub { get; set; }
         public bool SI { get; set; }
         public List<StationInfo> WFStationInfo { get; set; }
@@ -63,11 +59,9 @@ namespace WFNodeServer {
             Username = WF_Config.Username;
             Password = WF_Config.Password;
             ISY = WF_Config.ISY;
-            StationID = WF_Config.StationID;
             Profile = WF_Config.Profile;
             Port = WF_Config.Port;
             UDPPort = WF_Config.UDPPort;
-            Elevation = WF_Config.Elevation;
             Hub = WF_Config.Hub;
             SI = WF_Config.SI;
             WFStationInfo = WF_Config.WFStationInfo;
@@ -77,11 +71,9 @@ namespace WFNodeServer {
             WF_Config.Username = Username;
             WF_Config.Password = Password;
             WF_Config.ISY = ISY;
-            WF_Config.StationID = StationID;
             WF_Config.Profile = Profile;
             WF_Config.Port = Port;
             WF_Config.UDPPort = UDPPort;
-            WF_Config.Elevation = Elevation;
             WF_Config.Hub = Hub;
             WF_Config.SI = SI;
             WF_Config.WFStationInfo = WFStationInfo;
@@ -128,11 +120,9 @@ namespace WFNodeServer {
             WF_Config.Username = "admin";
             WF_Config.Password = "";
             WF_Config.Profile = 0;
-            WF_Config.Elevation = 0;
             WF_Config.Hub = false;
             WF_Config.Port = 8288;
             WF_Config.SI = false;
-            WF_Config.StationID = 0;
             WF_Config.UDPPort = 50222;
             WF_Config.Valid = false;
             WF_Config.WFStationInfo = new List<StationInfo>();
@@ -162,10 +152,6 @@ namespace WFNodeServer {
                     case "isy":
                         isy_host = parts[1];
                         WF_Config.ISY = parts[1];
-                        break;
-                    case "elevation":
-                        double.TryParse(parts[1], out Elevation);
-                        WF_Config.Elevation = Elevation;
                         break;
                     case "hub":
                         WF_Config.Hub = true;
