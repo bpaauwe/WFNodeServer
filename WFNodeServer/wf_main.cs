@@ -684,7 +684,7 @@ namespace WFNodeServer {
         internal void HandleDevice(object sender, DeviceEventArgs device) {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
-            string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber + "_d";
+            string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
             string units;
             int up;
 

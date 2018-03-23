@@ -74,7 +74,7 @@ namespace WFNodeServer {
         internal string SerialNumber {
             get {
                 string d = data.serial_number.Replace('-', '_');
-                d += "l";
+                d += "_l";
                 return d.ToLower();
             }
         }
@@ -189,6 +189,7 @@ namespace WFNodeServer {
         internal string SerialNumber {
             get {
                 string d = data.serial_number.Replace('-', '_');
+                d += "_d";
                 return d.ToLower();
             }
         }
