@@ -57,6 +57,7 @@
     <Compile Include="isy_detect.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="wf_api_key.cs" />
+    <Compile Include="wf_nodesetup.cs" />
     <Compile Include="wf_station.cs" />
     <Compile Include="wf_websocket.cs" />
     <Compile Include="wf_events.cs" />
@@ -68,6 +69,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="nodesetup\EN_US.TXT" />
+    <EmbeddedResource Include="nodesetup\I_EDIT.XML" />
+    <EmbeddedResource Include="nodesetup\I_NDEFS.XML" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

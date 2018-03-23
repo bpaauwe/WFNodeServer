@@ -274,6 +274,8 @@ namespace WFNodeServer {
                                 break;
                             case "restart":
                                 WeatherFlowNS.NS.SetupRest();
+                                WeatherFlowNS.NS.LookupProfile();
+                                WeatherFlowNS.NS.UpdateProfileFiles();
                                 WeatherFlowNS.NS.ConfigureNodes();
                                 WeatherFlowNS.NS.StartUDPMonitor();
                                 WeatherFlowNS.NS.StartHeartbeat();

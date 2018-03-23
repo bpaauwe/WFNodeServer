@@ -41,6 +41,7 @@ namespace WFNodeServer {
         internal static bool Hub { get; set; }
         internal static bool SI { get; set; }
         internal static List<StationInfo> WFStationInfo { get; set; }
+        internal static int ProfileVersion { get; set; }
         internal static bool Valid { get; set; }
     }
 
@@ -54,6 +55,7 @@ namespace WFNodeServer {
         public bool Hub { get; set; }
         public bool SI { get; set; }
         public List<StationInfo> WFStationInfo { get; set; }
+        public int ProfileVersion { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
@@ -65,6 +67,7 @@ namespace WFNodeServer {
             Hub = WF_Config.Hub;
             SI = WF_Config.SI;
             WFStationInfo = WF_Config.WFStationInfo;
+            ProfileVersion = WF_Config.ProfileVersion;
         }
 
         internal void LoadState() {
@@ -77,6 +80,7 @@ namespace WFNodeServer {
             WF_Config.Hub = Hub;
             WF_Config.SI = SI;
             WF_Config.WFStationInfo = WFStationInfo;
+            WF_Config.ProfileVersion = ProfileVersion;
 
             if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;
@@ -116,6 +120,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+        internal static int ProfileVersion = 1;
         internal static bool Debug = false;
 
         static void Main(string[] args) {
@@ -255,6 +260,7 @@ namespace WFNodeServer {
         private wf_websocket wsi = new wf_websocket();
         private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
         private Thread udp_thread = null;
+        private bool ProfileDetected = false;
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
@@ -280,11 +286,35 @@ namespace WFNodeServer {
 
             if (WF_Config.Valid) {
                 SetupRest();
+                LookupProfile();
+                UpdateProfileFiles();
                 ConfigureNodes();
                 StartUDPMonitor();
                 StartHeartbeat();
             } else {
                 Console.WriteLine("Please point your browser at http://localhost:" + WF_Config.Port.ToString() + "/config to configure the node server.");
+            }
+        }
+
+        internal void UpdateProfileFiles() {
+
+            if (WF_Config.ProfileVersion != WeatherFlowNS.ProfileVersion) {
+                Console.WriteLine("Updating profile files on ISY...");
+                // First remove existing profile files
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/profile/remove");
+
+                // Install our embedded versions
+                wf_nodesetup.UploadFile(Rest, WF_Config.Profile, "EN_US.TXT", "nls");
+                wf_nodesetup.UploadFile(Rest, WF_Config.Profile, "I_EDIT.XML", "editor");
+                wf_nodesetup.UploadFile(Rest, WF_Config.Profile, "I_NDEFS.XML", "nodedef");
+
+                // This command is documented but doesn't exist yet
+                //Rest.REST("ns/2/profile/reload");
+                Console.WriteLine("Files uploaded, ISY must be rebooted for changes to take effect.");
+
+                WF_Config.ProfileVersion = WeatherFlowNS.ProfileVersion;
+                Console.WriteLine(WeatherFlowNS.SaveConfiguration());
+                
             }
         }
 
@@ -359,26 +389,50 @@ namespace WFNodeServer {
             Rest.Password = WF_Config.Password;
         }
 
+        internal void LookupProfile() {
+            XmlDocument xmld;
+            XmlNode root;
+            int ProfileNum = 0;
+            // Look up the node server's currently installed to see if we're
+            // actually installed.
+            string profiles = Rest.REST("profiles/ns/0/connection");
+
+            // parse profiles looking for connections->connection->name fields
+            try {
+                xmld = new XmlDocument();
+                xmld.LoadXml(profiles);
+
+                root = xmld.FirstChild;
+                root = xmld.SelectSingleNode("connections");
+                foreach (XmlNode node in root.ChildNodes) {
+                    string profile = node.Attributes["profile"].Value;
+                    string name = node.SelectSingleNode("name").InnerText;
+                    if (name == "WeatherFlow") {
+                        int.TryParse(profile, out ProfileNum);
+                        Console.WriteLine("Detected profile number " + ProfileNum.ToString());
+                        WF_Config.Profile = ProfileNum;
+                        ProfileDetected = true;
+                        return;
+                    }
+                }
+            } catch (Exception ex) {
+                Console.WriteLine("Parsing profiles failed: " + ex.Message);
+            }
+        }
+
         internal void ConfigureNodes() {
             NodeList.Clear();
             SecondsSinceUpdate.Clear();
             HeartBeat.Clear();
 
             FindOurNodes();
-            if (NodeList.Count > 0) {
+            if (NodeList.Count > 0 && !ProfileDetected) {
                 int Profile;
                 // Parse profile from node address
                 int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
-                Console.WriteLine("Detected profile number " + Profile.ToString());
+                Console.WriteLine("Detected profile number " + Profile.ToString() + " from nodelist");
                 WF_Config.Profile = Profile;
-            } else {
-                // Should we try and create a node?  No, let's do this in the event handlers
-                // so we can use the serial number as the node address
-                //string address = "n" + profile.ToString("000") + "_weatherflow1";
-
-                //Rest.REST("ns/" + profile.ToString() + "/nodes/" + address +
-                //    "/add/WeatherFlow/?name=WeatherFlow");
-                //NodeList.Add(address, si_units);
+                ProfileDetected = true;
             }
                 
             // If si units, switch the nodedef 

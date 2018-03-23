@@ -105,8 +105,8 @@ namespace WFNodeServer {
             request.KeepAlive = false;
 
             // Read data from the stream
-            using (response = (HttpWebResponse)request.GetResponse()) {
-                try {
+            try {
+                response = (HttpWebResponse)request.GetResponse();
                     if (response.ContentLength > 0) {
                         code = (int)response.StatusCode;
                         if (code != 200) {
@@ -142,17 +142,50 @@ namespace WFNodeServer {
                             //Console.WriteLine("REST got: " + xml);
                         }
                     } // End of content length > 0
-                } catch (WebException ex) {
-                    xml = "";
-                    //Console.WriteLine(xml);
-                    //throw new RestException();
-                    Console.WriteLine(ex.Message);
-                }
                 response.Close();
+            } catch (WebException ex) {
+                xml = "";
+                //Console.WriteLine(xml);
+                //throw new RestException();
+                Console.WriteLine(ex.Message);
             }
 
             request.Abort();
             return xml;
+        }
+
+        internal void REST_POST(string url, string content, int len) {
+            HttpWebRequest request;
+            HttpWebResponse response;
+            string rest_url;
+            int code;
+
+            rest_url = Base + url;
+            if (AuthHeader == "" && AuthRequired)
+                AuthHeader = Authorize();
+
+            Console.WriteLine(rest_url);
+            request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
+            request.UserAgent = "WFNodeServer";
+            if (AuthRequired)
+                request.Headers.Add("Authorization", AuthHeader);
+            request.Proxy = null;
+            request.KeepAlive = false;
+            request.Method = "POST";
+            request.ContentLength = len;
+            request.ContentType = "application/xml";
+
+            Stream datastream = request.GetRequestStream();
+            datastream.Write(Encoding.ASCII.GetBytes(content), 0, len);
+            datastream.Close();
+
+            try {
+                response = (HttpWebResponse)request.GetResponse();
+                code = (int)response.StatusCode;
+                response.Close();
+            } catch (Exception ex) {
+                Console.WriteLine(ex.Message);
+            }
         }
     }
 }
