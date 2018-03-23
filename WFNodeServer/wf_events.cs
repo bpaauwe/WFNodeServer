@@ -39,6 +39,13 @@ namespace WFNodeServer {
         internal string SerialNumber {
             get {
                 string d = data.serial_number.Replace('-', '_');
+                d += "_r";
+                return d.ToLower();
+            }
+        }
+        internal string Parent {
+            get {
+                string d = data.serial_number.Replace('-', '_');
                 return d.ToLower();
             }
         }

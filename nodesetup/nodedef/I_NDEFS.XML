@@ -58,8 +58,6 @@
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_FLOAT1" />
 			<st id="GV7" editor="I_DEGREE" />
-			<st id="GV10" editor="I_WIND_DIRECTION" />
-			<st id="GV11" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -80,8 +78,6 @@
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_FLOAT1" />
 			<st id="GV7" editor="I_DEGREE" />
-			<st id="GV10" editor="I_WIND_DIRECTION" />
-			<st id="GV11" editor="I_FLOAT1" />
 		</sts>
 		<cmds>
 			<accepts>

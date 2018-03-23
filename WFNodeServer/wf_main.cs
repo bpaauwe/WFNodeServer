@@ -396,6 +396,7 @@ namespace WFNodeServer {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
                 } else if (NodeList[address] == "WF_Lightning") {
+                } else if (NodeList[address] == "WF_RapidWind") {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
@@ -731,15 +732,25 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
             string unit;
 
-            if (!NodeList.Keys.Contains(address))
-                return;
+            if (!NodeList.Keys.Contains(address)) {
+                string sky_address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.Parent;
+
+                Console.WriteLine("Device " + wind.SerialNumber + " doesn't exist, create it.");
+
+                // Ideally, this should be a secondary node under tha matching Air node.
+                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
+                    "/add/WF_RapidWind/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
+                NodeList.Add(address, "WF_RapidWind");
+            }
 
             wind.si_units = WF_Config.SI;
 
             unit = (WF_Config.SI) ? "/48" : "/49";
-            report = prefix + address + "/report/status/GV11/" + wind.Speed + unit;
+            //report = prefix + address + "/report/status/GV11/" + wind.Speed + unit;
+            report = prefix + address + "/report/status/GV1/" + wind.Speed + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV10/" + wind.Direction.ToString() + "/25";
+            //report = prefix + address + "/report/status/GV10/" + wind.Direction.ToString() + "/25";
+            report = prefix + address + "/report/status/GV0/" + wind.Direction.ToString() + "/25";
             Rest.REST(report);
         }
 
@@ -883,6 +894,9 @@ namespace WFNodeServer {
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
+                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWind") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWind");
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {

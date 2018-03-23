@@ -26,8 +26,6 @@ ST-139S-GV6-NAME = Wind Lull
 ST-139S-GV7-NAME = Wind Direction
 ST-139S-GV8-NAME = Rain Rate
 ST-139S-GV9-NAME = Daily Rainfall
-ST-139S-GV10-NAME = Rapid Wind Direction
-ST-139S-GV11-NAME = Rapid Wind Speed
 
 ND-WF_SkyD-NAME = Weather Flow Smart Weather Station Sky (diagnostic)
 ND-WF_SkyD-ICON = Input
@@ -51,8 +49,8 @@ ST-139L-GV0-NAME = Time
 ST-139L-GV1-NAME = Distance
 ST-139L-GV2-NAME = Energy
 
-ND-WF_Rapid_Wind-NAME = Weather Flow Smart Weather Station Rapid Wind
-ND-WF_Rapid_Wind-ICON = Input
+ND-WF_RapidWind-NAME = Weather Flow Smart Weather Station Rapid Wind
+ND-WF_RapidWind-ICON = Input
 ST-139R-GV0-NAME = Rapid Wind Direction
 ST-139R-GV1-NAME = Rapid Wind Speed
 

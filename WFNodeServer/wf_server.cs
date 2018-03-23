@@ -47,6 +47,7 @@ namespace WFNodeServer {
             {"WF_AirD", "Air Sensor - device data"},
             {"WF_Hub", "Hub data / heartbeat"},
             {"WF_Lightning", "Lightning event data"},
+            {"WF_RapidWind", "Rapid Wind speed/direction data"},
         };
 
         internal int Port {
