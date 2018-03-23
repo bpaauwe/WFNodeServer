@@ -655,7 +655,9 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV5/" + sky.GustSpeed + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV6/" + sky.WindDirection + "/25";
+            report = prefix + address + "/report/status/GV6/" + sky.WindLull + unit;
+            Rest.REST(report);
+            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/25";
             Rest.REST(report);
 
             // Currently we just report the rain over 1 minute. If we want the rate
@@ -665,11 +667,11 @@ namespace WFNodeServer {
             //report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
             //Rest.REST(report);
             unit = (WF_Config.SI) ? "/24" : "/46";
-            report = prefix + address + "/report/status/GV7/" + sky.RainRate + unit;
+            report = prefix + address + "/report/status/GV8/" + sky.RainRate + unit;
             Rest.REST(report);
 
             unit = (WF_Config.SI) ? "/105" : "/82";
-            report = prefix + address + "/report/status/GV8/" + sky.Daily + unit;
+            report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
             Rest.REST(report);
 
             if (!NodeList.Keys.Contains(sec_address)) {
@@ -735,9 +737,9 @@ namespace WFNodeServer {
             wind.si_units = WF_Config.SI;
 
             unit = (WF_Config.SI) ? "/48" : "/49";
-            report = prefix + address + "/report/status/GV10/" + wind.Speed + unit;
+            report = prefix + address + "/report/status/GV11/" + wind.Speed + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV9/" + wind.Direction.ToString() + "/25";
+            report = prefix + address + "/report/status/GV10/" + wind.Direction.ToString() + "/25";
             Rest.REST(report);
         }
 
