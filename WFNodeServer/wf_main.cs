@@ -122,6 +122,7 @@ namespace WFNodeServer {
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
         internal static int ProfileVersion = 1;
         internal static bool Debug = false;
+        internal static string ConfigFile = "wfnodeserver.json";
 
         static void Main(string[] args) {
             string username = "";
@@ -129,6 +130,7 @@ namespace WFNodeServer {
             string isy_host = "";
             int profile = 0;
             int port = 50222;
+            bool once = false;
 
             WF_Config.ISY = "";
             WF_Config.Username = "admin";
@@ -140,6 +142,14 @@ namespace WFNodeServer {
             WF_Config.UDPPort = 50222;
             WF_Config.Valid = false;
             WF_Config.WFStationInfo = new List<StationInfo>();
+
+            // First check for command line config file path
+            for (int i = 0; i < args.Length; i++) {
+                if (args[i].Contains("config"))
+                    ConfigFile = args[i].Split('=')[1];
+                if (args[i] == "-f")
+                    ConfigFile = args[++i];
+            }
 
             ReadConfiguration();
 
@@ -177,9 +187,16 @@ namespace WFNodeServer {
                     case "debug":
                         Debug = true;
                         break;
+                    case "config":
+                        break;
                     default:
-                        Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password> profile=<profile number>");
-                        Console.WriteLine("                    [isy=<is ip address/hostname>] [si] [hub]");
+                        if (!once) {
+                            Console.WriteLine("Usage: WFNodeServer username=<isy user> password=<isy password>");
+                            Console.WriteLine("                    profile=<profile number>");
+                            Console.WriteLine("                    [config=<confuration path/file]");
+                            Console.WriteLine("                    [isy=<is ip address/hostname>] [si] [hub]");
+                            once = true;
+                        }
                         break;
                 }
             }
@@ -203,7 +220,7 @@ namespace WFNodeServer {
             cfgstate s = new cfgstate();
 
             try {
-                using (StreamWriter sw = new StreamWriter("wfnodeserver.json")) {
+                using (StreamWriter sw = new StreamWriter(ConfigFile)) {
                     sw.Write(serializer.Serialize(s));
                 }
                 //sw.Close();
@@ -221,7 +238,7 @@ namespace WFNodeServer {
             int len;
 
             try {
-                using (StreamReader sr = new StreamReader("wfnodeserver.json")) {
+                using (StreamReader sr = new StreamReader(ConfigFile)) {
                     len = sr.Read(buf, 0, 2048);
                 }
                 //sr.Close();
@@ -234,7 +251,6 @@ namespace WFNodeServer {
                 string json = new string(buf);
                 cfgObj = serializer.Deserialize<cfgstate>(json.Substring(0, len));
                 cfgObj.LoadState();
-                Console.WriteLine(cfgObj.Username + " vs. " + WF_Config.Username);
             } catch (Exception ex) {
                 Console.WriteLine("Failed to import configuration.");
                 Console.WriteLine(ex.Message);
