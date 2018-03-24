@@ -1,0 +1,4 @@
+WFNodeServer/bin/*
+WFNodeServer/obj/*
+WFNodeServer.suo
+*.png
