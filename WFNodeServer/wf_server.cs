@@ -441,7 +441,7 @@ namespace WFNodeServer {
             page += "<form method=\"post\">\n";
             page += "<input type=\"hidden\" name=\"restart\" value=\"" + "1" + "\">\n";
             if (nodeserver_configured)
-                page += "<input style=\"width:250px\" type=\"submit\" value=\" Start Node Server \">";
+                page += "<input style=\"width:250px\" type=\"submit\" value=\" Restart Node Server \">";
             page += "</form>\n";
             page += "</td>\n";
             page += "<td width=\"20%\">&nbsp;</td>\n";
