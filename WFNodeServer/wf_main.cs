@@ -270,13 +270,11 @@ namespace WFNodeServer {
         internal event RainEvent WFRainSubscribers = null;
         internal bool active = false;
         internal Dictionary<string, string> NodeList = new Dictionary<string, string>();
-        internal Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
-        private Dictionary<string, bool> HeartBeat = new Dictionary<string, bool>();
-        internal WeatherFlow_UDP udp_client;
         private wf_websocket wsi = new wf_websocket();
         private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
-        private Thread udp_thread = null;
         private bool ProfileDetected = false;
+        internal Heartbeat heartbeat = new Heartbeat();
+        internal WeatherFlow_UDP udp_client = new WeatherFlow_UDP();
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
@@ -301,15 +299,29 @@ namespace WFNodeServer {
             // configuration and can continue to initialize things
 
             if (WF_Config.Valid) {
-                SetupRest();
-                LookupProfile();
-                UpdateProfileFiles();
-                ConfigureNodes();
-                StartUDPMonitor();
-                StartHeartbeat();
+                udp_client.Port = WF_Config.UDPPort;
+                InitializeISY();
+                udp_client.Start();
+                heartbeat.Start();
             } else {
                 Console.WriteLine("Please point your browser at http://localhost:" + WF_Config.Port.ToString() + "/config to configure the node server.");
             }
+        }
+
+        //
+        // Initiailize communication with the ISY.
+        //
+        // Set up authentication, Copy over any new profile
+        // files, query the ISY for our nodes.
+        // 
+        // We can attemp this as soon as we have a password
+        // and username for the ISY.
+        internal void InitializeISY() {
+            if (!SetupRest())
+                return;
+            LookupProfile();
+            UpdateProfileFiles();
+            ConfigureNodes();
         }
 
         internal void UpdateProfileFiles() {
@@ -334,59 +346,7 @@ namespace WFNodeServer {
             }
         }
 
-        internal void StartHeartbeat() {
-            // Start a timer to track time since Last Update 
-            if (!UpdateTimer.Enabled) {
-                UpdateTimer.AutoReset = true;
-                UpdateTimer.Elapsed += new System.Timers.ElapsedEventHandler(UpdateTimer_Elapsed);
-                UpdateTimer.Interval = 30000;
-                UpdateTimer.Start();
-            }
-        }
-
-        void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
-            string report;
-            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
-
-            foreach (string address in NodeList.Keys) {
-                if (NodeList[address] == "WF_Hub") {
-                    if (!HeartBeat.ContainsKey(address))
-                        HeartBeat.Add(address, true);
-
-                    if (HeartBeat[address]) {
-                        report = prefix + address + "/report/status/GV0/1/0";
-                    } else {
-                        report = prefix + address + "/report/status/GV0/-1/0";
-                    }
-                    HeartBeat[address] = !HeartBeat[address];
-                    Rest.REST(report);
-
-                    // CHECKME: Should we have a last update value for the hub?
-                } else if (NodeList[address] == "WF_AirD") {
-                } else if (NodeList[address] == "WF_SkyD") {
-                } else if (NodeList[address] == "WF_Lightning") {
-                } else {
-                    // this should only sky & air nodes
-                    report = prefix + address + "/report/status/GV0/" + SecondsSinceUpdate[address].ToString() + "/58";
-                    Rest.REST(report);
-                    SecondsSinceUpdate[address] += 30;
-                }
-            }
-        }
-
-        internal void StartUDPMonitor() {
-            if (udp_thread != null) {
-                udp_thread.Abort();
-            }
-
-            Console.WriteLine("Starting WeatherFlow data collection thread.");
-            udp_client = new WeatherFlow_UDP(WF_Config.UDPPort);
-            udp_thread = new Thread(new ThreadStart(udp_client.WeatherFlowThread));
-            udp_thread.IsBackground = true;
-            udp_thread.Start();
-        }
-
-        internal void SetupRest() {
+        internal bool SetupRest() {
             if (WF_Config.ISY == "") {
                 //ISYDetect.IsyAutoDetect();  // UPNP detection
                 WF_Config.ISY = ISYDetect.FindISY();
@@ -394,7 +354,7 @@ namespace WFNodeServer {
                     Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
                     //  TODO: Wait on configuration here.  
                     WeatherFlowNS.shutdown = true;
-                    return;
+                    return false;
                 }
             }
             Console.WriteLine("Using ISY at " + WF_Config.ISY);
@@ -403,6 +363,7 @@ namespace WFNodeServer {
             Rest.AuthRequired = true;
             Rest.Username = WF_Config.Username;
             Rest.Password = WF_Config.Password;
+            return true;
         }
 
         internal void LookupProfile() {
@@ -438,8 +399,6 @@ namespace WFNodeServer {
 
         internal void ConfigureNodes() {
             NodeList.Clear();
-            SecondsSinceUpdate.Clear();
-            HeartBeat.Clear();
 
             FindOurNodes();
             if (NodeList.Count > 0 && !ProfileDetected) {
@@ -470,13 +429,9 @@ namespace WFNodeServer {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
-                    HeartBeat.Add(address, true);
                 } else {
                     Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
-
-                if (!SecondsSinceUpdate.ContainsKey(address))
-                    SecondsSinceUpdate.Add(address, 0);
             }
         }
 
@@ -636,7 +591,6 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
                 NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
-                SecondsSinceUpdate.Add(address, 0);
             }
 
             StationInfo sinfo = wf_station.FindStationAir(air.serial_number);
@@ -704,7 +658,6 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Sky" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
                 NodeList.Add(address, "WF_Sky" + ((WF_Config.SI) ? "SI" : ""));
-                SecondsSinceUpdate.Add(address, 0);
 
                 // Do we want to add a secondary diagnostic node?
             }
@@ -840,7 +793,6 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Lightning/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
                 NodeList.Add(address, "WF_Lightning");
-                //SecondsSinceUpdate.Add(address, 0);
             }
             report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
             Rest.REST(report);
@@ -900,10 +852,7 @@ namespace WFNodeServer {
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + update.SerialNumber;
-
-            if (SecondsSinceUpdate.Keys.Contains(address)) {
-                SecondsSinceUpdate[address] = 0;
-            }
+            heartbeat.Updated(address);
         }
 
         internal void AddNode(string address) {

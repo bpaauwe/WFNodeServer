@@ -29,14 +29,33 @@ using System.Threading;
 
 namespace WFNodeServer {
     partial class WeatherFlow_UDP {
-
-        int port = 50222;
+        internal bool Active { get; set; }
+        internal int Port { get; set; }
+        private Thread udp_thread;
+        private ManualResetEvent threadDone = new ManualResetEvent(false);
 
         internal WeatherFlow_UDP() {
+            Port = 50222;
         }
 
         internal WeatherFlow_UDP(int p) {
-            port = p;
+            Port = p;
+        }
+
+        internal void Stop() {
+            Active = false;
+
+            // Wait for thread to stop
+            threadDone.WaitOne();
+        }
+
+        internal void Start() {
+            if (!Active) {
+                Console.WriteLine("Starting WeatherFlow data collection thread.");
+                udp_thread = new Thread(new ThreadStart(WeatherFlowThread));
+                udp_thread.IsBackground = true;
+                udp_thread.Start();
+            }
         }
 
         internal void WeatherFlowThread() {
@@ -48,11 +67,12 @@ namespace WFNodeServer {
 
             using (s = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)) {
                 s.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
-                groupEP = new IPEndPoint(IPAddress.Any, port);
+                groupEP = new IPEndPoint(IPAddress.Any, Port);
                 s.Bind(groupEP);
                 remoteEP = (EndPoint)groupEP;
+                Active = true;
 
-                while (true) {
+                while (Active) {
                     if (s.Available == 0) {
                         Thread.Sleep(200);
                         continue;
@@ -89,6 +109,7 @@ namespace WFNodeServer {
                         Console.WriteLine("UDP Listener failed: " + ex.Message);
                     }
                 }
+                threadDone.Set();
             }
         }
     }

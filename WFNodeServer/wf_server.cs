@@ -194,10 +194,14 @@ namespace WFNodeServer {
                 string[] list;
                 string[] pair;
                 int len = (int)context.Request.ContentLength64;
+                bool initISY = false;
+                bool saveCfg = false;
 
                 context.Request.InputStream.Read(post, 0, len);
                 string resp = Encoding.Default.GetString(post);
                 resp = resp.Substring(0, len);
+
+                cfg_file_status = "";
 
                 if (resp.Contains("AddStation")) {
                     string id = "";
@@ -234,12 +238,14 @@ namespace WFNodeServer {
 
                         WeatherFlowNS.NS.AddStation(sid, el, ar, sk, remote, station.AirSN, station.SkySN, rapid);
                     }
+                    saveCfg = true;
                 } else if (resp.Contains("DeleteStation")) {
                     string[] pr = resp.Split('=');
                     try {
                         int sid = int.Parse(pr[1]);
                         Console.WriteLine("Remove station " + pr[1] + " from list");
                         WeatherFlowNS.NS.DeleteStation(sid);
+                        saveCfg = true;
                     } catch {
                     }
                 } else {
@@ -248,37 +254,68 @@ namespace WFNodeServer {
                         pair = item.Split('=');
                         switch (pair[0]) {
                             case "sAddress":
-                                WF_Config.ISY = pair[1];
+                                if (pair[1] != WF_Config.ISY) {
+                                    WF_Config.ISY = pair[1];
+                                    initISY = true;
+                                    saveCfg = true;
+                                }
                                 break;
                             case "sUsername":
-                                WF_Config.Username = pair[1];
+                                if (pair[1] != WF_Config.Username) {
+                                    WF_Config.Username = pair[1];
+                                    initISY = true;
+                                    saveCfg = true;
+                                }
                                 break;
                             case "sPassword":
-                                WF_Config.Password = pair[1];
+                                if (pair[1] != WF_Config.Password) {
+                                    WF_Config.Password = pair[1];
+                                    initISY = true;
+                                    saveCfg = true;
+                                }
                                 break;
                             case "sProfile":
                                 int p = 0; ;
                                 int.TryParse(pair[1], out p);
-                                WF_Config.Profile = p;
+                                if (p != WF_Config.Profile) {
+                                    WF_Config.Profile = p;
+                                    initISY = true;
+                                    saveCfg = true;
+                                }
                                 break;
                             case "webPort":
                                 int w = 0; ;
                                 int.TryParse(pair[1], out w);
-                                WF_Config.Port = w;
+                                if (w != WF_Config.Port) {
+                                    WF_Config.Port = w;
+                                    saveCfg = true;
+                                }
                                 break;
                             case "sSI":
-                                WF_Config.SI = (pair[1] == "1");
+                                bool imperial = (pair[1] == "1");
+                                if (imperial != WF_Config.SI) {
+                                    WF_Config.SI = (pair[1] == "1");
+                                    saveCfg = true;
+                                }
                                 break;
                             case "sHub":
-                                WF_Config.Hub = (pair[1] == "1");
+                                bool hub = (pair[1] == "1");
+                                if (hub != WF_Config.Hub) {
+                                    WF_Config.Hub = (pair[1] == "1");
+                                    saveCfg = true;
+                                }
                                 break;
-                            case "restart":
-                                WeatherFlowNS.NS.SetupRest();
-                                WeatherFlowNS.NS.LookupProfile();
-                                WeatherFlowNS.NS.UpdateProfileFiles();
-                                WeatherFlowNS.NS.ConfigureNodes();
-                                WeatherFlowNS.NS.StartUDPMonitor();
-                                WeatherFlowNS.NS.StartHeartbeat();
+                            case "serverctl":
+                                if (pair[1].Contains("Restart")) {
+                                    WeatherFlowNS.NS.udp_client.Start();
+                                    WeatherFlowNS.NS.heartbeat.Start();
+                                    cfg_file_status = "Server Started";
+                                    Thread.Sleep(400);
+                                } else if (pair[1].Contains("Pause")) {
+                                    WeatherFlowNS.NS.heartbeat.Stop();
+                                    WeatherFlowNS.NS.udp_client.Stop();
+                                    cfg_file_status = "Server Paused";
+                                }
                                 break;
                             case "websocket":
                                 WeatherFlowNS.NS.StartWebSocket();
@@ -289,7 +326,10 @@ namespace WFNodeServer {
                     }
                 }
 
-                cfg_file_status = WeatherFlowNS.SaveConfiguration();
+                if (saveCfg)
+                    cfg_file_status += WeatherFlowNS.SaveConfiguration();
+                if (initISY)
+                    WeatherFlowNS.NS.InitializeISY();
             }
 
             try {
@@ -437,19 +477,25 @@ namespace WFNodeServer {
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
             page += "<table border=\"0\">\n";
             page += "<tr>\n";
-            page += "<td width=\"40%\">";
-            page += "<form method=\"post\">\n";
-            page += "<input type=\"hidden\" name=\"restart\" value=\"" + "1" + "\">\n";
-            if (nodeserver_configured)
-                page += "<input style=\"width:250px\" type=\"submit\" value=\" Restart Node Server \">";
-            page += "</form>\n";
+            page += "<td width=\"65%\">";
+            if (nodeserver_configured) {
+                page += "<form method=\"post\">";
+                page += "<input type=\"submit\" name=\"serverctl\" value=\" Restart Node Server \">";
+                page += "&nbsp;";
+                page += "<input type=\"submit\" name=\"serverctl\" value=\" Pause Node Server \">";
+                page += "&nbsp;";
+                page += "<input style=\"width: 120px; text-align: center; background-color: #e8e8e8;\" type=\"text\" name=\"status\" value=\"";
+                page += (WeatherFlowNS.NS.udp_client.Active) ? "Running" : "Paused";
+                page += "\" readonly>";
+                page += "</form>";
+            }
             page += "</td>\n";
-            page += "<td width=\"20%\">&nbsp;</td>\n";
-            page += "<td width=\"40%\">";
+            page += "<td width=\"15%\">&nbsp;</td>\n";
+            page += "<td align=\"right\" width=\"20%\">";
             page += "<form method=\"post\">\n";
             page += "<input type=\"hidden\" name=\"websocket\" value=\"" + "1" + "\">\n";
             if (remote_configured)
-                page += "<input style=\"width:250px\" type=\"submit\" value=\" Start WebSocket Client \">";
+                page += "<input type=\"submit\" value=\" Start WebSocket Client \">";
             page += "</form>\n";
             page += "</td>\n";
             page += "</tr>\n";
@@ -460,7 +506,8 @@ namespace WFNodeServer {
             page += "<div style=\"border: 1px solid; background-color: #D8D8D8; padding: 2px 2px 2px 2px\">";
             page += "Status: " + cfg_file_status;
             page += "</div>";
-            page += "</div>\n";
+            page += "</div>";
+
 
             // Display a table of nodes that were found on the ISY
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
