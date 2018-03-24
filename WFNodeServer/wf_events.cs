@@ -265,7 +265,7 @@ namespace WFNodeServer {
         internal string Pressure {
             get {
                 double inhg = data.obs[0][1].GetValueOrDefault() * 0.02952998751;
-                return inhg.ToString("0.##");
+                return inhg.ToString("0.###");
             }
         }
         internal double SetSeaLevel {
@@ -274,7 +274,7 @@ namespace WFNodeServer {
         internal string SeaLevel {
             get {
                 double inhg = sealevel * 0.02952998751;
-                return inhg.ToString("0.##");
+                return inhg.ToString("0.###");
             }
         }
 
@@ -385,7 +385,7 @@ namespace WFNodeServer {
         internal string Rain {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3].GetValueOrDefault()).ToString("0.##");
+                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3].GetValueOrDefault()).ToString("0.###");
                 else
                     return data.obs[0][3].GetValueOrDefault().ToString("0.#");
             }
@@ -399,7 +399,7 @@ namespace WFNodeServer {
                     rate = rate / interval;
 
                 if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(rate).ToString("0.##");
+                    return WeatherFlow_UDP.MM2Inch(rate).ToString("0.###");
                 else
                     return rate.ToString("0.#");
             }
@@ -450,7 +450,7 @@ namespace WFNodeServer {
         internal string Daily {
             get {
                 if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(daily).ToString("0.##");
+                    return WeatherFlow_UDP.MM2Inch(daily).ToString("0.###");
                 else
                     return daily.ToString("0.#");
             }

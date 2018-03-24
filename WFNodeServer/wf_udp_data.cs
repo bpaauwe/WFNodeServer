@@ -524,7 +524,7 @@ namespace WFNodeServer {
         }
 
         internal static double MM2Inch(double mm) {
-            return Math.Round(mm * 0.03937, 1);
+            return Math.Round(mm * 0.03937, 3);
         }
 
         internal static double Inch2MM(double inch) {
