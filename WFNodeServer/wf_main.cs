@@ -744,10 +744,29 @@ namespace WFNodeServer {
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/25";
                 Rest.REST(report);
+                report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x001) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV4/" + device.SensorStatus(0x002) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV5/" + device.SensorStatus(0x004) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV6/" + device.SensorStatus(0x008) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV7/" + device.SensorStatus(0x010) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25";
+                Rest.REST(report);
+
             } else if (NodeList[address].Contains("Sky")) {
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.#") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x040) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25";
                 Rest.REST(report);
             }
         }

@@ -12,6 +12,18 @@ ST-139A-GV6-NAME = DewPoint
 ST-139A-GV7-NAME = Apparent Temperature
 ST-139A-GV8-NAME = Pressure Trend
 
+ND-WF_AirD-NAME = Weather Flow Smart Weather Station Air (diagnostic)
+ND-WF_AirD-ICON = Input
+ST-139AD-GV0-NAME = Battery
+ST-139AD-GV1-NAME = Uptime
+ST-139AD-GV2-NAME = Signal Strength
+ST-139AD-GV3-NAME = Lightning Sensor
+ST-139AD-GV4-NAME = Lightning Noise
+ST-139AD-GV5-NAME = Lightning Disturber
+ST-139AD-GV6-NAME = Pressure Sensor
+ST-139AD-GV7-NAME = Temperature Sensor
+ST-139AD-GV8-NAME = Humidity Sensor
+
 ND-WF_Sky-NAME = Weather Flow Smart Weather Station Sky (metric)
 ND-WF_Sky-ICON = Input
 ND-WF_SkySI-NAME = Weather Flow Smart Weather Station Sky (SI)
@@ -29,11 +41,12 @@ ST-139S-GV9-NAME = Daily Rainfall
 
 ND-WF_SkyD-NAME = Weather Flow Smart Weather Station Sky (diagnostic)
 ND-WF_SkyD-ICON = Input
-ND-WF_AirD-NAME = Weather Flow Smart Weather Station Air (diagnostic)
-ND-WF_AirD-ICON = Input
-ST-139D-GV0-NAME = Battery
-ST-139D-GV1-NAME = Uptime
-ST-139D-GV2-NAME = Signal Strength
+ST-139SD-GV0-NAME = Battery
+ST-139SD-GV1-NAME = Uptime
+ST-139SD-GV2-NAME = Signal Strength
+ST-139SD-GV3-NAME = Wind Sensor
+ST-139SD-GV4-NAME = Precipitation Sensor
+ST-139SD-GV5-NAME = Light/UV Sensor
 
 ND-WF_Hub-NAME = Weather Flow Smart Weather Station Hub
 ND-WF_Hub-ICON = Input
@@ -55,6 +68,9 @@ ST-139R-GV0-NAME = Rapid Wind Direction
 ST-139R-GV1-NAME = Rapid Wind Speed
 
 CMD-ST-NAME = Query
+
+EN_SENSOR_STATUS-0 = OK
+EN_SENSOR_STATUS-1 = Failed
 
 EN_TREND-0 = Falling
 EN_TREND-1 = Steady

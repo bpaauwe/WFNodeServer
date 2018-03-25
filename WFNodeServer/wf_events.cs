@@ -222,6 +222,13 @@ namespace WFNodeServer {
         internal string RSSI {
             get { return data.rssi.ToString("0.##"); }
         }
+
+        internal string SensorStatus(int sensor) {
+            if ((data.sensor_status & sensor) > 0)
+                return "1";
+            else
+                return "0";
+        }
     }
 
     internal class AirEventArgs : System.EventArgs {

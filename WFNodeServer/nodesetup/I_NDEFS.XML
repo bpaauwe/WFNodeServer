@@ -38,11 +38,17 @@
 		</cmds>
 	</nodeDef>
 
-	<nodeDef id="WF_AirD" nodeType="139" nls="139D" >
+	<nodeDef id="WF_AirD" nodeType="139" nls="139AD" >
 		<sts>
 			<st id="GV0" editor="I_FLOAT1" />
 			<st id="GV1" editor="I_INTEGER" />
 			<st id="GV2" editor="I_FLOAT1" />
+			<st id="GV3" editor="I_SENSOR_STATUS" />
+			<st id="GV4" editor="I_SENSOR_STATUS" />
+			<st id="GV5" editor="I_SENSOR_STATUS" />
+			<st id="GV6" editor="I_SENSOR_STATUS" />
+			<st id="GV7" editor="I_SENSOR_STATUS" />
+			<st id="GV8" editor="I_SENSOR_STATUS" />
 		</sts>
 	</nodeDef>
 
@@ -86,11 +92,14 @@
 		</cmds>
 	</nodeDef>
 
-	<nodeDef id="WF_SkyD" nodeType="139" nls="139D" >
+	<nodeDef id="WF_SkyD" nodeType="139" nls="139SD" >
 		<sts>
 			<st id="GV0" editor="I_FLOAT1" />
 			<st id="GV1" editor="I_INTEGER" />
 			<st id="GV2" editor="I_FLOAT1" />
+			<st id="GV3" editor="I_SENSOR_STATUS" />
+			<st id="GV4" editor="I_SENSOR_STATUS" />
+			<st id="GV5" editor="I_SENSOR_STATUS" />
 		</sts>
 	</nodeDef>
 

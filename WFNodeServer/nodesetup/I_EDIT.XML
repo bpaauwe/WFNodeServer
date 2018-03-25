@@ -38,6 +38,9 @@
    <editor id="I_WIND_DIRECTION">
       <range uom="25" subset="0-8" nls="EN_WIND_DIRECTION" />
    </editor>
+   <editor id="I_SENSOR_STATUS">
+      <range uom="25" subset="0,1" nls="EN_SENSOR_STATUS" />
+   </editor>
    <editor id="I_10DAYS">
       <range uom="25" min="0" max="10" prec="0" />
    </editor>
