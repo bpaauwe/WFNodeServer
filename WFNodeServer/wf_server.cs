@@ -201,6 +201,8 @@ namespace WFNodeServer {
                 string resp = Encoding.Default.GetString(post);
                 resp = resp.Substring(0, len);
 
+                //Console.WriteLine("Response = " + resp);
+
                 cfg_file_status = "";
 
                 if (resp.Contains("AddStation")) {
@@ -318,7 +320,19 @@ namespace WFNodeServer {
                                 }
                                 break;
                             case "websocket":
-                                WeatherFlowNS.NS.StartWebSocket();
+                                if (pair[1].Contains("Start")) {
+                                    try {
+                                        WeatherFlowNS.NS.StartWebSocket();
+                                    } catch (Exception ex) {
+                                        Console.WriteLine("Starting websocket client failed: " + ex.Message);
+                                    }
+                                    cfg_file_status = "Websocket Client Started";
+                                    Thread.Sleep(400);
+                                } else if (pair[1].Contains("Stop")) {
+                                    WeatherFlowNS.NS.wsi.Stop();
+                                    cfg_file_status = "Websocket Client Stopped";
+                                    Thread.Sleep(800);
+                                }
                                 break;
                             default:
                                 break;
@@ -435,6 +449,22 @@ namespace WFNodeServer {
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
 
+            page += "<tr>\n";
+            page += "<td colspan=\"3\">";
+            if (nodeserver_configured) {
+                page += "<form method=\"post\">";
+                page += "<input type=\"submit\" name=\"serverctl\" value=\" Restart Node Server \">";
+                page += "&nbsp;";
+                page += "<input type=\"submit\" name=\"serverctl\" value=\" Pause Node Server \">";
+                page += "&nbsp;";
+                page += "<input style=\"width: 120px; text-align: center; background-color: #e8e8e8;\" type=\"text\" name=\"status\" value=\"";
+                page += (WeatherFlowNS.NS.udp_client.Active) ? "Running" : "Paused";
+                page += "\" readonly>";
+                page += "</form>";
+            }
+            page += "</td>\n";
+            page += "</tr>\n";
+
             page += "<tr><th colspan=\"3\">&nbsp;</th></tr>\n";
             page += "</table> </div> </table> </form>\n";
 
@@ -470,39 +500,28 @@ namespace WFNodeServer {
             page += "<td><input type=\"submit\" value=\"  Add  \"></td>\n";
             page += "</tr>";
             page += "</form>\n";
-            page += "</table>\n";
-            page += "</div>\n";
 
-            // Make the start buttons in a separate table and only enable them when there's valid configuration
-            page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
-            page += "<table border=\"0\">\n";
             page += "<tr>\n";
-            page += "<td width=\"65%\">";
-            if (nodeserver_configured) {
-                page += "<form method=\"post\">";
-                page += "<input type=\"submit\" name=\"serverctl\" value=\" Restart Node Server \">";
+            page += "<td colspan=\"7\">";
+            if (remote_configured) {
+                page += "<form method=\"post\">\n";
+                page += "<input type=\"submit\" name=\"websocket\" value=\" Start WebSocket Client \">";
                 page += "&nbsp;";
-                page += "<input type=\"submit\" name=\"serverctl\" value=\" Pause Node Server \">";
+                page += "<input type=\"submit\" name=\"websocket\" value=\" Stop WebSocket Client \">";
                 page += "&nbsp;";
-                page += "<input style=\"width: 120px; text-align: center; background-color: #e8e8e8;\" type=\"text\" name=\"status\" value=\"";
-                page += (WeatherFlowNS.NS.udp_client.Active) ? "Running" : "Paused";
+                page += "<input style=\"width: 120px; text-align: center; background-color: #e8e8e8;\" type=\"text\" name=\"wsstatus\" value=\"";
+                page += (WeatherFlowNS.NS.wsi.Started) ? "Running" : "Stopped";
                 page += "\" readonly>";
                 page += "</form>";
             }
             page += "</td>\n";
-            page += "<td width=\"15%\">&nbsp;</td>\n";
-            page += "<td align=\"right\" width=\"20%\">";
-            page += "<form method=\"post\">\n";
-            page += "<input type=\"hidden\" name=\"websocket\" value=\"" + "1" + "\">\n";
-            if (remote_configured)
-                page += "<input type=\"submit\" value=\" Start WebSocket Client \">";
-            page += "</form>\n";
-            page += "</td>\n";
             page += "</tr>\n";
+
             page += "</table>\n";
             page += "</div>\n";
 
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
+            page += "<hr>\n";
             page += "<div style=\"border: 1px solid; background-color: #D8D8D8; padding: 2px 2px 2px 2px\">";
             page += "Status: " + cfg_file_status;
             page += "</div>";

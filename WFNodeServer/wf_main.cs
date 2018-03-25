@@ -270,7 +270,7 @@ namespace WFNodeServer {
         internal event RainEvent WFRainSubscribers = null;
         internal bool active = false;
         internal Dictionary<string, string> NodeList = new Dictionary<string, string>();
-        private wf_websocket wsi = new wf_websocket();
+        internal wf_websocket wsi = new wf_websocket("ws.weatherflow.com", 80, "/swd/data?api_key=" + api_key);
         private System.Timers.Timer UpdateTimer = new System.Timers.Timer();
         private bool ProfileDetected = false;
         internal Heartbeat heartbeat = new Heartbeat();
@@ -436,12 +436,15 @@ namespace WFNodeServer {
         }
 
         internal void StartWebSocket() {
-            if (wsi.Started)
-                wsi.Shutdown();
+            if (wsi.Started) {
+                Console.WriteLine("Shutting down web socket connection.");
+                wsi.Stop();
+            }
 
-            wsi = new wf_websocket("ws.weatherflow.com", 80, "/swd/data?api_key=" + api_key);
+            wsi.Start();
             foreach (StationInfo s in WF_Config.WFStationInfo) {
                 if (s.remote) {
+                    Console.WriteLine("    Start listening for packets from station " + s.station_id.ToString());
                     if (s.air_id > 0)
                         wsi.StartListen(s.air_id.ToString());
                     if (s.sky_id > 0) {

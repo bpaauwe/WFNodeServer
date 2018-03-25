@@ -38,43 +38,67 @@ namespace WFNodeServer {
     class wf_websocket {
         TcpClient client;
         private static ManualResetEvent receiveDone = new ManualResetEvent(false);
+        private static ManualResetEvent CloseDone = new ManualResetEvent(false);
         private static bool finished = false;
         private static Thread receive_thread;
         private Dictionary<string, bool> started = new Dictionary<string, bool>();
         private Dictionary<string, bool> started_rapid = new Dictionary<string, bool>();
         internal bool Started = false;
+        private string Host;
+        private int Port;
+        private string Path;
+        private string seckey = "di5kdaiynKWkf8cH";
 
         internal wf_websocket() {
         }
 
         internal wf_websocket(string host, int port, string path) {
+            Host = host;
+            Port = port;
+            Path = path;
+        }
+
+        internal void Start() {
             byte[] buf = new byte[512];
             int len;
-            string seckey = "di5kdaiynKWkf8cH";
             bool header = false;
 
-            client = new TcpClient(host, port);
-            if (!client.Connected) {
-                Console.WriteLine("Client not connected to " + host);
+            while (Started) {
+                int retries = 0;
+
+                Console.WriteLine("Attempt to start already active WebSocket connection " + retries.ToString());
+                Thread.Sleep(1000);
+
+                if (retries++ > 10) {
+                    Console.WriteLine("Giving up after 10 attempts.");
+                    return;
+                }
             }
 
+            client = new TcpClient(Host, Port);
+            if (!client.Connected) {
+                Console.WriteLine("Client not connected to " + Port);
+            }
+
+            Console.WriteLine("Starting communication with websocket server.");
+            finished = false;
             Started = true;
 
             // Send header
             var seckeybytes = Encoding.UTF8.GetBytes(seckey);
 
-            client.Client.Send(Encoding.ASCII.GetBytes("GET " + path + " HTTP/1.1\r\n"));
-            client.Client.Send(Encoding.ASCII.GetBytes("Host: " + host + ":" + port.ToString() + "\r\n"));
+            client.Client.Send(Encoding.ASCII.GetBytes("GET " + Path + " HTTP/1.1\r\n"));
+            client.Client.Send(Encoding.ASCII.GetBytes("Host: " + Host + ":" + Port.ToString() + "\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Upgrade: websocket\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Connection: Upgrade\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Pragma: no-cache\r\n"));
-            client.Client.Send(Encoding.ASCII.GetBytes("Origin: http://" + host + "\r\n"));
+            client.Client.Send(Encoding.ASCII.GetBytes("Origin: http://" + Host + "\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Cache-Control: no-cache\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Sec-WebSocket-Key: " + System.Convert.ToBase64String(seckeybytes) + "\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("Sec-WebSocket-Version: 13\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("\r\n"));
 
-            Console.WriteLine("Waiting for handshake");
+            Console.WriteLine("    Waiting for handshake");
             Thread.Sleep(100);
             // Receive handshake
             while (!header) {
@@ -105,6 +129,7 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
+            Console.WriteLine("    Starting listen for device " + device_id);
             SendMessage(client, message, 0x01);
             started.Add(device_id, true);
         }
@@ -114,8 +139,8 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
+            Console.WriteLine("    Stopping listen for device " + device_id);
             SendMessage(client, message, 0x01);
-            started.Remove(device_id);
         }
 
         internal void StartListenRapid(string device_id) {
@@ -123,6 +148,7 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
+            Console.WriteLine("    Starting listen for device " + device_id);
             SendMessage(client, message, 0x01);
             started_rapid.Add(device_id, true);
         }
@@ -132,16 +158,23 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
+            Console.WriteLine("    Stopping listen for device " + device_id);
             SendMessage(client, message, 0x01);
-            started_rapid.Remove(device_id);
         }
 
-        internal void Shutdown() {
+        internal void Stop() {
             string message = "close";
-            foreach (string key in started.Keys)
+
+            Console.WriteLine("    Stop all listening.");
+            foreach (string key in started.Keys) {
                 StopListen(key);
-            foreach (string key in started_rapid.Keys)
+            }
+            started.Clear();
+
+            foreach (string key in started_rapid.Keys) {
                 StopListenRapid(key);
+            }
+            started_rapid.Clear();
 
             SendMessage(client, message, 0x08);
             finished = true;
@@ -157,6 +190,7 @@ namespace WFNodeServer {
             } else if (json.Contains("evt_strike")) {
                 WeatherFlowNS.NS.udp_client.LigtningStrikeEvt(json);
             } else if (json.Contains("evt_precip")) {
+            } else if (json.Contains("ack")) {
             } else {
                 Console.WriteLine("Unknown type of WebSocket packet");
                 Console.WriteLine(json);
@@ -166,7 +200,7 @@ namespace WFNodeServer {
         private void ReceiveLoop() {
             StateObject state = new StateObject();
 
-            Console.WriteLine("Starting receive loop");
+            Console.WriteLine("    Starting receive loop");
             state.workSocket = client;
             while (!finished) {
                 // Start receive data from server
@@ -179,8 +213,11 @@ namespace WFNodeServer {
             }
 
             // Wait for server to close connection
-            Console.WriteLine("Waiting for server close.");
+            Console.WriteLine("   Waiting for server close.");
+            CloseDone.WaitOne();
             client.Close();
+            Thread.Sleep(500);
+            Started = false;
         }
 
         private static void ReceiveCallback(IAsyncResult ar) {
@@ -276,6 +313,9 @@ namespace WFNodeServer {
 
             // Send the frame
             client.Client.Send(frame, 0, message.Length + framelen, SocketFlags.None);
+
+            if (type == 0x08) // Close connection message was sent
+                CloseDone.Set();
         }
     }
 }
