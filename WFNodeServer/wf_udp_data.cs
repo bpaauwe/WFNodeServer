@@ -438,6 +438,7 @@ namespace WFNodeServer {
                     }
 
                     WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
+                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
                 }
 
             } catch (Exception ex) {
