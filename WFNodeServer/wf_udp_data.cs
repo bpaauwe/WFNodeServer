@@ -133,7 +133,9 @@ namespace WFNodeServer {
             public double voltage { get; set; }
             public int firmware_revision { get; set; }
             public int rssi { get; set; }
+            public int hub_rssi { get; set; }  // Added in firmware 35
             public int sensor_status { get; set; }
+            public int debug { get; set; }  // Added in firmware 35
         }
 
         public class HubData {
