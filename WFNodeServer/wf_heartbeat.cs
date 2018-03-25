@@ -30,6 +30,7 @@ namespace WFNodeServer {
         private ElapsedEventHandler handler;
         private Dictionary<string, bool> HeartBeat = new Dictionary<string, bool>();
         private Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
+        private object _locker = new object();
 
         internal void Start() {
             // Start a timer to track time since Last Update 
@@ -56,10 +57,12 @@ namespace WFNodeServer {
         }
 
         internal void Updated(string address) {
-            if (!SecondsSinceUpdate.ContainsKey(address))
-                SecondsSinceUpdate.Add(address, 0);
+            lock (_locker) {
+                if (!SecondsSinceUpdate.ContainsKey(address))
+                    SecondsSinceUpdate.Add(address, 0);
 
-            SecondsSinceUpdate[address] = 0;
+                SecondsSinceUpdate[address] = 0;
+            }
         }
 
         private void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
@@ -86,12 +89,14 @@ namespace WFNodeServer {
                 } else if (WeatherFlowNS.NS.NodeList[address] == "WF_RapidWind") {
                 } else {
                     // this should only sky & air nodes
-                    if (!SecondsSinceUpdate.ContainsKey(address))
-                        SecondsSinceUpdate.Add(address, 0);
+                    lock (_locker) {
+                        if (!SecondsSinceUpdate.ContainsKey(address))
+                            SecondsSinceUpdate.Add(address, 0);
 
-                    report = prefix + address + "/report/status/GV0/" + SecondsSinceUpdate[address].ToString() + "/58";
-                    WeatherFlowNS.NS.Rest.REST(report);
-                    SecondsSinceUpdate[address] += 30;
+                        report = prefix + address + "/report/status/GV0/" + SecondsSinceUpdate[address].ToString() + "/58";
+                        WeatherFlowNS.NS.Rest.REST(report);
+                        SecondsSinceUpdate[address] += 30;
+                    }
                 }
             }
         }
