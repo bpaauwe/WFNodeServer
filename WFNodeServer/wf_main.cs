@@ -613,7 +613,7 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV3/" + air.SeaLevel + "/23";
             Rest.REST(report);
 
-            report = prefix + address + "/report/status/GV4/" + air.Strikes + "/0";
+            report = prefix + address + "/report/status/GV4/" + air.Strikes + "/25";
             Rest.REST(report);
 
             unit = (WF_Config.SI) ? "/0" : "/KM";
@@ -684,7 +684,7 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV6/" + sky.WindLull + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/25";
+            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/76";
             Rest.REST(report);
 
             // Currently we just report the rain over 1 minute. If we want the rate
@@ -742,7 +742,7 @@ namespace WFNodeServer {
             if (NodeList[address].Contains("Air")) {
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.#") + units;
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/25";
+                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x001) + "/25";
                 Rest.REST(report);
@@ -760,7 +760,7 @@ namespace WFNodeServer {
             } else if (NodeList[address].Contains("Sky")) {
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.#") + units;
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/25";
+                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x040) + "/25";
                 Rest.REST(report);
@@ -819,11 +819,11 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
             Rest.REST(report);
 
-            string unit = (WF_Config.SI) ? "/0" : "/KM";
+            string unit = (WF_Config.SI) ? "/56" : "/KM";
             report = prefix + address + "/report/status/GV1/" + strike.Distance + unit;
             Rest.REST(report);
 
-            report = prefix + address + "/report/status/GV2/" + strike.Energy + "/0";
+            report = prefix + address + "/report/status/GV2/" + strike.Energy + "/56";
             Rest.REST(report);
 
         }
@@ -853,13 +853,13 @@ namespace WFNodeServer {
             }
 
             if (WF_Config.Hub) {
-                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/0";
+                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/25";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + hub.Uptime + "/58";
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/0";
+                report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/56";
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + hub.Sequence + "/0";
+                report = prefix + address + "/report/status/GV4/" + hub.Sequence + "/25";
                 Rest.REST(report);
             }
 

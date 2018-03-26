@@ -5,9 +5,9 @@
 			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV1" editor="I_TEMP_C" />
 			<st id="GV2" editor="I_HUMIDITY" />
-			<st id="GV3" editor="I_FLOAT3" />
+			<st id="GV3" editor="I_INHG" />
 			<st id="GV4" editor="I_INTEGER" />
-			<st id="GV5" editor="I_FLOAT1" />
+			<st id="GV5" editor="I_KM" />
 			<st id="GV6" editor="I_TEMP_C" />
 			<st id="GV7" editor="I_TEMP_C" />
 			<st id="GV8" editor="I_TREND" />
@@ -24,9 +24,9 @@
 			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV1" editor="I_TEMP_F" />
 			<st id="GV2" editor="I_HUMIDITY" />
-			<st id="GV3" editor="I_FLOAT3" />
+			<st id="GV3" editor="I_INHG" />
 			<st id="GV4" editor="I_INTEGER" />
-			<st id="GV5" editor="I_FLOAT1" />
+			<st id="GV5" editor="I_MILES" />
 			<st id="GV6" editor="I_TEMP_F" />
 			<st id="GV7" editor="I_TEMP_F" />
 			<st id="GV8" editor="I_TREND" />
@@ -40,9 +40,9 @@
 
 	<nodeDef id="WF_AirD" nodeType="139" nls="139AD" >
 		<sts>
-			<st id="GV0" editor="I_FLOAT1" />
-			<st id="GV1" editor="I_INTEGER" />
-			<st id="GV2" editor="I_FLOAT1" />
+			<st id="GV0" editor="I_VOLTS" />
+			<st id="GV1" editor="I_HOURS" />
+			<st id="GV2" editor="I_SIGNAL" />
 			<st id="GV3" editor="I_SENSOR_STATUS" />
 			<st id="GV4" editor="I_SENSOR_STATUS" />
 			<st id="GV5" editor="I_SENSOR_STATUS" />
@@ -55,15 +55,15 @@
     <nodeDef id="WF_Sky" nodeType="139" nls="139S" >
 		<sts>
 			<st id="GV0" editor="I_LAST_UPDATE" />
-			<st id="GV8" editor="I_FLOAT2" />
-			<st id="GV9" editor="I_FLOAT2" />
-			<st id="GV1" editor="I_FLOAT1" />
-			<st id="GV2" editor="I_INTEGER" />
-			<st id="GV3" editor="I_FLOAT1" />
-			<st id="GV4" editor="I_FLOAT1" />
-			<st id="GV5" editor="I_FLOAT1" />
-			<st id="GV6" editor="I_FLOAT1" />
-			<st id="GV7" editor="I_DEGREE" />
+			<st id="GV8" editor="I_MMHR" />
+			<st id="GV9" editor="I_MM" />
+			<st id="GV1" editor="I_LUX" />
+			<st id="GV2" editor="I_UV" />
+			<st id="GV3" editor="I_RADIATION" />
+			<st id="GV4" editor="I_MPS" />
+			<st id="GV5" editor="I_MPS" />
+			<st id="GV6" editor="I_MPS" />
+			<st id="GV7" editor="I_WIND_DIR_DEGREES" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -75,15 +75,15 @@
     <nodeDef id="WF_SkySI" nodeType="139" nls="139S" >
 		<sts>
 			<st id="GV0" editor="I_LAST_UPDATE" />
-			<st id="GV8" editor="I_FLOAT3" />
-			<st id="GV9" editor="I_FLOAT3" />
-			<st id="GV1" editor="I_FLOAT1" />
-			<st id="GV2" editor="I_INTEGER" />
-			<st id="GV3" editor="I_FLOAT1" />
-			<st id="GV4" editor="I_FLOAT1" />
-			<st id="GV5" editor="I_FLOAT1" />
-			<st id="GV6" editor="I_FLOAT1" />
-			<st id="GV7" editor="I_DEGREE" />
+			<st id="GV8" editor="I_INHR" />
+			<st id="GV9" editor="I_INCHES" />
+			<st id="GV1" editor="I_LUX" />
+			<st id="GV2" editor="I_UV" />
+			<st id="GV3" editor="I_RADIATION" />
+			<st id="GV4" editor="I_MPH" />
+			<st id="GV5" editor="I_MPH" />
+			<st id="GV6" editor="I_MPH" />
+			<st id="GV7" editor="I_WIND_DIR_DEGREES" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -94,9 +94,9 @@
 
 	<nodeDef id="WF_SkyD" nodeType="139" nls="139SD" >
 		<sts>
-			<st id="GV0" editor="I_FLOAT1" />
-			<st id="GV1" editor="I_INTEGER" />
-			<st id="GV2" editor="I_FLOAT1" />
+			<st id="GV0" editor="I_VOLTS" />
+			<st id="GV1" editor="I_HOURS" />
+			<st id="GV2" editor="I_SIGNAL" />
 			<st id="GV3" editor="I_SENSOR_STATUS" />
 			<st id="GV4" editor="I_SENSOR_STATUS" />
 			<st id="GV5" editor="I_SENSOR_STATUS" />
@@ -107,8 +107,8 @@
 		<sts>
 			<st id="GV0" editor="I_INTEGER" />
 			<st id="GV1" editor="I_LAST_UPDATE" />
-			<st id="GV2" editor="I_INTEGER" />
-			<st id="GV3" editor="I_INTEGER" />
+			<st id="GV2" editor="I_HOURS" />
+			<st id="GV3" editor="I_SIGNAL" />
 			<st id="GV4" editor="I_INTEGER" />
 		</sts>
 	</nodeDef>
@@ -116,15 +116,30 @@
 	<nodeDef id="WF_Lightning" nodeType="139" nls="139L" >
 		<sts>
 			<st id="GV0" editor="I_LAST_UPDATE" />
-			<st id="GV1" editor="I_FLOAT1" />
-			<st id="GV2" editor="I_FLOAT2" />
+			<st id="GV1" editor="I_KM" />
+			<st id="GV2" editor="I_ENERGY" />
 		</sts>
 	</nodeDef>
 
+	<nodeDef id="WF_LightningSI" nodeType="139" nls="139L" >
+		<sts>
+			<st id="GV0" editor="I_LAST_UPDATE" />
+			<st id="GV1" editor="I_MILES" />
+			<st id="GV2" editor="I_ENERGY" />
+		</sts>
+	</nodeDef>
+  
 	<nodeDef id="WF_RapidWind" nodeType="139" nls="139R" >
 		<sts>
 			<st id="GV0" editor="I_WIND_DIRECTION" />
-			<st id="GV1" editor="I_FLOAT1" />
+			<st id="GV1" editor="I_MPS" />
+		</sts>
+	</nodeDef>
+
+	<nodeDef id="WF_RapidWindSI" nodeType="139" nls="139R" >
+		<sts>
+			<st id="GV0" editor="I_WIND_DIRECTION" />
+			<st id="GV1" editor="I_MPH" />
 		</sts>
 	</nodeDef>
 
