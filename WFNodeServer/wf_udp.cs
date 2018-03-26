@@ -1,6 +1,6 @@
 ﻿
 //
-// WFNodeServer - ISY Node Server for Weather Flow weather station data
+// WFNodeServer - ISY Node Server for WeatherFlow weather station data
 //
 // Copyright (C) 2018 Robert Paauwe
 //

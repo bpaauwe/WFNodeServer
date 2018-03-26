@@ -1,6 +1,6 @@
 ﻿
 //
-// WFNodeServer - ISY Node Server for Weather Flow weather station data
+// WFNodeServer - ISY Node Server for WeatherFlow weather station data
 //
 // Copyright (C) 2018 Robert Paauwe
 //
@@ -547,8 +547,6 @@ namespace WFNodeServer {
             Console.WriteLine("AddStationSky: Adding station " + id.ToString());
             WF_Config.WFStationInfo.Add(si);
         }
-
-
 
         internal void RaiseAirEvent(Object sender, WFNodeServer.AirEventArgs e) {
             if (WFAirSubscribers != null)

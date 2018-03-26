@@ -1,6 +1,6 @@
 ﻿
 //
-// WFNodeServer - ISY Node Server for Weather Flow weather station data
+// WFNodeServer - ISY Node Server for WeatherFlow weather station data
 //
 // Copyright (C) 2018 Robert Paauwe
 //
@@ -28,7 +28,7 @@ using System.Web.Script.Serialization;
 
 namespace WFNodeServer {
     partial class WeatherFlow_UDP {
-                internal PreciptData PreciptObj = new PreciptData();
+		internal PreciptData PreciptObj = new PreciptData();
         internal StrikeData StrikeObj = new StrikeData();
         internal WindData WindObj = new WindData();
         internal AirData AirObj = new AirData();
@@ -61,7 +61,6 @@ namespace WFNodeServer {
             WINDCHILL,
             PRESSURE_TREND,
         }
-
 
         public class PreciptData {
             public string serial_number { get; set; }
@@ -157,7 +156,8 @@ namespace WFNodeServer {
             public double precip_high_24h { get; set; }
             public int precip_high_epoch_24h { get; set; }
         }
-        public class ObsData {
+
+		public class ObsData {
             public Summary summary { get; set; }
             public string serial_number { get; set; }
             public string hub_sn { get; set; }
@@ -168,8 +168,7 @@ namespace WFNodeServer {
             public int firmware_revision { get; set; }
         }
 
-
-        private enum AirIndex {
+		private enum AirIndex {
             TS = 0,
             PRESSURE,
             TEMPURATURE,
@@ -240,17 +239,18 @@ namespace WFNodeServer {
                 HubObj = serializer.Deserialize<HubData>(json);
                 WeatherFlowNS.NS.RaiseHubEvent(this, new WFNodeServer.HubEventArgs(HubObj));
 
-                //Console.WriteLine("Serial Number:     " + HubObj.serial_number);
-                //Console.WriteLine("Device Type:       " + HubObj.type);
-                //Console.WriteLine("Firmware:          " + HubObj.firmware_revision.ToString());
-                //Console.WriteLine("uptime:            " + HubObj.uptime.ToString());
-                //Console.WriteLine("RSSI:              " + HubObj.rssi.ToString());
-                //Console.WriteLine("timestamp:         " + HubObj.timestamp.ToString());
-                //Console.WriteLine("Reset Flags:       " + HubObj.reset_flags);
-                //Console.WriteLine("Stack:             " + HubObj.stack);
-                //Console.WriteLine("Sequence:          " + HubObj.seq.ToString());
-                //Console.WriteLine("External File:     " + HubObj.fs.ToString());
-                ValidHub = true;
+				//Console.WriteLine("Serial Number:     " + HubObj.serial_number);
+				//Console.WriteLine("Device Type:       " + HubObj.type);
+				//Console.WriteLine("Firmware:          " + HubObj.firmware_revision.ToString());
+				//Console.WriteLine("uptime:            " + HubObj.uptime.ToString());
+				//Console.WriteLine("RSSI:              " + HubObj.rssi.ToString());
+				//Console.WriteLine("timestamp:         " + HubObj.timestamp.ToString());
+				//Console.WriteLine("Reset Flags:       " + HubObj.reset_flags);
+				//Console.WriteLine("Stack:             " + HubObj.stack);
+				//Console.WriteLine("Sequence:          " + HubObj.seq.ToString());
+				//Console.WriteLine("External Flash:    " + HubObj.fs.ToString());
+
+				ValidHub = true;
             } catch (Exception ex) {
                 Console.WriteLine("Deserialization of device status failed: " + ex.Message);
             }
@@ -263,7 +263,6 @@ namespace WFNodeServer {
 			// obs[0][1] = station pressure (MB)
 			// obs[0][2] = air temp (c)
 			// obs[0][3] = humidity (%)
-
 			// obs[0][4] = lightning count
 			// obs[0][5] = avg lightning dist (km)
 			// obs[0][6] = battery
@@ -429,8 +428,8 @@ namespace WFNodeServer {
                         try {
                             evnt.SetDewpoint = CalcDewPoint();
                             evnt.SetApparentTemp = FeelsLike(AirObj.obs[0][(int)AirIndex.TEMPURATURE].GetValueOrDefault(),
-                                                         AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault(),
-                                                         SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
+															 AirObj.obs[0][(int)AirIndex.HUMIDITY].GetValueOrDefault(),
+                                                             SkyObj.obs[0][(int)SkyIndex.WIND_SPEED].GetValueOrDefault());
                             // Trend is -1, 0, 1 while event wants 0, 1, 2
                             evnt.SetTrend = PressureTrend() + 1;
                             // Heat index & Windchill ??
@@ -449,8 +448,7 @@ namespace WFNodeServer {
             }
 
 		}
-
-
+		
         // t is temperature C
         // w is wind speed in m/s
         // h is humidity
@@ -541,6 +539,7 @@ namespace WFNodeServer {
         internal double SeaLevelPressureApprox(double p, double h) {
             return p + h / 8.3;
         }
+
         internal double SeaLevelPressure(double Ps, double Alt) {
             double i = 287.05;
             double a = 9.80665;

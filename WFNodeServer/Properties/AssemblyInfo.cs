@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("WFNodeServer")]
 [assembly: AssemblyDescription("ISY Nodeserver for WeatherFlow weather data")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Bobs Place media Engineering")]
+[assembly: AssemblyCompany("Bobs Place Media Engineering")]
 [assembly: AssemblyProduct("WFNodeServer")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
