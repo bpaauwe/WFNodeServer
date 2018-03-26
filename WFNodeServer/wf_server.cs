@@ -47,7 +47,9 @@ namespace WFNodeServer {
             {"WF_AirD", "Air Sensor - device data"},
             {"WF_Hub", "Hub data / heartbeat"},
             {"WF_Lightning", "Lightning event data"},
+            {"WF_LightningSI", "Lightning event data"},
             {"WF_RapidWind", "Rapid Wind speed/direction data"},
+            {"WF_RapidWindSI", "Rapid Wind speed/direction data"},
         };
 
         internal int Port {
@@ -533,8 +535,12 @@ namespace WFNodeServer {
             page += "<table width=\"400px\" border=\"1\">\n";
             page += "<tr><th>Node Address</th><th>Node Type</th></tr>\n";
             foreach (string n in WeatherFlowNS.NS.NodeList.Keys) {
-                page += "<tr><td style=\"padding: 1px 1px 1px 5px;\">" + n + "</td>";
-                page += "<td style=\"padding: 1px 1px 1px 5px;\">" + NodeDefs[WeatherFlowNS.NS.NodeList[n]] + "</td></tr>\n";
+                try {
+                    page += "<tr><td style=\"padding: 1px 1px 1px 5px;\">" + n + "</td>";
+                    page += "<td style=\"padding: 1px 1px 1px 5px;\">" + NodeDefs[WeatherFlowNS.NS.NodeList[n]] + "</td></tr>\n";
+                } catch {
+                    Console.WriteLine("Missing definition for node type " + WeatherFlowNS.NS.NodeList[n]);
+                }
             }
             page += "</table>\n";
             page += "</div>\n";
