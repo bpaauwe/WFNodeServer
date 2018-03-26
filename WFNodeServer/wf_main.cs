@@ -424,8 +424,18 @@ namespace WFNodeServer {
                 } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
                 } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                } else if (NodeList[address] == "WF_Lightning") {
-                } else if (NodeList[address] == "WF_RapidWind") {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_Lightning")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_LightningSI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_LightningSI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Lightning");
+                } else if (WF_Config.SI && NodeList[address] == "WF_LightningSI") {
+                } else if (!WF_Config.SI && NodeList[address] == "WF_Lightning") {
+                } else if (WF_Config.SI && (NodeList[address] == "WF_RapidWind")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWindSI");
+                } else if (!WF_Config.SI && (NodeList[address] == "WF_RapidWindSI")) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWind");
+                } else if (WF_Config.SI && NodeList[address] == "WF_RapidWindSI") {
+                } else if (!WF_Config.SI && NodeList[address] == "WF_RapidWind") {
                 } else if (NodeList[address] == "WF_SkyD") {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
@@ -936,8 +946,14 @@ namespace WFNodeServer {
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningSI") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningSI");
+                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWind") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWind");
+                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWindSI") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWindSI");
                             Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
