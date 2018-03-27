@@ -309,6 +309,13 @@ namespace WFNodeServer {
                                     saveCfg = true;
                                 }
                                 break;
+                            case "sDevice":
+                                bool device = (pair[1] == "1");
+                                if (device != WF_Config.Device) {
+                                    WF_Config.Device = (pair[1] == "1");
+                                    saveCfg = true;
+                                }
+                                break;
                             case "serverctl":
                                 if (pair[1].Contains("Restart")) {
                                     WeatherFlowNS.NS.udp_client.Start();
@@ -450,6 +457,7 @@ namespace WFNodeServer {
             page += ConfigItem("Profile Number", "sProfile", WF_Config.Profile.ToString(), 0);
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
+            page += ConfigBoolItem("Include Device data", "sDevice", WF_Config.Device);
 
             page += "<tr>\n";
             page += "<td colspan=\"3\">";
