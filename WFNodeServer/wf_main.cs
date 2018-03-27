@@ -120,7 +120,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        internal static int ProfileVersion = 1;
+        internal static int ProfileVersion = 2;
         internal static bool Debug = false;
         internal static string ConfigFile = "wfnodeserver.json";
 

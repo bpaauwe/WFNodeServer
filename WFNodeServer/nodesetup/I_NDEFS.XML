@@ -44,8 +44,8 @@
 			<st id="GV1" editor="I_HOURS" />
 			<st id="GV2" editor="I_SIGNAL" />
 			<st id="GV3" editor="I_SENSOR_STATUS" />
-			<st id="GV4" editor="I_SENSOR_STATUS" />
-			<st id="GV5" editor="I_SENSOR_STATUS" />
+			<st id="GV4" editor="I_SENSOR_TRIGGER" />
+			<st id="GV5" editor="I_SENSOR_TRIGGER" />
 			<st id="GV6" editor="I_SENSOR_STATUS" />
 			<st id="GV7" editor="I_SENSOR_STATUS" />
 			<st id="GV8" editor="I_SENSOR_STATUS" />
