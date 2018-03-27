@@ -206,7 +206,9 @@ namespace WFNodeServer {
                 }
             }
 
-            Console.WriteLine("WeatherFlow Node Server " + VERSION);
+            WFLogging.AddListener(Console.WriteLine);
+
+            WFLogging.Log("WeatherFlow Node Server " + VERSION);
 
             if ((WF_Config.Password != "") && (WF_Config.Username != "") && (WF_Config.Profile != 0))
                 WF_Config.Valid = true;
