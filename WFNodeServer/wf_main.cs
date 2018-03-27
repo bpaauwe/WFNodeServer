@@ -42,6 +42,7 @@ namespace WFNodeServer {
         internal static bool SI { get; set; }
         internal static List<StationInfo> WFStationInfo { get; set; }
         internal static int ProfileVersion { get; set; }
+        internal static bool Device { get; set; }
         internal static bool Valid { get; set; }
     }
 
@@ -56,6 +57,7 @@ namespace WFNodeServer {
         public bool SI { get; set; }
         public List<StationInfo> WFStationInfo { get; set; }
         public int ProfileVersion { get; set; }
+        public bool Device { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
@@ -68,6 +70,7 @@ namespace WFNodeServer {
             SI = WF_Config.SI;
             WFStationInfo = WF_Config.WFStationInfo;
             ProfileVersion = WF_Config.ProfileVersion;
+            Device = WF_Config.Device;
         }
 
         internal void LoadState() {
@@ -81,6 +84,7 @@ namespace WFNodeServer {
             WF_Config.SI = SI;
             WF_Config.WFStationInfo = WFStationInfo;
             WF_Config.ProfileVersion = ProfileVersion;
+            WF_Config.Device = Device;
 
             if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;
@@ -137,6 +141,7 @@ namespace WFNodeServer {
             WF_Config.Password = "";
             WF_Config.Profile = 0;
             WF_Config.Hub = false;
+            WF_Config.Device = false;
             WF_Config.Port = 8288;
             WF_Config.SI = false;
             WF_Config.UDPPort = 50222;
@@ -641,13 +646,15 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV8/" + air.Trend + "/25";
             Rest.REST(report);
 
-            if (!NodeList.Keys.Contains(sec_address)) {
-                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
-                    "/add/WF_AirD/?primary=" + address + "&name=WeatherFlow%20(" + air.SerialNumber + "_d)");
-                NodeList.Add(sec_address, "WF_AirD");
+            if (WF_Config.Device) {
+                if (!NodeList.Keys.Contains(sec_address)) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
+                        "/add/WF_AirD/?primary=" + address + "&name=WeatherFlow%20(" + air.SerialNumber + "_d)");
+                    NodeList.Add(sec_address, "WF_AirD");
+                }
+                report = prefix + sec_address + "/report/status/GV0/" + air.Battery + "/72";
+                Rest.REST(report);
             }
-            report = prefix + sec_address + "/report/status/GV0/" + air.Battery + "/72";
-            Rest.REST(report);
         }
 
         // Handler that is called when re receive Sky data
@@ -711,13 +718,15 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
             Rest.REST(report);
 
-            if (!NodeList.Keys.Contains(sec_address)) {
-                Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
-                    "/add/WF_SkyD/?primary=" + address + "&name=WeatherFlow%20(" + sky.SerialNumber + "_d)");
-                NodeList.Add(sec_address, "WF_SkyD");
+            if (WF_Config.Device) {
+                if (!NodeList.Keys.Contains(sec_address)) {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
+                        "/add/WF_SkyD/?primary=" + address + "&name=WeatherFlow%20(" + sky.SerialNumber + "_d)");
+                    NodeList.Add(sec_address, "WF_SkyD");
+                }
+                report = prefix + sec_address + "/report/status/GV0/" + sky.Battery + "/72";
+                Rest.REST(report);
             }
-            report = prefix + sec_address + "/report/status/GV0/" + sky.Battery + "/72";
-            Rest.REST(report);
         }
 
         internal void HandleDevice(object sender, DeviceEventArgs device) {
@@ -726,6 +735,10 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
             string units;
             int up;
+
+            // Skip if not enabled.
+            if (!WF_Config.Device)
+                return;
 
             // Somehow we need to know what type of device this is?
             if (!NodeList.Keys.Contains(address)) {
