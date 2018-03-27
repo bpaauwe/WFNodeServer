@@ -807,7 +807,7 @@ namespace WFNodeServer {
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_RapidWind/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
+                    "/add/WF_RapidWind" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
                 NodeList.Add(address, "WF_RapidWind");
             }
 
@@ -836,7 +836,7 @@ namespace WFNodeServer {
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Lightning/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
+                    "/add/WF_Lightning" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
                 NodeList.Add(address, "WF_Lightning");
             }
             report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
