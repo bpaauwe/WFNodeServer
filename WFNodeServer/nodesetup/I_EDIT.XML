@@ -89,6 +89,9 @@
    <editor id="I_SIGNAL">
        <range uom="56" min="-500" max="500" prec="1" />
    </editor>
+   <editor id="I_FIRMWARE">
+       <range uom="56" min="0" max="9999" prec="0" />
+   </editor>
    <editor id="I_INTEGER">
        <range uom="25" min="0" max="50000000" prec="0" />
    </editor>

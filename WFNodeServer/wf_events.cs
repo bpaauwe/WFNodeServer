@@ -229,6 +229,14 @@ namespace WFNodeServer {
             else
                 return "0";
         }
+
+        internal string Firmware {
+            get { return data.firmware_revision.ToString(); }
+        }
+
+        internal string Debug {
+            get { return data.debug.ToString(); }
+        }
     }
 
     internal class AirEventArgs : System.EventArgs {

@@ -49,6 +49,7 @@
 			<st id="GV6" editor="I_SENSOR_STATUS" />
 			<st id="GV7" editor="I_SENSOR_STATUS" />
 			<st id="GV8" editor="I_SENSOR_STATUS" />
+			<st id="GV9" editor="I_FIRMWARE" />
 		</sts>
 	</nodeDef>
 
@@ -100,12 +101,13 @@
 			<st id="GV3" editor="I_SENSOR_STATUS" />
 			<st id="GV4" editor="I_SENSOR_STATUS" />
 			<st id="GV5" editor="I_SENSOR_STATUS" />
+			<st id="GV6" editor="I_FIRMWARE" />
 		</sts>
 	</nodeDef>
 
 	<nodeDef id="WF_Hub" nodeType="139" nls="139H" >
 		<sts>
-			<st id="GV0" editor="I_INTEGER" />
+			<st id="GV0" editor="I_FIRMWARE" />
 			<st id="GV1" editor="I_LAST_UPDATE" />
 			<st id="GV2" editor="I_DAYS" />
 			<st id="GV3" editor="I_SIGNAL" />
