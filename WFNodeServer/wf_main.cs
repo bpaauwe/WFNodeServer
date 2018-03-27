@@ -768,6 +768,8 @@ namespace WFNodeServer {
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25";
                 Rest.REST(report);
+                report = prefix + address + "/report/status/GV9/" + device.Firmware + "/56";
+                Rest.REST(report);
 
             } else if (NodeList[address].Contains("Sky")) {
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
@@ -779,6 +781,8 @@ namespace WFNodeServer {
                 report = prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25";
+                Rest.REST(report);
+                report = prefix + address + "/report/status/GV6/" + device.Firmware + "/56";
                 Rest.REST(report);
             }
         }
@@ -867,7 +871,7 @@ namespace WFNodeServer {
             if (WF_Config.Hub) {
                 double up = (double)hub.Uptime / (60.0 * 60.0 * 24.0); // Days
 
-                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/25";
+                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/56";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + up.ToString("0.##") + "/10";
                 Rest.REST(report);
