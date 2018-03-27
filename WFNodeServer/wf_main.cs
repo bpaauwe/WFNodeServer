@@ -207,6 +207,7 @@ namespace WFNodeServer {
             }
 
             WFLogging.AddListener(Console.WriteLine);
+            WFLogging.Enabled = true;
 
             WFLogging.Log("WeatherFlow Node Server " + VERSION);
 
@@ -232,7 +233,7 @@ namespace WFNodeServer {
                 }
                 //sw.Close();
             } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                WFLogging.Error(ex.Message);
                 return ex.Message;
             }
             return "Configuration Saved";
@@ -250,7 +251,7 @@ namespace WFNodeServer {
                 }
                 //sr.Close();
             } catch {
-                Console.WriteLine("Failed to read configuration file wfnodeserver.json");
+                WFLogging.Error("Failed to read configuration file wfnodeserver.json");
                 return;
             }
 
@@ -259,8 +260,8 @@ namespace WFNodeServer {
                 cfgObj = serializer.Deserialize<cfgstate>(json.Substring(0, len));
                 cfgObj.LoadState();
             } catch (Exception ex) {
-                Console.WriteLine("Failed to import configuration.");
-                Console.WriteLine(ex.Message);
+                WFLogging.Error("Failed to import configuration.");
+                WFLogging.Error(ex.Message);
             }
         }
     }
@@ -288,7 +289,7 @@ namespace WFNodeServer {
 
             // Start server to handle config and ISY queries
             WFNServer wfn = new WFNServer("/WeatherFlow", WF_Config.Port, api_key);
-            Console.WriteLine("Started on port " + WF_Config.Port.ToString());
+            WFLogging.Log("Started on port " + WF_Config.Port.ToString());
 
             Rest = new rest();
 
@@ -311,7 +312,7 @@ namespace WFNodeServer {
                 udp_client.Start();
                 heartbeat.Start();
             } else {
-                Console.WriteLine("Please point your browser at http://localhost:" + WF_Config.Port.ToString() + "/config to configure the node server.");
+                WFLogging.Log("Please point your browser at http://localhost:" + WF_Config.Port.ToString() + "/config to configure the node server.");
             }
         }
 
@@ -334,7 +335,7 @@ namespace WFNodeServer {
         internal void UpdateProfileFiles() {
 
             if (WF_Config.ProfileVersion != WeatherFlowNS.ProfileVersion) {
-                Console.WriteLine("Updating profile files on ISY...");
+                WFLogging.Log("Updating profile files on ISY...");
                 // First remove existing profile files
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/profile/remove");
 
@@ -345,10 +346,10 @@ namespace WFNodeServer {
 
                 // This command is documented but doesn't exist yet
                 //Rest.REST("ns/2/profile/reload");
-                Console.WriteLine("Files uploaded, ISY must be rebooted for changes to take effect.");
+                WFLogging.Log("Files uploaded, ISY must be rebooted for changes to take effect.");
 
                 WF_Config.ProfileVersion = WeatherFlowNS.ProfileVersion;
-                Console.WriteLine(WeatherFlowNS.SaveConfiguration());
+                WFLogging.Log(WeatherFlowNS.SaveConfiguration());
                 
             }
         }
