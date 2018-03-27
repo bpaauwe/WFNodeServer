@@ -734,7 +734,8 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
             string units;
-            int up;
+            double up;
+            double secsperday = 60 * 60 * 24;
 
             // Skip if not enabled.
             if (!WF_Config.Device)
@@ -745,25 +746,13 @@ namespace WFNodeServer {
                 return;
             }
 
-            // Device uptime is in seconds.  Lets make this easier to understand as
-            // the time goes up.
-            if (device.Uptime < 120) {
-                up = device.Uptime;
-                units = "/57";
-            } else if (device.Uptime < (60 * 60 * 2)) {
-                up = device.Uptime / 60;  // Minutes
-                units = "/45";
-            } else if (device.Uptime < (60 * 60 * 24 * 2)) {
-                up = device.Uptime / (60 * 60); // Hours
-                units = "/20";
-            } else {
-                up = device.Uptime / (60 * 60 * 24); // Days
-                units = "/10";
-            }
-
+            // Device uptime is in seconds.  Lets make this easier to understand and 
+            // report it in days
+            up = (double)device.Uptime / secsperday; // Days
+            units = "/10";
 
             if (NodeList[address].Contains("Air")) {
-                report = prefix + address + "/report/status/GV1/" + up.ToString("0.#") + units;
+                report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
                 Rest.REST(report);
@@ -781,7 +770,7 @@ namespace WFNodeServer {
                 Rest.REST(report);
 
             } else if (NodeList[address].Contains("Sky")) {
-                report = prefix + address + "/report/status/GV1/" + up.ToString("0.#") + units;
+                report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
                 Rest.REST(report);
@@ -876,9 +865,11 @@ namespace WFNodeServer {
             }
 
             if (WF_Config.Hub) {
+                double up = (double)hub.Uptime / (60.0 * 60.0 * 24.0); // Days
+
                 report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/25";
                 Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + hub.Uptime + "/58";
+                report = prefix + address + "/report/status/GV2/" + up.ToString("0.##") + "/10";
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/56";
                 Rest.REST(report);
@@ -892,7 +883,7 @@ namespace WFNodeServer {
             Console.WriteLine("HUB: fs          = " + hub.FS);
             Console.WriteLine("HUB: rssi        = " + hub.RSSI);
             Console.WriteLine("HUB: timestamp   = " + hub.TimeStamp);
-            Console.WriteLine("HUB: uptime      = " + hub.Uptime);
+            Console.WriteLine("HUB: uptime      = " + hub.Uptime.ToString());
         }
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {

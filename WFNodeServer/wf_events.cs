@@ -161,8 +161,8 @@ namespace WFNodeServer {
         internal string TimeStamp {
             get { return data.timestamp.ToString(); }
         }
-        internal string Uptime {
-            get { return data.uptime.ToString(); }
+        internal int Uptime {
+            get { return data.uptime; }
         }
         
     }
