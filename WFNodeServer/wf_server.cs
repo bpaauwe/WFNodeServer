@@ -540,7 +540,7 @@ namespace WFNodeServer {
 
             // Display a table of nodes that were found on the ISY
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
-            page += "<table width=\"400px\" border=\"1\">\n";
+            page += "<table width=\"450px\" border=\"1\">\n";
             page += "<tr><th>Node Address</th><th>Node Type</th></tr>\n";
             foreach (string n in WeatherFlowNS.NS.NodeList.Keys) {
                 try {
