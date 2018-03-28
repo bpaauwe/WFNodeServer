@@ -110,7 +110,7 @@ namespace WFNodeServer {
         }
 
 
-        internal void GetStationMeta(string station_id) {
+        internal bool GetStationMeta(string station_id) {
             string resp;
             RootObject root;
             JavaScriptSerializer serializer = new JavaScriptSerializer();
@@ -118,13 +118,16 @@ namespace WFNodeServer {
             resp = WFRest.REST("/swd/rest/stations/" + station_id + "?api_key=6c8c96f9-e561-43dd-b173-5198d8797e0a");
 
             if (resp == "")
-                return;
+                return false;
             if (resp.Contains("ERROR"))
-                return;
+                return false;
 
             if (resp != "") {
                 try {
                     root = serializer.Deserialize<RootObject>(resp);
+
+                    if (root.stations.Count == 0)
+                        return false;
 
                     Latitude = root.stations[0].latitude;
                     Longitude = root.stations[0].longitude;
@@ -149,8 +152,10 @@ namespace WFNodeServer {
 
                 } catch (Exception ex) {
                     Console.WriteLine("Error: " + ex.Message);
+                    return false;
                 }
             }
+            return true;
         }
 
         internal static StationInfo FindStationAir(string serial) {
