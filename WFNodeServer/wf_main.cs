@@ -646,14 +646,18 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV8/" + air.Trend + "/25";
             Rest.REST(report);
 
+            report = prefix + address + "/report/status/GV9/" + air.Battery + "/72";
+            Rest.REST(report);
+
+            // Normally, we'd add the new node when we see a device status message
+            // but device status doesn't tell us what type of device it is for so
+            // create a air device node here if it's warrented.
             if (WF_Config.Device) {
                 if (!NodeList.Keys.Contains(sec_address)) {
                     Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
                         "/add/WF_AirD/?primary=" + address + "&name=WeatherFlow%20(" + air.SerialNumber + "_d)");
                     NodeList.Add(sec_address, "WF_AirD");
                 }
-                report = prefix + sec_address + "/report/status/GV0/" + air.Battery + "/72";
-                Rest.REST(report);
             }
         }
 
@@ -718,14 +722,18 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
             Rest.REST(report);
 
+            report = prefix + address + "/report/status/GV10/" + sky.Battery + "/72";
+            Rest.REST(report);
+
+            // Normally, we'd add the new node when we see a device status message
+            // but device status doesn't tell us what type of device it is for so
+            // create a sky device node here if it's warrented.
             if (WF_Config.Device) {
                 if (!NodeList.Keys.Contains(sec_address)) {
                     Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
                         "/add/WF_SkyD/?primary=" + address + "&name=WeatherFlow%20(" + sky.SerialNumber + "_d)");
                     NodeList.Add(sec_address, "WF_SkyD");
                 }
-                report = prefix + sec_address + "/report/status/GV0/" + sky.Battery + "/72";
-                Rest.REST(report);
             }
         }
 
@@ -752,6 +760,8 @@ namespace WFNodeServer {
             units = "/10";
 
             if (NodeList[address].Contains("Air")) {
+                report = prefix + address + "/report/status/GV0/" + device.Voltage + "/72";
+                Rest.REST(report);
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
@@ -772,6 +782,8 @@ namespace WFNodeServer {
                 Rest.REST(report);
 
             } else if (NodeList[address].Contains("Sky")) {
+                report = prefix + address + "/report/status/GV0/" + device.Voltage + "/72";
+                Rest.REST(report);
                 report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
                 Rest.REST(report);
                 report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";

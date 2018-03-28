@@ -11,6 +11,7 @@
 			<st id="GV6" editor="I_TEMP_C" />
 			<st id="GV7" editor="I_TEMP_C" />
 			<st id="GV8" editor="I_TREND" />
+			<st id="GV9" editor="I_VOLTS" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -30,6 +31,7 @@
 			<st id="GV6" editor="I_TEMP_F" />
 			<st id="GV7" editor="I_TEMP_F" />
 			<st id="GV8" editor="I_TREND" />
+			<st id="GV9" editor="I_VOLTS" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -65,6 +67,7 @@
 			<st id="GV5" editor="I_MPS" />
 			<st id="GV6" editor="I_MPS" />
 			<st id="GV7" editor="I_WIND_DIR_DEGREES" />
+			<st id="GV10" editor="I_VOLTS" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -85,6 +88,7 @@
 			<st id="GV5" editor="I_MPH" />
 			<st id="GV6" editor="I_MPH" />
 			<st id="GV7" editor="I_WIND_DIR_DEGREES" />
+			<st id="GV10" editor="I_VOLTS" />
 		</sts>
 		<cmds>
 			<accepts>

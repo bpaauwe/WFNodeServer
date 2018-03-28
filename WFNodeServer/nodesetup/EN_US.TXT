@@ -11,6 +11,7 @@ ST-139A-GV5-NAME = Lightning Distance
 ST-139A-GV6-NAME = DewPoint 
 ST-139A-GV7-NAME = Apparent Temperature
 ST-139A-GV8-NAME = Pressure Trend
+ST-139A-GV9-NAME = Battery
 
 ND-WF_AirD-NAME = WeatherFlow Smart Weather Station Air (device)
 ND-WF_AirD-ICON = Input
@@ -39,6 +40,7 @@ ST-139S-GV6-NAME = Wind Lull
 ST-139S-GV7-NAME = Wind Direction
 ST-139S-GV8-NAME = Rain Rate
 ST-139S-GV9-NAME = Daily Rainfall
+ST-139S-GV10-NAME = Battery
 
 ND-WF_SkyD-NAME = WeatherFlow Smart Weather Station Sky (device)
 ND-WF_SkyD-ICON = Input
