@@ -151,7 +151,7 @@ namespace WFNodeServer {
                     }
 
                 } catch (Exception ex) {
-                    Console.WriteLine("Error: " + ex.Message);
+                    WFLogging.Error("Error: " + ex.Message);
                     return false;
                 }
             }

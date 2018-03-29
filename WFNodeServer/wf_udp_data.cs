@@ -229,7 +229,7 @@ namespace WFNodeServer {
                     Sensors.Add(DeviceObj.serial_number, DeviceObj);
 
             } catch (Exception ex) {
-                Console.WriteLine("Deserialization of device status failed: " + ex.Message);
+                WFLogging.Error("Deserialization of device status failed: " + ex.Message);
             }
         }
 
@@ -252,7 +252,7 @@ namespace WFNodeServer {
                 //Console.WriteLine("External File:     " + HubObj.fs.ToString());
                 ValidHub = true;
             } catch (Exception ex) {
-                Console.WriteLine("Deserialization of device status failed: " + ex.Message);
+                WFLogging.Error("Deserialization of device status failed: " + ex.Message);
             }
         }
 
@@ -304,7 +304,7 @@ namespace WFNodeServer {
                 WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
             } catch (Exception ex) {
-                Console.WriteLine("Deserialization failed for air data: " + ex.Message);
+                WFLogging.Error("Deserialization failed for air data: " + ex.Message);
             }
 		}
 
@@ -322,7 +322,7 @@ namespace WFNodeServer {
                 WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
             } catch (Exception ex) {
-                Console.WriteLine("Deserialization failed for sky data: " + ex.Message);
+                WFLogging.Error("Deserialization failed for sky data: " + ex.Message);
                 return;
             }
 
@@ -339,7 +339,7 @@ namespace WFNodeServer {
                 WeatherFlowNS.NS.RaiseLightningEvent(this, new LightningEventArgs(StrikeObj));
 
             } catch (Exception ex) {
-                Console.WriteLine("Failed to deserialize strike event: " + ex.Message);
+                WFLogging.Error("Failed to deserialize strike event: " + ex.Message);
             }
         }
 
@@ -351,7 +351,7 @@ namespace WFNodeServer {
                 PreciptObj = serializer.Deserialize<PreciptData>(json);
                 WeatherFlowNS.NS.RaiseRainEvent(this, new RainEventArgs(PreciptObj));
             } catch (Exception ex) {
-                Console.WriteLine("Failed to deserialize precipitation event: " + ex.Message);
+                WFLogging.Error("Failed to deserialize precipitation event: " + ex.Message);
             }
         }
 
@@ -368,8 +368,8 @@ namespace WFNodeServer {
                 if (si.rapid)
                     WeatherFlowNS.NS.RaiseRapidEvent(this, new RapidEventArgs(WindObj));
             } catch (Exception ex) {
-                Console.WriteLine("Failed to deserialize rapid wind event: " + ex.Message);
-                Console.WriteLine(json);
+                WFLogging.Error("Failed to deserialize rapid wind event: " + ex.Message);
+                WFLogging.Error(json);
             }
         }
 
@@ -381,8 +381,8 @@ namespace WFNodeServer {
                 try {
                     obs = serializer.Deserialize<ObsData>(json);
                 } catch (Exception ex) {
-                    Console.WriteLine("Deserialization failed for WebSocket data: " + ex.Message);
-                    Console.WriteLine(json);
+                    WFLogging.Error("Deserialization failed for WebSocket data: " + ex.Message);
+                    WFLogging.Error(json);
                     return;
                 }
                 if (json.Contains("obs_sky")) {
@@ -444,7 +444,7 @@ namespace WFNodeServer {
                 }
 
             } catch (Exception ex) {
-                Console.WriteLine("Failed to process websocket observation data: " + ex.Message);
+                WFLogging.Error("Failed to process websocket observation data: " + ex.Message);
                 return;
             }
 

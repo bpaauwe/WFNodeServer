@@ -363,13 +363,13 @@ namespace WFNodeServer {
                 //ISYDetect.IsyAutoDetect();  // UPNP detection
                 WF_Config.ISY = ISYDetect.FindISY();
                 if (WF_Config.ISY == "") {
-                    Console.WriteLine("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
+                    WFLogging.Error("Failed to detect an ISY on the network. Please add isy=<your isy IP Address> to the command line.");
                     //  TODO: Wait on configuration here.  
                     WeatherFlowNS.shutdown = true;
                     return false;
                 }
             }
-            Console.WriteLine("Using ISY at " + WF_Config.ISY);
+            WFLogging.Log("Using ISY at " + WF_Config.ISY);
 
             Rest.Base = "http://" + WF_Config.ISY + "/rest/";
             Rest.AuthRequired = true;
@@ -398,14 +398,14 @@ namespace WFNodeServer {
                     string name = node.SelectSingleNode("name").InnerText;
                     if (name == "WeatherFlow") {
                         int.TryParse(profile, out ProfileNum);
-                        Console.WriteLine("Detected profile number " + ProfileNum.ToString());
+                        WFLogging.Log("Detected profile number " + ProfileNum.ToString());
                         WF_Config.Profile = ProfileNum;
                         ProfileDetected = true;
                         return;
                     }
                 }
             } catch (Exception ex) {
-                Console.WriteLine("Parsing profiles failed: " + ex.Message);
+                WFLogging.Error("Parsing profiles failed: " + ex.Message);
             }
         }
 
@@ -417,7 +417,7 @@ namespace WFNodeServer {
                 int Profile;
                 // Parse profile from node address
                 int.TryParse(NodeList.ElementAt(0).Key.Substring(1, 3), out Profile);
-                Console.WriteLine("Detected profile number " + Profile.ToString() + " from nodelist");
+                WFLogging.Info("Detected profile number " + Profile.ToString() + " from nodelist");
                 WF_Config.Profile = Profile;
                 ProfileDetected = true;
             }
@@ -452,21 +452,21 @@ namespace WFNodeServer {
                 } else if (NodeList[address] == "WF_AirD") {
                 } else if (NodeList[address] == "WF_Hub") {
                 } else {
-                    Console.WriteLine("Node with address " + address + " has unknown type " + NodeList[address]);
+                    WFLogging.Error("Node with address " + address + " has unknown type " + NodeList[address]);
                 }
             }
         }
 
         internal void StartWebSocket() {
             if (wsi.Started) {
-                Console.WriteLine("Shutting down web socket connection.");
+                WFLogging.Info("Shutting down web socket connection.");
                 wsi.Stop();
             }
 
             wsi.Start();
             foreach (StationInfo s in WF_Config.WFStationInfo) {
                 if (s.remote) {
-                    Console.WriteLine("    Start listening for packets from station " + s.station_id.ToString());
+                    WFLogging.Info("    Start listening for packets from station " + s.station_id.ToString());
                     if (s.air_id > 0)
                         wsi.StartListen(s.air_id.ToString());
                     if (s.sky_id > 0) {
@@ -519,7 +519,7 @@ namespace WFNodeServer {
         internal void AddStationAir(int id, int air, string air_sn) {
             foreach (StationInfo s in WF_Config.WFStationInfo) {
                 if (s.station_id == id) {
-                    Console.WriteLine("AddStationAir: Found station " + id.ToString());
+                    WFLogging.Info("AddStationAir: Found station " + id.ToString());
                     s.air_id = air;
                     s.air_sn = air_sn;
                     return;
@@ -534,14 +534,14 @@ namespace WFNodeServer {
             si.sky_sn = "";
             si.air_sn = air_sn;
             si.rapid = false;
-            Console.WriteLine("AddStationAir: Adding station " + id.ToString());
+            WFLogging.Info("AddStationAir: Adding station " + id.ToString());
             WF_Config.WFStationInfo.Add(si);
         }
 
         internal void AddStationSky(int id, int sky, string sky_sn) {
             foreach (StationInfo s in WF_Config.WFStationInfo) {
                 if (s.station_id == id) {
-                    Console.WriteLine("AddStationSky: Found station " + id.ToString());
+                    WFLogging.Info("AddStationSky: Found station " + id.ToString());
                     s.sky_id = sky;
                     s.sky_sn = sky_sn;
                     return;
@@ -556,7 +556,7 @@ namespace WFNodeServer {
             si.sky_sn = sky_sn;
             si.air_sn = "";
             si.rapid = false;
-            Console.WriteLine("AddStationSky: Adding station " + id.ToString());
+            WFLogging.Info("AddStationSky: Adding station " + id.ToString());
             WF_Config.WFStationInfo.Add(si);
         }
 
@@ -607,10 +607,10 @@ namespace WFNodeServer {
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
-                Console.WriteLine("Device " + air.SerialNumber + " doesn't exist, create it.");
+                WFLogging.Info("Device " + air.SerialNumber + " doesn't exist, create it.");
                 if (WeatherFlowNS.Debug) {
-                    Console.WriteLine("Debug:");
-                    Console.WriteLine(air.Raw);
+                    WFLogging.Debug("Debug:");
+                    WFLogging.Debug(air.Raw);
                 }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
@@ -680,10 +680,10 @@ namespace WFNodeServer {
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
-                Console.WriteLine("Device " + sky.SerialNumber + " doesn't exist, create it.");
+                WFLogging.Info("Device " + sky.SerialNumber + " doesn't exist, create it.");
                 if (WeatherFlowNS.Debug) {
-                    Console.WriteLine("Debug:");
-                    Console.WriteLine(sky.Raw);
+                    WFLogging.Debug("Debug:");
+                    WFLogging.Debug(sky.Raw);
                 }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
@@ -815,7 +815,7 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 string sky_address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.Parent;
 
-                Console.WriteLine("Device " + wind.SerialNumber + " doesn't exist, create it.");
+                WFLogging.Info("Device " + wind.SerialNumber + " doesn't exist, create it.");
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
@@ -844,7 +844,7 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address)) {
                 string air_address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.Parent;
 
-                Console.WriteLine("Device " + strike.SerialNumber + " doesn't exist, create it.");
+                WFLogging.Info("Device " + strike.SerialNumber + " doesn't exist, create it.");
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
@@ -870,7 +870,7 @@ namespace WFNodeServer {
             if (!NodeList.Keys.Contains(address))
                 return;
 
-            Console.WriteLine("Rain Start Event at : " + rain.TimeStamp);
+            WFLogging.Info("Rain Start Event at : " + rain.TimeStamp);
         }
 
         internal void HandleHub(object sender, HubEventArgs hub) {
@@ -880,7 +880,7 @@ namespace WFNodeServer {
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
-                Console.WriteLine("Device " + hub.SerialNumber + " doesn't exist, create it.");
+                WFLogging.Info("Device " + hub.SerialNumber + " doesn't exist, create it.");
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Hub/?name=WeatherFlow%20(" + hub.SerialNumber + ")");
@@ -900,13 +900,13 @@ namespace WFNodeServer {
                 Rest.REST(report);
             }
 
-            Console.WriteLine("HUB: firmware    = " + hub.Firmware);
-            Console.WriteLine("HUB: reset flags = " + hub.ResetFlags);
-            Console.WriteLine("HUB: stack       = " + hub.Stack);
-            Console.WriteLine("HUB: fs          = " + hub.FS);
-            Console.WriteLine("HUB: rssi        = " + hub.RSSI);
-            Console.WriteLine("HUB: timestamp   = " + hub.TimeStamp);
-            Console.WriteLine("HUB: uptime      = " + hub.Uptime.ToString());
+            WFLogging.Debug("HUB: firmware    = " + hub.Firmware);
+            WFLogging.Debug("HUB: reset flags = " + hub.ResetFlags);
+            WFLogging.Debug("HUB: stack       = " + hub.Stack);
+            WFLogging.Debug("HUB: fs          = " + hub.FS);
+            WFLogging.Debug("HUB: rssi        = " + hub.RSSI);
+            WFLogging.Debug("HUB: timestamp   = " + hub.TimeStamp);
+            WFLogging.Debug("HUB: uptime      = " + hub.Uptime.ToString());
         }
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {
@@ -915,11 +915,11 @@ namespace WFNodeServer {
         }
 
         internal void AddNode(string address) {
-            Console.WriteLine("Adding " + address + " to our list.");
+            WFLogging.Info("Adding " + address + " to our list.");
             NodeList.Add(address, "");
         }
         internal void RemoveNode(string address) {
-            Console.WriteLine("Removing " + address + " from our list.");
+            WFLogging.Info("Removing " + address + " from our list.");
             NodeList.Remove(address);
         }
 
@@ -948,46 +948,46 @@ namespace WFNodeServer {
                         if (node.Attributes["nodeDefId"].Value == "WeatherFlow") {
                             // Found one. 
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WeatherFlow");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Air") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Air");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_AirSI") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirSI");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Sky") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Sky");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_SkySI") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkySI");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Hub") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Hub");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_SkyD") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkyD");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_AirD") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirD");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningSI") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningSI");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWind") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWind");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWindSI") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWindSI");
-                            Console.WriteLine("Found: " + node.SelectSingleNode("address").InnerText);
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
                     }
                 }
             } catch (Exception ex) {
-                Console.WriteLine("XML parsing failed: " + ex.Message);
+                WFLogging.Error("XML parsing failed: " + ex.Message);
             }
         }
     }

@@ -84,8 +84,8 @@ namespace WFNodeServer {
                     listener.Prefixes.Add("http://*:" + port.ToString() + "/");
                     listener.Start();
                 } catch (Exception ex) {
-                    Console.WriteLine("Failed to start web server on port " + port.ToString());
-                    Console.WriteLine("  Error was: " + ex.Message);
+                    WFLogging.Error("Failed to start web server on port " + port.ToString());
+                    WFLogging.Error("  Error was: " + ex.Message);
                     return;
                 }
                 while (true) {
@@ -93,7 +93,7 @@ namespace WFNodeServer {
                         HttpListenerContext context = listener.GetContext();
                         Process(context);
                     } catch (Exception ex) {
-                        Console.WriteLine("Failed to process connection: " + ex.Message);
+                        WFLogging.Error("Failed to process connection: " + ex.Message);
                     }
                     //Thread.Sleep(5000);
                 }
@@ -134,33 +134,33 @@ namespace WFNodeServer {
 
             // TODO: Parse out the request id if present
             if (filename.Contains("install")) {
-                Console.WriteLine("Recieved request to install the profile files.");
+                WFLogging.Info("Recieved request to install the profile files.");
             } else if (filename.Contains("query")) {
                 string[] parts;
                 parts = filename.Split('/');
 
-                Console.WriteLine("Query node " + parts[3]);
+                WFLogging.Info("Query node " + parts[3]);
             } else if (filename.Contains("status")) {
                 string[] parts;
                 parts = filename.Split('/');
 
-                Console.WriteLine("Get status of node " + parts[3]);
+                WFLogging.Info("Get status of node " + parts[3]);
                 NodeStatus();
             } else if (filename.Contains("add")) {
-                Console.WriteLine("Add our node.  How is this different from report/Add?");
+                WFLogging.Info("Add our node.  How is this different from report/Add?");
                 AddNodes();
 
             // the report API is not yet implemented on the ISY so we'll
             // never get anything of these until it is.
             } else if (filename.Contains("report/add")) {
-                Console.WriteLine("Report that a node was added?");
+                WFLogging.Info("Report that a node was added?");
             } else if (filename.Contains("report/rename")) {
             } else if (filename.Contains("report/remove")) {
             } else if (filename.Contains("report/enable")) {
             } else if (filename.Contains("report/disable")) {
             } else if (filename.Contains("favicon.ico")) {
             } else { 
-                Console.WriteLine("Unknown Request: " + filename);
+                WFLogging.Error("Unknown Request: " + filename);
             }
 
             context.Response.ContentType = "text/plain";
@@ -239,7 +239,7 @@ namespace WFNodeServer {
                 WeatherFlowNS.NS.AddStation(a_form.station_id, a_form.elevation, a_form.air_id, a_form.sky_id, a_form.remote, station.AirSN, station.SkySN, a_form.rapid);
                 return true;
             } else {
-                Console.WriteLine("Failed to find station " + a_form.station_id.ToString());
+                WFLogging.Error("Failed to find station " + a_form.station_id.ToString());
                 cfg_file_status = "Station " + a_form.station_id.ToString() + " lookup failed.";
             }
             return false;
@@ -270,13 +270,13 @@ namespace WFNodeServer {
                     station_form a_form = GetStationInfo(resp);
                     switch (a_form.action) {
                         case "Delete":
-                            Console.WriteLine("Delete station " + a_form.station_id.ToString());
+                            WFLogging.Info("Delete station " + a_form.station_id.ToString());
                             WeatherFlowNS.NS.DeleteStation(a_form.station_id);
                             saveCfg = true;
                             break;
                         case "++Add++":
                             bool exists = false;
-                            Console.WriteLine("Add station " + a_form.station_id.ToString());
+                            WFLogging.Info("Add station " + a_form.station_id.ToString());
                             // Check if station already exists
                             foreach (StationInfo s in WF_Config.WFStationInfo) {
                                 if (s.station_id == a_form.station_id) {
@@ -289,11 +289,11 @@ namespace WFNodeServer {
                                 saveCfg = AddStation(a_form);
                             break;
                         case "Update":
-                            Console.WriteLine("Update station " + a_form.station_id.ToString());
+                            WFLogging.Info("Update station " + a_form.station_id.ToString());
                             saveCfg = AddStation(a_form);
                             break;
                         default:
-                            Console.WriteLine("Unknown action [" + a_form.action + "]");
+                            WFLogging.Warning("Unknown action [" + a_form.action + "]");
                             break;
                     }
                 } else {
@@ -384,7 +384,7 @@ namespace WFNodeServer {
                                     try {
                                         WeatherFlowNS.NS.StartWebSocket();
                                     } catch (Exception ex) {
-                                        Console.WriteLine("Starting websocket client failed: " + ex.Message);
+                                        WFLogging.Error("Starting websocket client failed: " + ex.Message);
                                     }
                                     cfg_file_status = "Websocket Client Started";
                                     Thread.Sleep(400);
@@ -409,8 +409,8 @@ namespace WFNodeServer {
             try {
                 cfg_page = MakeConfigPage();
             } catch (Exception ex) {
-                Console.WriteLine("Failed to make configuration web page.");
-                Console.WriteLine(ex.Message);
+                WFLogging.Error("Failed to make configuration web page.");
+                WFLogging.Error(ex.Message);
                 context.Response.Close();
                 return;
             }
@@ -620,7 +620,7 @@ namespace WFNodeServer {
                     page += "<tr><td style=\"padding: 1px 1px 1px 5px;\">" + n + "</td>";
                     page += "<td style=\"padding: 1px 1px 1px 5px;\">" + NodeDefs[WeatherFlowNS.NS.NodeList[n]] + "</td></tr>\n";
                 } catch {
-                    Console.WriteLine("Missing definition for node type " + WeatherFlowNS.NS.NodeList[n]);
+                    WFLogging.Error("Missing definition for node type " + WeatherFlowNS.NS.NodeList[n]);
                 }
             }
             page += "</table>\n";

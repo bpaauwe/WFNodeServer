@@ -66,21 +66,21 @@ namespace WFNodeServer {
             while (Started) {
                 int retries = 0;
 
-                Console.WriteLine("Attempt to start already active WebSocket connection " + retries.ToString());
+                WFLogging.Warning("Attempt to start already active WebSocket connection " + retries.ToString());
                 Thread.Sleep(1000);
 
                 if (retries++ > 10) {
-                    Console.WriteLine("Giving up after 10 attempts.");
+                    WFLogging.Error("Giving up after 10 attempts.");
                     return;
                 }
             }
 
             client = new TcpClient(Host, Port);
             if (!client.Connected) {
-                Console.WriteLine("Client not connected to " + Port);
+                WFLogging.Error("Client not connected to " + Port);
             }
 
-            Console.WriteLine("Starting communication with websocket server.");
+            WFLogging.Log("Starting communication with websocket server.");
             finished = false;
             Started = true;
 
@@ -98,7 +98,7 @@ namespace WFNodeServer {
             client.Client.Send(Encoding.ASCII.GetBytes("Sec-WebSocket-Version: 13\r\n"));
             client.Client.Send(Encoding.ASCII.GetBytes("\r\n"));
 
-            Console.WriteLine("    Waiting for handshake");
+            WFLogging.Info("    Waiting for handshake");
             Thread.Sleep(100);
             // Receive handshake
             while (!header) {
@@ -129,7 +129,7 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
-            Console.WriteLine("    Starting listen for device " + device_id);
+            WFLogging.Info("    Starting listen for device " + device_id);
             SendMessage(client, message, 0x01);
             started.Add(device_id, true);
         }
@@ -139,7 +139,7 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
-            Console.WriteLine("    Stopping listen for device " + device_id);
+            WFLogging.Info("    Stopping listen for device " + device_id);
             SendMessage(client, message, 0x01);
         }
 
@@ -148,7 +148,7 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
-            Console.WriteLine("    Starting listen for device " + device_id);
+            WFLogging.Info("    Starting listen for device " + device_id);
             SendMessage(client, message, 0x01);
             started_rapid.Add(device_id, true);
         }
@@ -158,14 +158,14 @@ namespace WFNodeServer {
             message += device_id;
             message += ", \"id\":\"random-id-23456\" }";
 
-            Console.WriteLine("    Stopping listen for device " + device_id);
+            WFLogging.Info("    Stopping listen for device " + device_id);
             SendMessage(client, message, 0x01);
         }
 
         internal void Stop() {
             string message = "close";
 
-            Console.WriteLine("    Stop all listening.");
+            WFLogging.Info("    Stop all listening.");
             foreach (string key in started.Keys) {
                 StopListen(key);
             }
@@ -192,15 +192,15 @@ namespace WFNodeServer {
             } else if (json.Contains("evt_precip")) {
             } else if (json.Contains("ack")) {
             } else {
-                Console.WriteLine("Unknown type of WebSocket packet");
-                Console.WriteLine(json);
+                WFLogging.Error("Unknown type of WebSocket packet");
+                WFLogging.Error(json);
             }
         }
 
         private void ReceiveLoop() {
             StateObject state = new StateObject();
 
-            Console.WriteLine("    Starting receive loop");
+            WFLogging.Info("    Starting receive loop");
             state.workSocket = client;
             while (!finished) {
                 // Start receive data from server
@@ -213,7 +213,7 @@ namespace WFNodeServer {
             }
 
             // Wait for server to close connection
-            Console.WriteLine("   Waiting for server close.");
+            WFLogging.Info("   Waiting for server close.");
             CloseDone.WaitOne();
             client.Close();
             Thread.Sleep(500);
@@ -260,7 +260,7 @@ namespace WFNodeServer {
                         } else if (payload_type == 0x02) {
                             // Binary payload
                         } else if (payload_type == 0x00) {
-                            Console.WriteLine("Got a continuation opcode, currently not supported.");
+                            WFLogging.Error("Got a continuation opcode, currently not supported.");
                         } else if (payload_type == 0x08) {
                             // Close frame
                             finished = true;
@@ -274,7 +274,7 @@ namespace WFNodeServer {
                         return;
                     } else {
                         // We need to read more data
-                        Console.WriteLine("Need more data to complete frame");
+                        WFLogging.Info("Need more data to complete frame");
                         client.Client.BeginReceive(state.buffer, 0, StateObject.bufsize, 0, new AsyncCallback(ReceiveCallback), state);
                         return;
                     }

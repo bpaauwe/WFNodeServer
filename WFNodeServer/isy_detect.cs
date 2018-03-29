@@ -60,7 +60,7 @@ namespace WFNodeServer {
                 i1 += 2;
                 ISYAddress = receiveString.Substring(i1, (i2 - i1));
             }
-            Console.WriteLine("Found ISY at " + ISYAddress);
+            WFLogging.Log("Found ISY at " + ISYAddress);
         }
 
         private static string GetBroadcast() {
@@ -160,8 +160,8 @@ namespace WFNodeServer {
                 try {
                     listen_udp.Client.Bind(group_ep);
                 } catch (Exception e) {
-                    Console.WriteLine("Failed to bind to broadcast address");
-                    Console.WriteLine(e.Message);
+                    WFLogging.Error("Failed to bind to broadcast address");
+                    WFLogging.Error(e.Message);
                     return "";
                 }
 
@@ -170,7 +170,7 @@ namespace WFNodeServer {
                 try {
                     listen_udp.JoinMulticastGroup(group_ip);
                 } catch (Exception e) {
-                    Console.WriteLine("Failed to join Multicast group: " + e.Message);
+                    WFLogging.Error("Failed to join Multicast group: " + e.Message);
                     //listen_udp.Close();
                     return "";
                 }
@@ -183,7 +183,7 @@ namespace WFNodeServer {
                     try {
                         recv_data = listen_udp.Receive(ref group_ep);
                     } catch {
-                        Console.WriteLine("Timed out trying to discover ISY.");
+                        WFLogging.Error("Timed out trying to discover ISY.");
                         return "";
                     }
                     if (recv_data.Length != 0) {
@@ -193,7 +193,7 @@ namespace WFNodeServer {
                         // Now see if this is really an ISY
                         if (buf.Contains("X_Insteon") == false) {
                             if (--tries == 0) {
-                                Console.WriteLine("Failed to detect ISY on the network.");
+                                WFLogging.Error("Failed to detect ISY on the network.");
                                 return "";
                             }
                         } else {
@@ -210,7 +210,7 @@ namespace WFNodeServer {
                 //listen_udp.Close();
             }
 
-			Console.WriteLine(("Found an ISY: " + ip));
+			WFLogging.Log(("Found an ISY: " + ip));
 			return ip;
 		}
     }

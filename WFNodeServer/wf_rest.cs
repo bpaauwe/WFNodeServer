@@ -88,15 +88,15 @@ namespace WFNodeServer {
             rest_url = Base + url;
 
             if (rest_url == "") {
-                Console.WriteLine("ISY REST called with missing URL.");
-                Console.WriteLine("  Does this mean there's no connection to an ISY?");
+                WFLogging.Error("ISY REST called with missing URL.");
+                WFLogging.Error("  Does this mean there's no connection to an ISY?");
                 return "";
             }
 
             if (AuthHeader == "" && AuthRequired)
                 AuthHeader = Authorize();
 
-            //Console.WriteLine(rest_url);
+            WFLogging.Debug(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.UserAgent = "WFNodeServer";
             if (AuthRequired)
@@ -111,11 +111,11 @@ namespace WFNodeServer {
                         code = (int)response.StatusCode;
                         if (code != 200) {
                             if (code == 404) {  // No entries match this request
-                                Console.WriteLine("REST request " + url + " failed " + response.StatusDescription);
+                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
                             } else if (code == 405) { // URL doesn't exist (bad request)
-                                Console.WriteLine("REST request " + url + " failed " + response.StatusDescription);
+                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
                             } else {
-                                Console.WriteLine("ISY REST request to URL, " +
+                                WFLogging.Error("ISY REST request to URL, " +
                                         url + ", failed with " +
                                         response.StatusDescription);
                             }
@@ -135,7 +135,7 @@ namespace WFNodeServer {
                                     }
                                 } while (len > 0);
                             } catch {
-                                Console.WriteLine("Ignoring reader exception?");
+                                WFLogging.Debug("Ignoring reader exception?");
                             }
 
                             reader.Close();
@@ -147,7 +147,7 @@ namespace WFNodeServer {
                 xml = "";
                 //Console.WriteLine(xml);
                 //throw new RestException();
-                Console.WriteLine(ex.Message);
+                WFLogging.Error(ex.Message);
             }
 
             request.Abort();
@@ -164,7 +164,7 @@ namespace WFNodeServer {
             if (AuthHeader == "" && AuthRequired)
                 AuthHeader = Authorize();
 
-            Console.WriteLine(rest_url);
+            WFLogging.Debug(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.UserAgent = "WFNodeServer";
             if (AuthRequired)
@@ -184,7 +184,7 @@ namespace WFNodeServer {
                 code = (int)response.StatusCode;
                 response.Close();
             } catch (Exception ex) {
-                Console.WriteLine(ex.Message);
+                WFLogging.Error(ex.Message);
             }
         }
     }

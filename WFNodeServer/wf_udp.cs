@@ -51,7 +51,7 @@ namespace WFNodeServer {
 
         internal void Start() {
             if (!Active) {
-                Console.WriteLine("Starting WeatherFlow data collection thread.");
+                WFLogging.Log("Starting WeatherFlow data collection thread.");
                 udp_thread = new Thread(new ThreadStart(WeatherFlowThread));
                 udp_thread.IsBackground = true;
                 udp_thread.Start();
@@ -106,7 +106,7 @@ namespace WFNodeServer {
                             }
                         }
                     } catch (Exception ex) {
-                        Console.WriteLine("UDP Listener failed: " + ex.Message);
+                        WFLogging.Error("UDP Listener failed: " + ex.Message);
                     }
                 }
                 threadDone.Set();
