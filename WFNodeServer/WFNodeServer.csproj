@@ -61,6 +61,7 @@
     <Compile Include="wf_log.cs" />
     <Compile Include="wf_nodesetup.cs" />
     <Compile Include="wf_station.cs" />
+    <Compile Include="wf_weblog.cs" />
     <Compile Include="wf_websocket.cs" />
     <Compile Include="wf_events.cs" />
     <Compile Include="wf_main.cs" />
