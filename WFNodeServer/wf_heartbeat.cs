@@ -87,6 +87,8 @@ namespace WFNodeServer {
                 } else if (WeatherFlowNS.NS.NodeList[address] == "WF_SkyD") {
                 } else if (WeatherFlowNS.NS.NodeList[address] == "WF_Lightning") {
                 } else if (WeatherFlowNS.NS.NodeList[address] == "WF_RapidWind") {
+                } else if (WeatherFlowNS.NS.NodeList[address] == "WF_LightningSI") {
+                } else if (WeatherFlowNS.NS.NodeList[address] == "WF_RapidWindSI") {
                 } else {
                     // this should only sky & air nodes
                     lock (_locker) {
