@@ -44,6 +44,7 @@ namespace WFNodeServer {
         internal static int ProfileVersion { get; set; }
         internal static bool Device { get; set; }
         internal static bool Valid { get; set; }
+        internal static int LogLevel { get; set; }
     }
 
     public class cfgstate {
@@ -58,6 +59,7 @@ namespace WFNodeServer {
         public List<StationInfo> WFStationInfo { get; set; }
         public int ProfileVersion { get; set; }
         public bool Device { get; set; }
+        public int LogLevel { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
@@ -71,6 +73,7 @@ namespace WFNodeServer {
             WFStationInfo = WF_Config.WFStationInfo;
             ProfileVersion = WF_Config.ProfileVersion;
             Device = WF_Config.Device;
+            LogLevel = WF_Config.LogLevel;
         }
 
         internal void LoadState() {
@@ -85,6 +88,7 @@ namespace WFNodeServer {
             WF_Config.WFStationInfo = WFStationInfo;
             WF_Config.ProfileVersion = ProfileVersion;
             WF_Config.Device = Device;
+            WF_Config.LogLevel = LogLevel;
 
             if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;

@@ -24,12 +24,58 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using System.Web;
 
 namespace WFNodeServer {
     internal static class WFWebLog {
 
+        private static string element(string resp, string key) {
+            foreach (string item in resp.Split('&')) {
+                string[] pair = item.Split('=');
+                if (pair[0] == key)
+                    return HttpUtility.UrlDecode(pair[1]);
+            }
+            return "";
+        }
+
         internal static void LogPage(HttpListenerContext context) {
             byte[] page;
+
+            // Process changes
+            if (context.Request.ContentLength64 > 0) {
+                int len = (int)context.Request.ContentLength64;
+                byte[] post = new byte[1024];
+
+                context.Request.InputStream.Read(post, 0, len);
+                string resp = Encoding.Default.GetString(post);
+                resp = resp.Substring(0, len);
+
+                foreach (string item in resp.Split('&')) {
+                    string[] pair = item.Split('=');
+                    switch (pair[0]) {
+                        case "sLogLevel":
+                            int l = 0;
+                            int.TryParse(pair[1], out l);
+                            if (l != WF_Config.LogLevel) {
+                                WF_Config.LogLevel = l;
+                                WFLogging.Level = (LOG_LEVELS)l;
+                                WeatherFlowNS.SaveConfiguration();
+                            }
+                            break;
+                        case "Save":
+                            // Look up value of filename and save log to that file
+                            string fname = element(resp, "filename");
+                            try {
+                                using (StreamWriter sw = new StreamWriter(fname)) {
+                                    sw.Write(WFLogging.ToString());
+                                }
+                            } catch (Exception ex) {
+                                WFLogging.Error(ex.Message);
+                            }
+                            break;
+                    }
+                }
+            }
 
             page = ASCIIEncoding.ASCII.GetBytes(MakeLog());
 
@@ -70,6 +116,7 @@ namespace WFNodeServer {
             page += "	body { font-family: Sans-Serif; }\n";
             page += "</style>\n";
             page += "<script>\n";
+            page += "  var timeInt = 0;\n";
             page += "  function loadLog(callback) {\n";
             page += "    var xhttp;\n";
             page += "    xhttp = new XMLHttpRequest();\n";
@@ -84,16 +131,42 @@ namespace WFNodeServer {
             page += "  function UpdateLog(xhttp) {\n";
             page += "    var elem = document.getElementById(\"log\");\n";
             page += "    elem.innerHTML = xhttp.responseText;\n";
-            page += "    elem.scrollTop = elem.scrollHeiht;\n";
+            page += "    elem.scrollTop = elem.scrollHeight;\n";
             page += "  }\n";
             page += "  function Start() {\n";
-            page += "    setInterval(() => loadLog(UpdateLog), 2000);\n";
+            page += "    timeInt = setInterval(() => loadLog(UpdateLog), 2000);\n";
+            page += "  }\n";
+            page += "  function PauseLog() {\n";
+            page += "    if (timeInt > 0) {\n";
+            page += "       document.getElementById(\"Pause\").value = \"Paused\";\n";
+            page += "       clearInterval(timeInt);\n";
+            page += "       timeInt = 0;\n";
+            page += "    } else {\n";
+            page += "       document.getElementById(\"Pause\").value = \"Pause\";\n";
+            page += "       timeInt = setInterval(() => loadLog(UpdateLog), 2000);\n";
+            page += "    }\n";
             page += "  }\n";
             page += "</script>\n";
+            page += "<div align=\"center\" style=\"width: 900px; margin: 0 auto;\">\n";
             page += "<title>WeatherFlow Nodeserver Web Interface</title>\n";
             page += "</head><body onload=\"Start();\">\n";
             page += "<textarea id=\"log\" rows=\"45\" cols=\"120\">";
             page += "</textarea>\n";
+            page += "<hr>\n";
+            page += "<form name=\"log\" action=\"/log\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
+            page += "<input type=\"Button\" id=\"Pause\" name=\"Pause\" value=\"Pause\" onclick=\"PauseLog();\"> &nbsp;";
+            page += "<input type=\"submit\" name=\"Save\" value=\"Save to\"> &nbsp;";
+            page += "<input id=\"the-file-input\" type=\"text\" name=\"filename\"> &nbsp;";
+            page += "Log Level: ";
+            page += "<select name=\"sLogLevel\" onchange=\"this.form.submit()\">";
+            page += "<option value=\"0\" " + ((WF_Config.LogLevel == 0) ? "selected" : "") + ">Updates</option>";
+            page += "<option value=\"1\" " + ((WF_Config.LogLevel == 1) ? "selected" : "") + ">Errors</option>";
+            page += "<option value=\"2\" " + ((WF_Config.LogLevel == 2) ? "selected" : "") + ">Warnings</option>";
+            page += "<option value=\"3\" " + ((WF_Config.LogLevel == 3) ? "selected" : "") + ">Info</option>";
+            page += "<option value=\"4\" " + ((WF_Config.LogLevel == 4) ? "selected" : "") + ">Debug</option>";
+            page += "</select>\n";
+            page += "</form>\n";
+            page += "</div>\n";
             page += "</body></html>\n";
 
             return page;
