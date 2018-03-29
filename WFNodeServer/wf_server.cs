@@ -110,6 +110,16 @@ namespace WFNodeServer {
                 return;
             }
 
+            if (filename.Contains("/log")) {
+                WFWebLog.LogPage(context);
+                return;
+            }
+
+            if (filename == "/wflog") {
+                WFWebLog.LogText(context);
+                return;
+            }
+
             // WeatherFlow/install  - install
             // Weatherflow/nodes/<address>/query - Query the node and report status
             // WeatherFlow/nodes/<address>/status - report current status
