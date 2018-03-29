@@ -102,7 +102,7 @@ namespace WFNodeServer {
             if (AuthRequired)
                 request.Headers.Add("Authorization", AuthHeader);
             request.Proxy = null;
-            request.KeepAlive = false;
+            request.KeepAlive = true;
 
             // Read data from the stream
             try {
