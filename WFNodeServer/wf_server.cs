@@ -644,7 +644,8 @@ namespace WFNodeServer {
             menu = "<div align=\"center\" style=\"width: 900px; margin: 0 auto; padding-bottom: 10px;\">\n";
             menu += "<h1>WeatherFlow Nodeserver v" + WeatherFlowNS.VERSION + "</h1>\n";
             menu += "<a href=\"/config\">Configuration</a> | ";
-            menu += "<a href=\"/log\">Log</a>";
+            menu += "<a href=\"/log\">Log</a> | ";
+            menu += "<a href=\"/nodeinfo\">Node Info</a>";
             menu += "</div>\n";
 
             return menu;
