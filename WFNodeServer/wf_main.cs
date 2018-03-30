@@ -287,6 +287,7 @@ namespace WFNodeServer {
         private bool ProfileDetected = false;
         internal Heartbeat heartbeat = new Heartbeat();
         internal WeatherFlow_UDP udp_client = new WeatherFlow_UDP();
+        internal Dictionary<string, EventArgs> NodeData = new Dictionary<string, EventArgs>();
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
@@ -604,6 +605,7 @@ namespace WFNodeServer {
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber + "_d";
 
             air.si_units = WF_Config.SI;
+            NodeData[address] = air;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -617,6 +619,7 @@ namespace WFNodeServer {
                     "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
                 NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
             }
+
 
             StationInfo sinfo = wf_station.FindStationAir(air.serial_number);
             if (sinfo.station_id == -1)
@@ -677,6 +680,7 @@ namespace WFNodeServer {
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber + "_d";
 
             sky.si_units = WF_Config.SI;
+            NodeData[address] = sky;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -752,6 +756,8 @@ namespace WFNodeServer {
             double up;
             double secsperday = 60 * 60 * 24;
 
+            NodeData[address] = device;
+
             // Skip if not enabled.
             if (!WF_Config.Device)
                 return;
@@ -812,6 +818,8 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
             string unit;
 
+            NodeData[address] = wind;
+
             if (!NodeList.Keys.Contains(address)) {
                 string sky_address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.Parent;
 
@@ -840,6 +848,7 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.SerialNumber;
 
             strike.si_units = WF_Config.SI;
+            NodeData[address] = strike;
 
             if (!NodeList.Keys.Contains(address)) {
                 string air_address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.Parent;
@@ -877,6 +886,8 @@ namespace WFNodeServer {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + hub.SerialNumber;
+
+            NodeData[address] = hub;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
