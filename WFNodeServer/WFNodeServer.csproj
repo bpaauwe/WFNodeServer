@@ -60,6 +60,7 @@
     <Compile Include="wf_heartbeat.cs" />
     <Compile Include="wf_log.cs" />
     <Compile Include="wf_nodesetup.cs" />
+    <Compile Include="wf_node_info.cs" />
     <Compile Include="wf_station.cs" />
     <Compile Include="wf_weblog.cs" />
     <Compile Include="wf_websocket.cs" />

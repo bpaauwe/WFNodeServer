@@ -120,6 +120,11 @@ namespace WFNodeServer {
                 return;
             }
 
+            if (filename == "/nodeinfo") {
+                WFNodeInfo.NodeDocPage(context);
+                return;
+            }
+
             // WeatherFlow/install  - install
             // Weatherflow/nodes/<address>/query - Query the node and report status
             // WeatherFlow/nodes/<address>/status - report current status
