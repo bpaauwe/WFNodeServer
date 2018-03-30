@@ -376,6 +376,7 @@ namespace WFNodeServer {
 		internal void WSObservations(string json) {
             JavaScriptSerializer serializer = new JavaScriptSerializer();
             ObsData obs;
+            double elevation = 0;
 
             try {
                 try {
@@ -419,11 +420,17 @@ namespace WFNodeServer {
                     AirObj.type = obs.type;
                     AirObj.valid = true;
 
+                    // Look up elevation
+                    StationInfo si = wf_station.FindStationAir(AirObj.serial_number);
+                    if (si != null) {
+                        elevation = si.elevation;
+                    }
+
                     AirEventArgs evnt = new AirEventArgs(AirObj);
                     evnt.SetDewpoint = 0;
                     evnt.SetApparentTemp = 0;
                     evnt.SetTrend = 1;
-                    evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), WeatherFlowNS.Elevation);
+                    evnt.SetSeaLevel = SeaLevelPressure(AirObj.obs[0][(int)AirIndex.PRESSURE].GetValueOrDefault(), elevation);
                     evnt.Raw = json;
                     if (SkyObj.valid) {
                         try {
