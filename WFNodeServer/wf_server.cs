@@ -513,9 +513,9 @@ namespace WFNodeServer {
             page += "<title>WeatherFlow Nodeserver Web Interface</title>\n";
             page += "</head><body>\n";
             page += "<form name=\"root\" action=\"/config\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
-            page += "<table border=\"0\" width=\"100%\">\n";
-            page += "<tr><td align=\"center\"><h1>WeatherFlow Nodeserver v" + WeatherFlowNS.VERSION + "</h1></td></tr>\n";
-            page += "<div align=\"center\">\n";
+            page += MakeMenu();
+            page += "<div style=\"margin: 20 auto; padding-bottom: 10px;\">\n";
+            page += "<div>\n";
             page += "<table border=\"0\" width=\"600\" id=\"tblBody\" style=\"padding-left: 4px; padding-right: 4px; padding-top: 1px; padding-bottom: 1px\">\n";
             page += "<tr><td colspan=\"3\" Class=\"sectionTitle\"><br><h2>Configuration</h2><br></td></tr>\n";
 
@@ -546,7 +546,7 @@ namespace WFNodeServer {
             page += "</tr>\n";
 
             page += "<tr><th colspan=\"3\">&nbsp;</th></tr>\n";
-            page += "</table> </div> </table> </form>\n";
+            page += "</table> </div> </form>\n";
 
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
             page += "<table border=\"0\">\n";
@@ -626,9 +626,23 @@ namespace WFNodeServer {
             page += "</table>\n";
             page += "</div>\n";
 
+            page += "</div>\n";
+
             page += "</body> </html> \n";
 
             return page;
+        }
+
+        internal static string MakeMenu() {
+            string menu;
+
+            menu = "<div align=\"center\" style=\"width: 900px; margin: 0 auto; padding-bottom: 10px;\">\n";
+            menu += "<h1>WeatherFlow Nodeserver v" + WeatherFlowNS.VERSION + "</h1>\n";
+            menu += "<a href=\"/config\">Configuration</a> | ";
+            menu += "<a href=\"/log\">Log</a>";
+            menu += "</div>\n";
+
+            return menu;
         }
 
     }

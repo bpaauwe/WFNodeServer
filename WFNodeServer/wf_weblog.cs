@@ -150,6 +150,7 @@ namespace WFNodeServer {
             page += "<div align=\"center\" style=\"width: 900px; margin: 0 auto;\">\n";
             page += "<title>WeatherFlow Nodeserver Web Interface</title>\n";
             page += "</head><body onload=\"Start();\">\n";
+            page += WFNServer.MakeMenu();
             page += "<textarea id=\"log\" rows=\"45\" cols=\"120\">";
             page += "</textarea>\n";
             page += "<hr>\n";
