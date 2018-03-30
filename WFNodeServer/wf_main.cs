@@ -712,7 +712,7 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV6/" + sky.WindLull + unit;
             Rest.REST(report);
-            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/76";
+            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/14";
             Rest.REST(report);
 
             // Currently we just report the rain over 1 minute. If we want the rate
