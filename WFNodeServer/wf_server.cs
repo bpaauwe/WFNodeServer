@@ -299,6 +299,7 @@ namespace WFNodeServer {
                 } else {
                     list = resp.Split('&');
                     foreach (string item in list) {
+                        int v = 0;
                         pair = item.Split('=');
                         switch (pair[0]) {
                             case "sAddress":
@@ -323,19 +324,17 @@ namespace WFNodeServer {
                                 }
                                 break;
                             case "sProfile":
-                                int p = 0; ;
-                                int.TryParse(pair[1], out p);
-                                if (p != WF_Config.Profile) {
-                                    WF_Config.Profile = p;
+                                int.TryParse(pair[1], out v);
+                                if (v != WF_Config.Profile) {
+                                    WF_Config.Profile = v;
                                     initISY = true;
                                     saveCfg = true;
                                 }
                                 break;
                             case "webPort":
-                                int w = 0; ;
-                                int.TryParse(pair[1], out w);
-                                if (w != WF_Config.Port) {
-                                    WF_Config.Port = w;
+                                int.TryParse(pair[1], out v);
+                                if (v != WF_Config.Port) {
+                                    WF_Config.Port = v;
                                     saveCfg = true;
                                 }
                                 break;
@@ -357,6 +356,14 @@ namespace WFNodeServer {
                                 bool device = (pair[1] == "1");
                                 if (device != WF_Config.Device) {
                                     WF_Config.Device = (pair[1] == "1");
+                                    saveCfg = true;
+                                }
+                                break;
+                            case "sLogLevel":
+                                int.TryParse(pair[1], out v);
+                                if (v != WF_Config.LogLevel) {
+                                    WF_Config.LogLevel = v;
+                                    WFLogging.Level = (LOG_LEVELS)v;
                                     saveCfg = true;
                                 }
                                 break;
@@ -435,6 +442,24 @@ namespace WFNodeServer {
             return item;
         }
 
+        private string ConfigList(string title, string varname, int selected) {
+            string item;
+
+            item = "<tr>\n";
+            item += "<td><b>" + title + "</b></td>\n";
+            item += "<td><select name=\"" + varname + "\" onchange=\"this.form.submit()\">";
+            item += "<option value=\"0\" " + ((selected == 0) ? "selected" : "") + ">Updates</option>";
+            item += "<option value=\"1\" " + ((selected == 1) ? "selected" : "") + ">Errors</option>";
+            item += "<option value=\"2\" " + ((selected == 2) ? "selected" : "") + ">Warnings</option>";
+            item += "<option value=\"3\" " + ((selected == 3) ? "selected" : "") + ">Info</option>";
+            item += "<option value=\"4\" " + ((selected == 4) ? "selected" : "") + ">Debug</option>";
+            item += "</select>\n";
+            item += "</td>\n";
+            item += "</tr>\n";
+
+            return item;
+        }
+
         private string ConfigItem(string title, string varname, string varvalue, int type) {
             string item;
 
@@ -502,6 +527,7 @@ namespace WFNodeServer {
             page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
             page += ConfigBoolItem("Include Device data", "sDevice", WF_Config.Device);
+            page += ConfigList("Set Logging Level", "sLogLevel", WF_Config.LogLevel);
 
             page += "<tr>\n";
             page += "<td colspan=\"3\">";
