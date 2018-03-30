@@ -185,6 +185,7 @@ namespace WFNodeServer {
 					fs.Close();
 				}
             } catch (Exception ex){
+                Error("Failed to save Log to " + fname + " - " + ex.Message);
             }
         }
 
