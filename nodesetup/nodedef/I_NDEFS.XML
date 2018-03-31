@@ -48,8 +48,8 @@
 
     <nodeDef id="WF_Sky" nodeType="139" nls="139S" >
 		<sts>
-			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV8" editor="I_FLOAT2" />
+			<st id="GV10" editor="I_RAINTYPE" />
 			<st id="GV9" editor="I_FLOAT2" />
 			<st id="GV1" editor="I_FLOAT1" />
 			<st id="GV2" editor="I_INTEGER" />
@@ -58,6 +58,7 @@
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_FLOAT1" />
 			<st id="GV7" editor="I_DEGREE" />
+			<st id="GV0" editor="I_LAST_UPDATE" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -68,8 +69,8 @@
 
     <nodeDef id="WF_SkySI" nodeType="139" nls="139S" >
 		<sts>
-			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV8" editor="I_FLOAT2" />
+			<st id="GV10" editor="I_RAINTYPE" />
 			<st id="GV9" editor="I_FLOAT2" />
 			<st id="GV1" editor="I_FLOAT1" />
 			<st id="GV2" editor="I_INTEGER" />
@@ -78,6 +79,7 @@
 			<st id="GV5" editor="I_FLOAT1" />
 			<st id="GV6" editor="I_FLOAT1" />
 			<st id="GV7" editor="I_DEGREE" />
+			<st id="GV0" editor="I_LAST_UPDATE" />
 		</sts>
 		<cmds>
 			<accepts>

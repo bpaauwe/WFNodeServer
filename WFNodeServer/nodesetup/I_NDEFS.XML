@@ -57,8 +57,8 @@
 
     <nodeDef id="WF_Sky" nodeType="139" nls="139S" >
 		<sts>
-			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV8" editor="I_MMHR" />
+			<st id="GV11" editor="I_RAINTYPE" />
 			<st id="GV9" editor="I_MM" />
 			<st id="GV1" editor="I_LUX" />
 			<st id="GV2" editor="I_UV" />
@@ -68,6 +68,7 @@
 			<st id="GV6" editor="I_MPS" />
 			<st id="GV7" editor="I_DEGREE" />
 			<st id="GV10" editor="I_VOLTS" />
+			<st id="GV0" editor="I_LAST_UPDATE" />
 		</sts>
 		<cmds>
 			<accepts>
@@ -78,8 +79,8 @@
 
     <nodeDef id="WF_SkySI" nodeType="139" nls="139S" >
 		<sts>
-			<st id="GV0" editor="I_LAST_UPDATE" />
 			<st id="GV8" editor="I_INHR" />
+			<st id="GV11" editor="I_RAINTYPE" />
 			<st id="GV9" editor="I_INCHES" />
 			<st id="GV1" editor="I_LUX" />
 			<st id="GV2" editor="I_UV" />
@@ -89,6 +90,7 @@
 			<st id="GV6" editor="I_MPH" />
 			<st id="GV7" editor="I_DEGREE" />
 			<st id="GV10" editor="I_VOLTS" />
+			<st id="GV0" editor="I_LAST_UPDATE" />
 		</sts>
 		<cmds>
 			<accepts>

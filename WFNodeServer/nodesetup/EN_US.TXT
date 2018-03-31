@@ -41,6 +41,7 @@ ST-139S-GV7-NAME = Wind Direction
 ST-139S-GV8-NAME = Rain Rate
 ST-139S-GV9-NAME = Daily Rainfall
 ST-139S-GV10-NAME = Battery
+ST-139S-GV11-NAME = Rain Type
 
 ND-WF_SkyD-NAME = WeatherFlow Smart Weather Station Sky (device)
 ND-WF_SkyD-ICON = Input
@@ -82,6 +83,10 @@ EN_SENSOR_STATUS-1 = Failed
 
 EN_SENSOR_TRIGGER-0 = OK
 EN_SENSOR_TRIGGER-1 = Triggered
+
+EN_RAINTYPE-0 = None
+EN_RAINTYPE-1 = Rain
+EN_RAINTYPE-2 = Hail
 
 EN_TREND-0 = Falling
 EN_TREND-1 = Steady

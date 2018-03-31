@@ -56,6 +56,10 @@ ST-139R-GV1-NAME = Rapid Wind Speed
 
 CMD-ST-NAME = Query
 
+EN_RAINTYPE-0 = None
+EN_RAINTYPE-1 = Rain
+EN_RAINTYPE-2 = Hail
+
 EN_TREND-0 = Falling
 EN_TREND-1 = Steady
 EN_TREND-2 = Rising
