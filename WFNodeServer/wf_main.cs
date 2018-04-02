@@ -212,6 +212,7 @@ namespace WFNodeServer {
 
             WFLogging.AddListener(Console.WriteLine);
             WFLogging.Enabled = true;
+            WFLogging.Level = (LOG_LEVELS)WF_Config.LogLevel;
 
             WFLogging.Log("WeatherFlow Node Server " + VERSION);
 
@@ -731,6 +732,9 @@ namespace WFNodeServer {
 
             unit = (WF_Config.SI) ? "/105" : "/82";
             report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
+            Rest.REST(report);
+
+            report = prefix + address + "/report/status/GV11/" + sky.PrecipitationType + "/25";
             Rest.REST(report);
 
             report = prefix + address + "/report/status/GV10/" + sky.Battery + "/72";

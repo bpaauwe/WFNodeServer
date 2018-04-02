@@ -144,6 +144,7 @@ namespace WFNodeServer {
                 table += TableRow("Rain Rate", address, "8", args.RainRate, "");
                 table += TableRow("Daily Rainfall", address, "9", args.Rain, "");
                 table += TableRow("Battery", address, "10", args.Battery, "");
+                table += TableRow("Rain Type", address, "11", args.PrecipitationType, "");
             } else {
                 table += TableRow("Last Update", address, "0", "", "Time in seconds since last update");
                 table += TableRow("Illumination", address, "1", "###", "");
@@ -156,6 +157,7 @@ namespace WFNodeServer {
                 table += TableRow("Rain Rate", address, "8", "###", "");
                 table += TableRow("Daily Rainfall", address, "9", "###", "");
                 table += TableRow("Battery", address, "10", "###", "");
+                table += TableRow("Rain Type", address, "11", "###", "");
             }
             table += "<tr><th colspan=\"5\">&nbsp;</th></tr>";
 
