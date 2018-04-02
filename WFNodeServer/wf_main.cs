@@ -733,6 +733,9 @@ namespace WFNodeServer {
             report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
             Rest.REST(report);
 
+            report = prefix + address + "/report/status/GV11/" + sky.PrecipitationType + "/25";
+            Rest.REST(report);
+
             report = prefix + address + "/report/status/GV10/" + sky.Battery + "/72";
             Rest.REST(report);
 
