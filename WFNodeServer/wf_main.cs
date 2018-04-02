@@ -212,6 +212,7 @@ namespace WFNodeServer {
 
             WFLogging.AddListener(Console.WriteLine);
             WFLogging.Enabled = true;
+            WFLogging.Level = (LOG_LEVELS)WF_Config.LogLevel;
 
             WFLogging.Log("WeatherFlow Node Server " + VERSION);
 
