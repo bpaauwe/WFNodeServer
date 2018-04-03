@@ -73,6 +73,9 @@ namespace WFNodeServer {
                                 WFLogging.Error(ex.Message);
                             }
                             break;
+                        case "Clear":
+                            WFLogging.Clear();
+                            break;
                     }
                 }
             }
@@ -156,6 +159,7 @@ namespace WFNodeServer {
             page += "<hr>\n";
             page += "<form name=\"log\" action=\"/log\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
             page += "<input type=\"Button\" id=\"Pause\" name=\"Pause\" value=\"Pause\" onclick=\"PauseLog();\"> &nbsp;";
+            page += "<input type=\"submit\" id=\"Clear\" name=\"Clear\" value=\"Clear\"> &nbsp;";
             page += "<input type=\"submit\" name=\"Save\" value=\"Save to\"> &nbsp;";
             page += "<input id=\"the-file-input\" type=\"text\" name=\"filename\"> &nbsp;";
             page += "Log Level: ";
