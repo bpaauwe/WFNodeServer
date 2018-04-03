@@ -9,7 +9,7 @@
       <range uom="25" subset="0-2" nls="EN_TREND" />
    </editor>
    <editor id="I_RAINTYPE">
-      <range uom="25" subset="0-2" nls="EN_RAINTYPE" />
+      <range uom="25" subset="0-3" nls="EN_RAINTYPE" />
    </editor>
    <editor id="I_CARDINAL">
       <range uom="25" subset="0-15" nls="EN_CARDINAL" />
