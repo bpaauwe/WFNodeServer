@@ -255,6 +255,7 @@ namespace WFNodeServer {
             string cfg_page;
             byte[] page;
             byte[] post = new byte[1024];
+            Thread do_something;
 
             //Console.WriteLine("content length = " + context.Request.ContentLength64.ToString());
             if (context.Request.ContentLength64 > 0) {
@@ -302,6 +303,11 @@ namespace WFNodeServer {
                             WFLogging.Warning("Unknown action [" + a_form.action + "]");
                             break;
                     }
+                } else if (resp.Contains("upload")) {
+                    // Upload profile files  TODO: Should this be done in a thread?
+                    do_something = new Thread(WeatherFlowNS.NS.UpdateProfileFiles);
+                    do_something.IsBackground = true;
+                    do_something.Start();
                 } else {
                     list = resp.Split('&');
                     foreach (string item in list) {
@@ -547,6 +553,8 @@ namespace WFNodeServer {
                 page += "<input style=\"width: 120px; text-align: center; background-color: #e8e8e8;\" type=\"text\" name=\"status\" value=\"";
                 page += (WeatherFlowNS.NS.udp_client.Active) ? "Running" : "Paused";
                 page += "\" readonly>";
+                page += "&nbsp;&nbsp;";
+                page += "<input type=\"submit\" name=\"upload\" value=\" Upload Profile Files \" placeholder=\"Upload files to the ISY\">";
                 page += "</form>";
             }
             page += "</td>\n";

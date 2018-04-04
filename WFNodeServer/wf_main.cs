@@ -289,6 +289,7 @@ namespace WFNodeServer {
         internal Heartbeat heartbeat = new Heartbeat();
         internal WeatherFlow_UDP udp_client = new WeatherFlow_UDP();
         internal Dictionary<string, EventArgs> NodeData = new Dictionary<string, EventArgs>();
+        private object profile_lock = new object();
 
         //internal NodeServer(string host, string user, string pass, int profile, bool si_units, bool hub_node, int port) {
         internal NodeServer() {
@@ -334,13 +335,13 @@ namespace WFNodeServer {
             if (!SetupRest())
                 return;
             LookupProfile();
-            UpdateProfileFiles();
+            if (WF_Config.ProfileVersion != WeatherFlowNS.ProfileVersion)
+                UpdateProfileFiles();
             ConfigureNodes();
         }
 
         internal void UpdateProfileFiles() {
-
-            if (WF_Config.ProfileVersion != WeatherFlowNS.ProfileVersion) {
+            lock (profile_lock) {
                 WFLogging.Log("Updating profile files on ISY...");
                 // First remove existing profile files
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/profile/remove");
@@ -352,11 +353,10 @@ namespace WFNodeServer {
 
                 // This command is documented but doesn't exist yet
                 //Rest.REST("ns/2/profile/reload");
-                WFLogging.Log("Files uploaded, ISY must be rebooted for changes to take effect.");
+                WFLogging.Log("Files uploaded, ISY admin console must be restarted for changes to take effect.");
 
                 WF_Config.ProfileVersion = WeatherFlowNS.ProfileVersion;
                 WFLogging.Log(WeatherFlowNS.SaveConfiguration());
-                
             }
         }
 
