@@ -79,7 +79,6 @@ namespace WFNodeServer {
         internal string REST(string url) {
             HttpWebRequest request;
             HttpWebResponse response;
-            Stream reader;
             string xml = "";
             string rest_url;
             int code;
@@ -103,47 +102,31 @@ namespace WFNodeServer {
             // Read data from the stream
             try {
                 response = (HttpWebResponse)request.GetResponse();
-                    if (response.ContentLength > 0) {
-                        code = (int)response.StatusCode;
-                        if (code != 200) {
-                            if (code == 404) {  // No entries match this request
-                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
-                            } else if (code == 405) { // URL doesn't exist (bad request)
-                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
-                            } else {
-                                WFLogging.Error("ISY REST request to URL, " +
-                                        url + ", failed with " +
-                                        response.StatusDescription);
-                            }
-                        } else {  // code == 200 OK, read response
-                            byte[] buf = new byte[4096];
-                            int len;
-                            string chunk;
-
-                            reader = response.GetResponseStream();
-                            try {
-                                do {
-                                    len = reader.Read(buf, 0, buf.Length);
-                                    //Console.WriteLine("  -> Read " + len.ToString() + " bytes from stream.");
-                                    if (len > 0) {
-                                        chunk = new String(Encoding.ASCII.GetString(buf).ToCharArray(), 0, len);
-                                        xml += chunk;
-                                    }
-                                } while (len > 0);
-                            } catch {
-                                WFLogging.Debug("Ignoring reader exception?");
-                            }
-
-                            reader.Close();
-                            //Console.WriteLine("REST got: " + xml);
+                if (response.ContentLength > 0) {
+                    code = (int)response.StatusCode;
+                    if (code != 200) {
+                        if (code == 404) {  // No entries match this request
+                            WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
+                        } else if (code == 405) { // URL doesn't exist (bad request)
+                            WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
+                        } else {
+                            WFLogging.Error("ISY REST request to URL, " +
+                                    url + ", failed with " +
+                                    response.StatusDescription);
                         }
-                    } // End of content length > 0
+                    } else {  // code == 200 OK, read response
+                        xml = ChunkedRead(response);
+                    }
+                } else if (response.ContentLength == -1) {// End of content length > 0
+                    // Response is chunked?
+                    xml = ChunkedRead(response);
+                }
                 response.Close();
             } catch (WebException ex) {
                 xml = "";
                 //Console.WriteLine(xml);
                 //throw new RestException();
-                WFLogging.Error(ex.Message);
+                WFLogging.Error("Request failed: " + ex.Message);
             }
 
             request.Abort();
@@ -180,6 +163,32 @@ namespace WFNodeServer {
             } catch (Exception ex) {
                 WFLogging.Error(ex.Message);
             }
+        }
+
+        private string ChunkedRead(HttpWebResponse response) {
+            Stream reader;
+            byte[] buf = new byte[4096];
+            int len;
+            string chunk;
+            string resp = "";
+
+            reader = response.GetResponseStream();
+            try {
+                do {
+                    len = reader.Read(buf, 0, buf.Length);
+                    //Console.WriteLine("  -> Read " + len.ToString() + " bytes from stream.");
+                    if (len > 0) {
+                        chunk = new String(Encoding.ASCII.GetString(buf).ToCharArray(), 0, len);
+                        resp += chunk;
+                    }
+                } while (len > 0);
+            } catch {
+                WFLogging.Debug("Ignoring reader exception?");
+            }
+
+            reader.Close();
+
+            return resp;
         }
     }
 }
