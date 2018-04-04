@@ -36,7 +36,6 @@ namespace WFNodeServer {
         internal string Password { get; set; }
         internal string Username { get; set; }
         internal string Base;
-        internal string AuthHeader = "";
         internal bool AuthRequired = true;
 
         internal rest() {
@@ -93,14 +92,11 @@ namespace WFNodeServer {
                 return "";
             }
 
-            if (AuthHeader == "" && AuthRequired)
-                AuthHeader = Authorize();
-
             WFLogging.Debug(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.UserAgent = "WFNodeServer";
             if (AuthRequired)
-                request.Headers.Add("Authorization", AuthHeader);
+                request.Headers.Add("Authorization", Authorize());
             request.Proxy = null;
             request.KeepAlive = true;
 
@@ -161,14 +157,12 @@ namespace WFNodeServer {
             int code;
 
             rest_url = Base + url;
-            if (AuthHeader == "" && AuthRequired)
-                AuthHeader = Authorize();
 
             WFLogging.Debug(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.UserAgent = "WFNodeServer";
             if (AuthRequired)
-                request.Headers.Add("Authorization", AuthHeader);
+                request.Headers.Add("Authorization", Authorize());
             request.Proxy = null;
             request.KeepAlive = false;
             request.Method = "POST";
