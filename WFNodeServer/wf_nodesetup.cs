@@ -45,7 +45,11 @@ namespace WFNodeServer {
                 // Send to ISY
                 // This is just a http post to /rest/ns/profile/<profile>/upload/<type>/<filename>
                 Rest.AuthRequired = true;
-                Rest.REST_POST("ns/profile/" + profile.ToString() + "/upload/" + type + "/" + resname, contents, contents.Length);
+                try {
+                    Rest.REST_POST("ns/profile/" + profile.ToString() + "/upload/" + type + "/" + resname, contents, contents.Length);
+                } catch (Exception ex) {
+                    WFLogging.Error(resname + " upload failed: " + ex.Message);
+                }
             }
         }
     }
