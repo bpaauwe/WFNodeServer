@@ -151,6 +151,7 @@ namespace WFNodeServer {
             WF_Config.UDPPort = 50222;
             WF_Config.Valid = false;
             WF_Config.WFStationInfo = new List<StationInfo>();
+            WF_Config.LogLevel = 1;
 
             // First check for command line config file path
             for (int i = 0; i < args.Length; i++) {
@@ -377,6 +378,12 @@ namespace WFNodeServer {
             Rest.AuthRequired = true;
             Rest.Username = WF_Config.Username;
             Rest.Password = WF_Config.Password;
+
+            if (Rest.Username == "" || Rest.Password == "")
+                return false;
+
+            // TODO: Attempt to connect to ISY
+
             return true;
         }
 
@@ -414,6 +421,7 @@ namespace WFNodeServer {
         internal void ConfigureNodes() {
             NodeList.Clear();
 
+            WFLogging.Log("Querying ISY for existing nodes");
             FindOurNodes();
             if (NodeList.Count > 0 && !ProfileDetected) {
                 int Profile;
@@ -948,6 +956,7 @@ namespace WFNodeServer {
 
             try {
                 xml = Rest.REST(query);
+
                 xmld = new XmlDocument();
                 xmld.LoadXml(xml);
 
@@ -999,6 +1008,7 @@ namespace WFNodeServer {
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
+                        WFLogging.Error("Failed to parse nodeDefId attribute from " + node.Name);
                     }
                 }
             } catch (Exception ex) {
