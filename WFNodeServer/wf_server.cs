@@ -28,6 +28,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Reflection;
+using System.Web;
 
 namespace WFNodeServer {
     internal class WFNServer {
@@ -306,6 +307,7 @@ namespace WFNodeServer {
                     foreach (string item in list) {
                         int v = 0;
                         pair = item.Split('=');
+                        pair[1] = HttpUtility.UrlDecode(pair[1]);
                         switch (pair[0]) {
                             case "sAddress":
                                 if (pair[1] != WF_Config.ISY) {
