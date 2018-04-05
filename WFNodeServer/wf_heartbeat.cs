@@ -31,6 +31,7 @@ namespace WFNodeServer {
         private Dictionary<string, bool> HeartBeat = new Dictionary<string, bool>();
         private Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
         private object _locker = new object();
+        private int interval = 0;
 
         internal void Start() {
             // Start a timer to track time since Last Update 
@@ -68,6 +69,11 @@ namespace WFNodeServer {
         private void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+
+            if (++interval == 10) {
+                WFLogging.Info("ISY Request Rate: " + WeatherFlowNS.NS.Rest.stats.Rate.ToString() + " requests/minute");
+                interval = 0;
+            }
 
             foreach (string address in WeatherFlowNS.NS.NodeList.Keys) {
                 if (WeatherFlowNS.NS.NodeList[address] == "WF_Hub") {

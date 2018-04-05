@@ -32,11 +32,32 @@ using System.Xml;
 
 
 namespace WFNodeServer {
+    internal class RestStats {
+        internal DateTime Start { get; set; }
+        internal int Count;
+
+        internal RestStats() {
+            Start = DateTime.Now;
+            Count = 0;
+        }
+
+        internal double Rate {
+            get {
+                TimeSpan t = DateTime.Now.Subtract(Start);
+                if (t.TotalMinutes == 0)
+                    return Count;
+                return Count / t.TotalMinutes;
+            }
+        }
+    }
+
     internal class rest {
         internal string Password { get; set; }
         internal string Username { get; set; }
         internal string Base;
         internal bool AuthRequired = true;
+
+        internal RestStats stats = new RestStats();
 
         internal rest() {
         }
@@ -91,6 +112,7 @@ namespace WFNodeServer {
                 return "";
             }
 
+            stats.Count++;
             WFLogging.Debug(rest_url);
             request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
             request.UserAgent = "WFNodeServer";
@@ -129,7 +151,7 @@ namespace WFNodeServer {
                 WFLogging.Error("Request failed: " + ex.Message);
             }
 
-            request.Abort();
+            //request.Abort();
             return xml;
         }
 
