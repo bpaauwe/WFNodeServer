@@ -207,6 +207,8 @@ namespace WFNodeServer {
             internal int station_id;
             internal int air_id;
             internal int sky_id;
+            internal string air_sn;
+            internal string sky_sn;
             internal double elevation;
             internal bool remote;
             internal bool rapid;
@@ -223,9 +225,14 @@ namespace WFNodeServer {
             foreach (string p in list) {
                 string[] pr = p.Split('=');
                 switch (pr[0]) {
-                    case "station_id": int.TryParse(pr[1], out sf.station_id); break;
+                    case "station_id":
+                        sf.station_id = 0;
+                        int.TryParse(pr[1], out sf.station_id);
+                        break;
                     case "air_id": int.TryParse(pr[1], out sf.air_id); break;
                     case "sky_id": int.TryParse(pr[1], out sf.sky_id); break;
+                    case "air_sn": sf.air_sn = pr[1]; break;
+                    case "sky_sn": sf.sky_sn = pr[1]; break;
                     case "elevation": double.TryParse(pr[1], out sf.elevation); break;
                     case "remote": sf.remote = true; break;
                     case "rapid": sf.rapid = true; break;
@@ -241,6 +248,8 @@ namespace WFNodeServer {
             if (station.GetStationMeta(a_form.station_id.ToString()) || (a_form.station_id == 0)) {
                 a_form.air_id = (a_form.air_id == 0) ? station.Air : a_form.air_id;
                 a_form.sky_id = (a_form.sky_id == 0) ? station.Sky : a_form.sky_id;
+                a_form.air_sn = (a_form.air_sn == "") ? station.AirSN : a_form.air_sn;
+                a_form.sky_sn = (a_form.sky_sn == "") ? station.SkySN : a_form.sky_sn;
                 a_form.elevation = (a_form.elevation == 0) ? station.Elevation : a_form.elevation;
                 WeatherFlowNS.NS.AddStation(a_form.station_id, a_form.elevation, a_form.air_id, a_form.sky_id, a_form.remote, station.AirSN, station.SkySN, a_form.rapid);
                 return true;
@@ -566,15 +575,20 @@ namespace WFNodeServer {
             page += "<div style=\"padding-left: 4px; padding-right: 4px; padding-top: 20px; padding-bottom: 1px\">\n";
             page += "<table border=\"0\">\n";
             page += "<tr><td colspan=\"8\"><h2>Station Configuration</h2></td></tr>\n";
-            page += "<tr><th>Station ID</th><th>Sky ID</th><th>Air ID</th><th>Elevation (meters)</th><th>Remote</th><th>Rapid</th><th>&nbsp;</th></tr>\n";
+            page += "<tr><th>Station ID</th><th>Sky S/N</th><th>Air S/N</th><th>Elevation (meters)</th><th>Remote</th><th>Rapid</th><th>&nbsp;</th></tr>\n";
             foreach (StationInfo s in WF_Config.WFStationInfo) {
                 string placeholder = "Enter the weather station ID";
 
                 page += "<tr>";
                 page += "<form method=\"post\">";
-                page += "<td><input style=\"width:150px\" required placeholder=\"" + placeholder + "\" name = \"station_id\" type=\"number\" value=\"" + s.station_id.ToString() + "\"></td>";
-                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.sky_id.ToString() + "\"></td>";
-                page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.air_id.ToString() + "\"></td>";
+                if (s.station_id == 0)
+                    page += "<td><input style=\"width:150px\" name = \"station_id\" readonly value=\"" + "Local UDP" + "\"></td>";
+                else
+                    page += "<td><input style=\"width:150px\" required placeholder=\"" + placeholder + "\" name = \"station_id\" type=\"number\" value=\"" + s.station_id.ToString() + "\"></td>";
+                //page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.sky_id.ToString() + "\"></td>";
+                //page += "<td><input style=\"width:150px\" type=\"number\" readonly value=\"" + s.air_id.ToString() + "\"></td>";
+                page += "<td><input style=\"width:150px\" readonly value=\"" + s.sky_sn + "\"></td>";
+                page += "<td><input style=\"width:150px\" readonly value=\"" + s.air_sn + "\"></td>";
                 page += "<td><input style=\"width:150px\" name=\"elevation\" type=\"number\" step=\"any\" value=\"" + s.elevation.ToString() + "\"></td>";
                 page += "<td><input style=\"width:50px\" ";
                 page += (s.remote) ? "checked" : "unchecked";
@@ -590,8 +604,10 @@ namespace WFNodeServer {
             page += "<form name=\"stations\" action=\"/config\" enctype=\"application/x-www-form-urlencoded\" method=\"post\">\n";
             page += "<tr>";
             page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"station_id\" value=\"\" required></td>\n";
-            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"sky_id\" value=\"\"></td>\n";
-            page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"air_id\" value=\"\"></td>\n";
+            //page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"sky_id\" value=\"\"></td>\n";
+            //page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"air_id\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:150px\" name=\"sky_id\" value=\"\"></td>\n";
+            page += "<td><input style=\"width:150px\" name=\"air_id\" value=\"\"></td>\n";
             page += "<td><input style=\"width:150px\" type=\"number\" step=\"any\" name=\"elevation\" value=\"\"></td>\n";
             page += "<td><input style=\"width:50px\" type=\"checkbox\"  name=\"remote\" value=\"1\"></td>\n";
             page += "<td><input style=\"width:50px\" type=\"checkbox\"  name=\"rapid\" value=\"1\"></td>\n";
