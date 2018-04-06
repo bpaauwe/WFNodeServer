@@ -79,6 +79,7 @@ namespace WFNodeServer {
 
         internal rest(string base_url) {
             Base = base_url;
+            System.Net.ServicePointManager.Expect100Continue = false;
         }
 
         // 
@@ -135,8 +136,10 @@ namespace WFNodeServer {
                 if (AuthRequired)
                     request.Headers.Add("Authorization", Authorize());
                 request.Proxy = null;
+                request.ServicePoint.ConnectionLimit = 10;
+                request.Timeout = 2000;
                 request.KeepAlive = true;
-                request.Pipelined = true;
+                //request.Pipelined = true;
 
                 // Read data from the stream
                 try {

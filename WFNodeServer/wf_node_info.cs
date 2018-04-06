@@ -40,6 +40,7 @@ namespace WFNodeServer {
             context.Response.OutputStream.Write(page, 0, page.Length);
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+            context.Response.Close();
         }
 
         private static string TableRow(string name, string address, string gv, string value, string note) {

@@ -175,6 +175,7 @@ namespace WFNodeServer {
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+            context.Response.Close();
         }
 
         private void Initialize(string path, int port) {
@@ -449,6 +450,7 @@ namespace WFNodeServer {
             context.Response.OutputStream.Write(page, 0, page.Length);
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+            context.Response.Close();
         }
 
         private string ConfigBoolItem(string title, string varname, bool flag) {

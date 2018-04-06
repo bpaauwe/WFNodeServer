@@ -89,6 +89,7 @@ namespace WFNodeServer {
             context.Response.OutputStream.Write(page, 0, page.Length);
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+            context.Response.Close();
         }
 
         internal static void LogText(HttpListenerContext context) {
@@ -103,6 +104,7 @@ namespace WFNodeServer {
             context.Response.OutputStream.Write(page, 0, page.Length);
             context.Response.OutputStream.Flush();
             context.Response.OutputStream.Close();
+            context.Response.Close();
         }
 
         private static string MakeLog() {
