@@ -64,14 +64,16 @@ namespace WFNodeServer {
 
                 SecondsSinceUpdate[address] = 0;
             }
+
         }
 
         private void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            DateTime start = DateTime.Now;
 
-            if (++interval == 10) {
-                WFLogging.Info("ISY Request Rate: " + WeatherFlowNS.NS.Rest.stats.Rate.ToString() + " requests/minute");
+            if (++interval >= 10) {
+                WFLogging.Info("ISY Request Rate: " + WeatherFlowNS.NS.Rest.stats.Rate + " requests/minute");
                 interval = 0;
             }
 
@@ -107,6 +109,7 @@ namespace WFNodeServer {
                     }
                 }
             }
+            WFLogging.Info("HandleHeartbeat " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
     }
 }

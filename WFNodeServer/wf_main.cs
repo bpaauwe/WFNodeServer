@@ -612,6 +612,7 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber + "_d";
+            DateTime start = DateTime.Now;
 
             air.si_units = WF_Config.SI;
             NodeData[address] = air;
@@ -678,6 +679,7 @@ namespace WFNodeServer {
                     NodeList.Add(sec_address, "WF_AirD");
                 }
             }
+            WFLogging.Info("HandleAir       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         // Handler that is called when re receive Sky data
@@ -687,6 +689,7 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber + "_d";
+            DateTime start = DateTime.Now;
 
             sky.si_units = WF_Config.SI;
             NodeData[address] = sky;
@@ -758,6 +761,7 @@ namespace WFNodeServer {
                     NodeList.Add(sec_address, "WF_SkyD");
                 }
             }
+            WFLogging.Info("HandleSky       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleDevice(object sender, DeviceEventArgs device) {
@@ -767,6 +771,7 @@ namespace WFNodeServer {
             string units;
             double up;
             double secsperday = 60 * 60 * 24;
+            DateTime start = DateTime.Now;
 
             NodeData[address] = device;
 
@@ -822,6 +827,7 @@ namespace WFNodeServer {
                 report = prefix + address + "/report/status/GV6/" + device.Firmware + "/56";
                 Rest.REST(report);
             }
+            WFLogging.Info("HandleDevice    " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleWind(object sender, RapidEventArgs wind) {
@@ -829,6 +835,7 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
             string unit;
+            DateTime start = DateTime.Now;
 
             NodeData[address] = wind;
 
@@ -852,12 +859,14 @@ namespace WFNodeServer {
             //report = prefix + address + "/report/status/GV10/" + wind.Direction.ToString() + "/25";
             report = prefix + address + "/report/status/GV0/" + wind.Direction.ToString() + "/25";
             Rest.REST(report);
+            WFLogging.Info("HandleWind      " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleLightning(object sender, LightningEventArgs strike) {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.SerialNumber;
+            DateTime start = DateTime.Now;
 
             strike.si_units = WF_Config.SI;
             NodeData[address] = strike;
@@ -881,7 +890,7 @@ namespace WFNodeServer {
 
             report = prefix + address + "/report/status/GV2/" + strike.Energy + "/56";
             Rest.REST(report);
-
+            WFLogging.Info("HandleLightning " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleRain(object sender, RainEventArgs rain) {
@@ -898,6 +907,7 @@ namespace WFNodeServer {
             string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + hub.SerialNumber;
+            DateTime start = DateTime.Now;
 
             NodeData[address] = hub;
 
@@ -930,6 +940,7 @@ namespace WFNodeServer {
             WFLogging.Debug("HUB: rssi        = " + hub.RSSI);
             WFLogging.Debug("HUB: timestamp   = " + hub.TimeStamp);
             WFLogging.Debug("HUB: uptime      = " + hub.Uptime.ToString());
+            WFLogging.Info("HandleHub       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {

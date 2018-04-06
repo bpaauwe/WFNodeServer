@@ -34,19 +34,34 @@ using System.Xml;
 namespace WFNodeServer {
     internal class RestStats {
         internal DateTime Start { get; set; }
-        internal int Count;
+        internal double RequestTime { get; set; }
+        private int count;
+        private DateTime last;
 
         internal RestStats() {
             Start = DateTime.Now;
-            Count = 0;
+            count = 0;
+            last = Start;
         }
 
-        internal double Rate {
+        internal int Count {
+            get { return count; }
+            set {
+                TimeSpan t = DateTime.Now.Subtract(last);
+                string l = String.Format("{0,12:0.0000ms}", t.TotalMilliseconds);
+                WFLogging.Info("Time since last request = " + l + "  took " + RequestTime.ToString() + "ms");
+                count = value;
+                last = DateTime.Now;
+            }
+        }
+
+        internal string Rate {
             get {
                 TimeSpan t = DateTime.Now.Subtract(Start);
                 if (t.TotalMinutes == 0)
-                    return Count;
-                return Count / t.TotalMinutes;
+                    return count.ToString();
+
+                return (count / t.TotalMinutes).ToString("0.##");
             }
         }
     }
