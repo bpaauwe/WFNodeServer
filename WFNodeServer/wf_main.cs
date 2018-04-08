@@ -945,7 +945,8 @@ namespace WFNodeServer {
 
         internal void GetUpdate(object sender, UpdateEventArgs update) {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + update.SerialNumber;
-            heartbeat.Updated(address);
+            heartbeat.Updated(address, update.UpdateTime, update.type);
+            //heartbeat.Updated(address);
         }
 
         internal void AddNode(string address) {

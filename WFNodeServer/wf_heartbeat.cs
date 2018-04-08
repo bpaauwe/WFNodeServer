@@ -29,9 +29,14 @@ namespace WFNodeServer {
         private Timer UpdateTimer = new System.Timers.Timer();
         private ElapsedEventHandler handler;
         private Dictionary<string, bool> HeartBeat = new Dictionary<string, bool>();
-        private Dictionary<string, int> SecondsSinceUpdate = new Dictionary<string, int>();
+        private Dictionary<string, UDPTime> SecondsSinceUpdate = new Dictionary<string, UDPTime>();
         private object _locker = new object();
         private int interval = 0;
+
+        struct UDPTime {
+            internal int timestamp;
+            internal int now;
+        };
 
         internal void Start() {
             // Start a timer to track time since Last Update 
@@ -57,14 +62,44 @@ namespace WFNodeServer {
             SecondsSinceUpdate.Clear();
         }
 
-        internal void Updated(string address) {
-            lock (_locker) {
-                if (!SecondsSinceUpdate.ContainsKey(address))
-                    SecondsSinceUpdate.Add(address, 0);
+        internal void Updated(string address, int timestamp, WeatherFlow_UDP.DataType t) {
+            // Check for missing data here.
+            UDPTime utime;
+            TimeSpan epoch = DateTime.UtcNow - new DateTime(1970, 1, 1);
 
-                SecondsSinceUpdate[address] = 0;
+            utime.timestamp = timestamp;
+            utime.now = (int)epoch.TotalSeconds;
+
+            if (!SecondsSinceUpdate.ContainsKey(address))
+                SecondsSinceUpdate[address] = utime;
+
+            // TODO: The diff should be 2x the interval. Is there some way to get that
+            //       information here?
+            int diff = timestamp - SecondsSinceUpdate[address].timestamp;
+            switch (t) {
+                case WeatherFlow_UDP.DataType.AIR:
+                case WeatherFlow_UDP.DataType.SKY:
+                    // Expect data every 60 seconds
+                    if (diff >= 120)
+                        WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
+                    break;
+                case WeatherFlow_UDP.DataType.DEVICE:
+                    // Expect data every 30 seconds
+                    if (diff >= 60)
+                        WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
+                    break;
+                case WeatherFlow_UDP.DataType.HUB:
+                    // Expect data every 10 seconds
+                    if (diff >= 20)
+                        WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
+                    break;
+                case WeatherFlow_UDP.DataType.WIND:
+                    // Expect data every 3 seconds
+                    if (diff >= 6)
+                        WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
+                    break;
             }
-
+            SecondsSinceUpdate[address] = utime;
         }
 
         private void UpdateTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
@@ -100,12 +135,18 @@ namespace WFNodeServer {
                 } else {
                     // this should only sky & air nodes
                     lock (_locker) {
-                        if (!SecondsSinceUpdate.ContainsKey(address))
-                            SecondsSinceUpdate.Add(address, 0);
+                        TimeSpan t = DateTime.UtcNow - new DateTime(1970, 1, 1);
 
-                        report = prefix + address + "/report/status/GV0/" + SecondsSinceUpdate[address].ToString() + "/58";
-                        WeatherFlowNS.NS.Rest.REST(report);
-                        SecondsSinceUpdate[address] += 30;
+                        if (SecondsSinceUpdate.ContainsKey(address)) {
+                            int elapsed = (int)t.TotalSeconds - SecondsSinceUpdate[address].now;
+                            report = prefix + address + "/report/status/GV0/" + elapsed.ToString() + "/58";
+                            WeatherFlowNS.NS.Rest.REST(report);
+                        } else {
+                            UDPTime utime;
+                            utime.timestamp = (int)t.TotalSeconds;  // On startup, we don't know when the last message was sent
+                            utime.now = (int)t.TotalSeconds;
+                            SecondsSinceUpdate[address] = utime;
+                        }
                     }
                 }
             }

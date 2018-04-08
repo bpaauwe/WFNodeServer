@@ -170,7 +170,13 @@ namespace WFNodeServer {
     internal class UpdateEventArgs : System.EventArgs {
         internal int update_time;
         internal string serial_number;
+        internal WeatherFlow_UDP.DataType type;
 
+        internal UpdateEventArgs(int u, string s, WeatherFlow_UDP.DataType t) {
+            update_time = u;
+            serial_number = s;
+            type = t;
+        }
         internal UpdateEventArgs(int u, string s) {
             update_time = u;
             serial_number = s;

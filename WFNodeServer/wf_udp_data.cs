@@ -40,6 +40,15 @@ namespace WFNodeServer {
         private string CurrentDate = DateTime.Now.Subtract(TimeSpan.FromDays(1)).ToShortDateString();
         private double DailyPrecipitation = 0;
 
+        internal enum DataType {
+            STRIKE = 0,
+            WIND,
+            AIR,
+            SKY,
+            DEVICE,
+            HUB,
+        }
+
         internal enum WF {
             ROOT = 0,
             TEMPERATURE,
@@ -212,6 +221,7 @@ namespace WFNodeServer {
 
                 // Add event to update this info.
                 WeatherFlowNS.NS.RaiseDeviceEvent(this, new WFNodeServer.DeviceEventArgs(DeviceObj));
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)DeviceObj.timestamp, DeviceObj.serial_number + "_d", DataType.DEVICE));
 
                 //Console.WriteLine("Serial Number:     " + DeviceObj.serial_number);
                 //Console.WriteLine("Device Type:       " + DeviceObj.type);
@@ -239,6 +249,7 @@ namespace WFNodeServer {
             try {
                 HubObj = serializer.Deserialize<HubData>(json);
                 WeatherFlowNS.NS.RaiseHubEvent(this, new WFNodeServer.HubEventArgs(HubObj));
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)HubObj.timestamp, HubObj.serial_number, DataType.HUB));
 
                 //Console.WriteLine("Serial Number:     " + HubObj.serial_number);
                 //Console.WriteLine("Device Type:       " + HubObj.type);
@@ -302,7 +313,7 @@ namespace WFNodeServer {
                 }
 
                 WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
-                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)AirObj.obs[0][0], AirObj.serial_number, DataType.AIR));
             } catch (Exception ex) {
                 WFLogging.Error("Deserialization failed for air data: " + ex.Message);
             }
@@ -320,7 +331,7 @@ namespace WFNodeServer {
                 evnt.Raw = json;
 
                 WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
-                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)SkyObj.obs[0][0], SkyObj.serial_number, DataType.SKY));
             } catch (Exception ex) {
                 WFLogging.Error("Deserialization failed for sky data: " + ex.Message);
                 return;
@@ -365,8 +376,10 @@ namespace WFNodeServer {
                 WindObj = serializer.Deserialize<WindData>(json);
 
                 StationInfo si = wf_station.FindStationSky(WindObj.serial_number);
-                if (si.rapid)
+                if (si.rapid) {
                     WeatherFlowNS.NS.RaiseRapidEvent(this, new RapidEventArgs(WindObj));
+                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)WindObj.ob[0], WindObj.serial_number + "_r", DataType.WIND));
+                }
             } catch (Exception ex) {
                 WFLogging.Error("Failed to deserialize rapid wind event: " + ex.Message);
                 WFLogging.Error(json);
@@ -407,7 +420,7 @@ namespace WFNodeServer {
 
                     // This fails the first time, why?
                     WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
-                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, SkyObj.serial_number));
+                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)SkyObj.obs[0][0], SkyObj.serial_number, DataType.SKY));
                 } else if (json.Contains("obs_air")) {
                     //AirObj = new AirData();
                     if (obs.source == "cache")
@@ -447,7 +460,7 @@ namespace WFNodeServer {
                     }
 
                     WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
-                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs(0, AirObj.serial_number));
+                    WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)AirObj.obs[0][0], AirObj.serial_number, DataType.AIR));
                 }
 
             } catch (Exception ex) {
