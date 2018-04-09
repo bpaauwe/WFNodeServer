@@ -25,6 +25,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 using System.Web;
+using System.Net.NetworkInformation;
 
 namespace WFNodeServer {
     internal static class WFWebLog {
@@ -116,44 +117,45 @@ namespace WFNodeServer {
             page += "<meta http-equiv=\"pragma\" content=\"no-cache\">\n";
             page += "<meta http-equiv=\"Content-Language\" content=\"en\">\n";
             page += "<meta charset=\"UTF-8\">\n";
-            page += "<meta name=\"google\" content=\"notranslate\">\n";
             page += "<style>\n";
             page += "	body { font-family: Sans-Serif; }\n";
             page += "</style>\n";
             page += "<script>\n";
-            page += "  var timeInt = 0;\n";
-            page += "  function loadLog(callback) {\n";
-            page += "    var xhttp;\n";
-            page += "    xhttp = new XMLHttpRequest();\n";
-            page += "    xhttp.onreadystatechange = function() {\n";
-            page += "      if (this.readyState == 4 && this.status == 200) {\n";
-            page += "         callback(this);\n";
+            page += "  var paused = false;\n";
+            page += "  var pause_log = \"\";\n";
+            page += "  var logSocket = new WebSocket(\"ws://" + GetMyIPAddress() + ":9001\", \"Log\");";
+            page += "  logSocket.onopen = function(event) {\n";
+            page += "      //alert(\"Opened websocket connection\");\n";
+            page += "  }\n";
+            page += "  logSocket.onmessage = function(event) {\n";
+            page += "      if (!paused) {\n";
+            page += "          var elem = document.getElementById(\"log\");\n";
+            page += "          elem.value += (event.data + \"\\n\");\n";
+            page += "          var total = elem.value.split(\"\\n\");\n";
+            page += "          if (total.length > 8000)\n";
+            page += "              total = total.slice(-8000);\n";
+            page += "          elem.value = total.join(\"\\n\");\n";
+            page += "          elem.scrollTop = elem.scrollHeight;\n";
+            page += "      } else {\n";
+            page += "          pause_log += (event.data + \"\\r\\n\");\n";
             page += "      }\n";
-            page += "    };\n";
-            page += "    xhttp.open(\"GET\", \"/wflog\", true);\n";
-            page += "    xhttp.send();\n";
-            page += "  }\n";
-            page += "  function UpdateLog(xhttp) {\n";
-            page += "    var elem = document.getElementById(\"log\");\n";
-            page += "    elem.innerHTML = xhttp.responseText;\n";
-            page += "    elem.scrollTop = elem.scrollHeight;\n";
-            page += "  }\n";
-            page += "  function Start() {\n";
-            page += "    timeInt = setInterval(() => loadLog(UpdateLog), 2000);\n";
             page += "  }\n";
             page += "  function PauseLog() {\n";
-            page += "    if (timeInt > 0) {\n";
+            page += "    if (!paused) {\n";
             page += "       document.getElementById(\"Pause\").value = \"Paused\";\n";
-            page += "       clearInterval(timeInt);\n";
-            page += "       timeInt = 0;\n";
+            page += "       paused = true;\n";
             page += "    } else {\n";
             page += "       document.getElementById(\"Pause\").value = \"Pause\";\n";
-            page += "       timeInt = setInterval(() => loadLog(UpdateLog), 2000);\n";
+            page += "       var elem = document.getElementById(\"log\");\n";
+            page += "       elem.innerHTML += pause_log;\n";
+            page += "       elem.scrollTop = elem.scrollHeight;\n";
+            page += "       paused = false;\n";
+            page += "       pause_log = \"\";\n";
             page += "    }\n";
             page += "  }\n";
             page += "</script>\n";
-            page += "<title>WeatherFlow Nodeserver Web Interface</title>\n";
-            page += "</head><body onload=\"Start();\">\n";
+            page += "<title>WeatherFlow Nodeserver Web Interface - Log</title>\n";
+            page += "</head><body>\n";
             page += "<div align=\"center\" style=\"width: 900px; margin: 0 auto;\">\n";
             page += WFNServer.MakeMenu();
             page += "<textarea id=\"log\" rows=\"45\" cols=\"120\">";
@@ -178,5 +180,29 @@ namespace WFNodeServer {
 
             return page;
         }
+
+        private static string GetMyIPAddress() {
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces()) {
+                // Look for type == "Ethernet" && status == "Up"
+                if (ni.NetworkInterfaceType.ToString() != "Ethernet")
+                    continue;
+                if (ni.OperationalStatus.ToString() != "Up")
+                    continue;
+
+                foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses) {
+                    if (ip.IPv4Mask.ToString() == "0.0.0.0")
+                        continue;
+                    if (ip.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    var addrInt = BitConverter.ToInt32(ip.Address.GetAddressBytes(), 0);
+                    IPAddress myIP = new IPAddress(BitConverter.GetBytes(addrInt));
+                    return myIP.ToString();
+                }
+            }
+
+            return "";
+        }
+
     }
 }

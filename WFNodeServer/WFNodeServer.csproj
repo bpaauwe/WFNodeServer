@@ -59,6 +59,7 @@
     <Compile Include="wf_api_key.cs" />
     <Compile Include="wf_heartbeat.cs" />
     <Compile Include="wf_log.cs" />
+    <Compile Include="wf_log_server.cs" />
     <Compile Include="wf_nodesetup.cs" />
     <Compile Include="wf_node_info.cs" />
     <Compile Include="wf_station.cs" />

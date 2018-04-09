@@ -214,6 +214,7 @@ namespace WFNodeServer {
             WFLogging.AddListener(Console.WriteLine);
             WFLogging.Enabled = true;
             WFLogging.Level = (LOG_LEVELS)WF_Config.LogLevel;
+            WFLogging.TimeStamps = true;
 
             WFLogging.Log("WeatherFlow Node Server " + VERSION);
 
@@ -223,6 +224,8 @@ namespace WFNodeServer {
                 WF_Config.Valid = false;
 
             NS = new NodeServer();
+
+            WF_WebsocketLog LogServer = new WF_WebsocketLog(9001);
 
             while (!shutdown) {
                 Thread.Sleep(30000);
