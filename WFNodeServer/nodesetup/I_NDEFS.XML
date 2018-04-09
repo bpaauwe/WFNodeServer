@@ -63,9 +63,9 @@
 			<st id="GV1" editor="I_LUX" />
 			<st id="GV2" editor="I_UV" />
 			<st id="GV3" editor="I_RADIATION" />
-			<st id="GV4" editor="I_MPS" />
-			<st id="GV5" editor="I_MPS" />
-			<st id="GV6" editor="I_MPS" />
+			<st id="GV4" editor="I_KPH" />
+			<st id="GV5" editor="I_KPH" />
+			<st id="GV6" editor="I_KPH" />
 			<st id="GV7" editor="I_DEGREE" />
 			<st id="GV10" editor="I_VOLTS" />
 			<st id="GV0" editor="I_LAST_UPDATE" />
@@ -140,7 +140,7 @@
 	<nodeDef id="WF_RapidWind" nodeType="139" nls="139R" >
 		<sts>
 			<st id="GV0" editor="I_WIND_DIRECTION" />
-			<st id="GV1" editor="I_MPS" />
+			<st id="GV1" editor="I_KPH" />
 		</sts>
 	</nodeDef>
 

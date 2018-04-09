@@ -128,7 +128,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        internal static int ProfileVersion = 2;
+        internal static int ProfileVersion = 3;
         internal static bool Debug = false;
         internal static string ConfigFile = "wfnodeserver.json";
 
@@ -724,7 +724,7 @@ namespace WFNodeServer {
             Rest.REST(report);
             report = prefix + address + "/report/status/GV3/" + sky.SolarRadiation + "/74";
             Rest.REST(report);
-            unit = (WF_Config.SI) ? "/48" : "/49";
+            unit = (WF_Config.SI) ? "/48" : "/32";
             report = prefix + address + "/report/status/GV4/" + sky.WindSpeed + unit;
             Rest.REST(report);
             report = prefix + address + "/report/status/GV5/" + sky.GustSpeed + unit;
@@ -855,7 +855,7 @@ namespace WFNodeServer {
 
             wind.si_units = WF_Config.SI;
 
-            unit = (WF_Config.SI) ? "/48" : "/49";
+            unit = (WF_Config.SI) ? "/48" : "/32";
             //report = prefix + address + "/report/status/GV11/" + wind.Speed + unit;
             report = prefix + address + "/report/status/GV1/" + wind.Speed + unit;
             Rest.REST(report);

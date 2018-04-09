@@ -59,6 +59,9 @@
    <editor id="I_MPS">
       <range uom="49" min="0" max="20000" prec="1" />
    </editor>
+   <editor id="I_KPH">
+      <range uom="32" min="0" max="20000" prec="1" />
+   </editor>
    <editor id="I_INHR">
       <range uom="24" min="0" max="2000" prec="3" />
    </editor>
