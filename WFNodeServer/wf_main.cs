@@ -720,6 +720,7 @@ namespace WFNodeServer {
                     Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
                         "/add/WF_AirD/?primary=" + address + "&name=WeatherFlow%20(" + air.SerialNumber + "_d)");
                     NodeList.Add(sec_address, "WF_AirD");
+                    Rest.SendWSDLReqeust("SetParent", address, sec_address);
                 }
             }
             WFLogging.Info("HandleAir       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
@@ -802,6 +803,7 @@ namespace WFNodeServer {
                     Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + sec_address +
                         "/add/WF_SkyD/?primary=" + address + "&name=WeatherFlow%20(" + sky.SerialNumber + "_d)");
                     NodeList.Add(sec_address, "WF_SkyD");
+                    Rest.SendWSDLReqeust("SetParent", address, sec_address);
                 }
             }
             WFLogging.Info("HandleSky       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
@@ -891,6 +893,9 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_RapidWind" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
                 NodeList.Add(address, "WF_RapidWind");
+
+                // Group it
+                Rest.SendWSDLReqeust("SetParent", sky_address, address);
             }
 
             wind.si_units = WF_Config.SI;
@@ -923,6 +928,8 @@ namespace WFNodeServer {
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
                     "/add/WF_Lightning" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
                 NodeList.Add(address, "WF_Lightning");
+
+                Rest.SendWSDLReqeust("SetParent", air_address, address);
             }
             report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
             Rest.REST(report);

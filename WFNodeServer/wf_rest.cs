@@ -235,5 +235,52 @@ namespace WFNodeServer {
 
             return resp;
         }
+
+        // This is handling the SetParent service only at this point but could
+        // be expanded to handle other ISY WSDL reuests if needed.
+        internal void SendWSDLReqeust(string service, string parent, string node) {
+            string url = "http://" + WF_Config.ISY + "/services";
+            HttpWebRequest request;
+            HttpWebResponse response;
+            string reqString = "";
+
+            reqString = "<? version=\'1.0\' encoding=\'utf-8\'?>";
+            reqString += "<s:Envelope>";
+            reqString += "<s:Body>";
+            reqString += "<u:" + service + " xmlns:u=\'urn:udi-com:service:X_Insteon_Lighting_Service:1\'>";
+
+            reqString += "<node>" + node + "</node>";
+            reqString += "<nodeType>1</nodeType>";
+            reqString += "<parent>" + parent + "</parent>";
+            reqString += "<parentType>1</parentType>";
+
+            reqString += "</u:" + service + ">";
+            reqString += "</s:Body>";
+            reqString += "</s:Envelope>";
+            reqString += "\r\n";
+
+            request = (HttpWebRequest)HttpWebRequest.Create(url);
+            request.KeepAlive = true;
+            request.Method = "POST";
+            request.ContentType = "text/xml; charset-utf-8";
+            request.Headers.Add("Authorization", Authorize());
+            request.Headers.Add("SOAPAction", "urn:udi-com:device:X_Insteon_Lighting_Service:1#" + service);
+
+            Stream data = request.GetRequestStream();
+            data.Write(Encoding.ASCII.GetBytes(reqString), 0, reqString.Length);
+            data.Flush();
+            data.Close();
+
+            response = (HttpWebResponse)request.GetResponse();
+            if (response.StatusCode == HttpStatusCode.OK)
+                WFLogging.Log("Grouped " + node + " as a child of " + parent);
+            else
+                WFLogging.Error("Group of " + node + " under " + parent + "failed: " + response.StatusDescription);
+
+            response.Close();
+
+            return;
+        }
+
     }
 }
