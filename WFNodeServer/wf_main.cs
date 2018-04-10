@@ -336,9 +336,16 @@ namespace WFNodeServer {
         // We can attemp this as soon as we have a password
         // and username for the ISY.
         internal void InitializeISY() {
+            int p;
+
             if (!SetupRest())
                 return;
-            LookupProfile();
+
+            p = LookupProfile();
+
+            if (!ProfileDetected)
+                InstallNodeServerOnISY(++p);
+
             if (WF_Config.ProfileVersion != WeatherFlowNS.ProfileVersion)
                 UpdateProfileFiles();
             ConfigureNodes();
@@ -390,7 +397,7 @@ namespace WFNodeServer {
             return true;
         }
 
-        internal void LookupProfile() {
+        internal int LookupProfile() {
             XmlDocument xmld;
             XmlNode root;
             int ProfileNum = 0;
@@ -408,17 +415,50 @@ namespace WFNodeServer {
                 foreach (XmlNode node in root.ChildNodes) {
                     string profile = node.Attributes["profile"].Value;
                     string name = node.SelectSingleNode("name").InnerText;
+                    int.TryParse(profile, out ProfileNum);
                     if (name == "WeatherFlow") {
-                        int.TryParse(profile, out ProfileNum);
                         WFLogging.Log("Detected profile number " + ProfileNum.ToString());
                         WF_Config.Profile = ProfileNum;
                         ProfileDetected = true;
-                        return;
+                        return ProfileNum;
                     }
                 }
             } catch (Exception ex) {
                 WFLogging.Error("Parsing profiles failed: " + ex.Message);
             }
+            return ProfileNum;
+        }
+
+        internal void InstallNodeServerOnISY(int profile) {
+            if (profile > 25) {
+                WFLogging.Error("No node server profile slots available on ISY to install node server.");
+                return;
+            }
+
+            // ip=<address>
+            // baseurl=/weatherflow
+            // name=WeatherFlow
+            // nsuser=
+            // nspwd=
+            // isyusernum=0
+            // port=8288
+            // timeout=0
+            // ssl=false
+            // enabled=true
+            string installreq = "profiles/ns/" + profile.ToString() + "/connection/set/network/?";
+            installreq += "ip=" + HttpUtility.UrlEncode(ISYDetect.GetMyIPAddress());
+            installreq += "&baseurl=" + HttpUtility.UrlEncode("/WeatherFlow");
+            installreq += "&name=WeatherFlow";
+            installreq += "&nsuser=";
+            installreq += "&nspwd=";
+            installreq += "&isyusernum=0";
+            installreq += "&port=" + WF_Config.Port.ToString();
+            installreq += "&timeout=0";
+            installreq += "&ssl=false";
+            installreq += "&enabled=true";
+
+            WFLogging.Log("Attemping to install WeatherFlow node server in slot " + profile.ToString());
+            Rest.REST(installreq);
         }
 
         internal void ConfigureNodes() {
