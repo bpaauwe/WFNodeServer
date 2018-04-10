@@ -90,7 +90,6 @@ namespace WFNodeServer {
             string protocol = new System.Text.RegularExpressions.Regex("Sec-WebSocket-Protocol: (.*)").Match(data).Groups[1].Value.Trim();
             Console.WriteLine("Protocol: " + protocol);
             int l = bytes.Length;
-            //Console.WriteLine("Checking for end of header");
             if (bytes[l-1] == '\n' && bytes[l-2] == '\r' && bytes[l-3] == '\n') {
                 response = Encoding.UTF8.GetBytes("HTTP/1.1 101 Switching Protocols" + eol
                                 + "Upgrade: websocket" + eol
@@ -104,9 +103,7 @@ namespace WFNodeServer {
                                         )
                                     ) + eol
                                 + eol);
-                //Console.WriteLine("sending response, " + response.Length.ToString());
                 stream.Write(response, 0, response.Length);
-                //stream.WriteByte(0x00);
                 stream.Flush();
                 WFLogging.Debug(Encoding.ASCII.GetString(response));
             } else {
@@ -116,8 +113,10 @@ namespace WFNodeServer {
                 return;
             }
 
-            // Start sending the log.  This needs to be formatted properly as
-            // an actual frame of data.
+            // Start sending the log.
+            //  Only send the most recent 500 lines of data because sending more
+            //  here makes the interface unresponse for too long while it processes
+            //  it all.
             int start = (WFLogging.EventLogCount > 500) ? (WFLogging.EventLogCount - 500) : 0;
             for (int i = start; i < WFLogging.EventLogCount; i++) {
                 string[] e = WFLogging.GetEvent(i);
@@ -131,7 +130,6 @@ namespace WFNodeServer {
             }
 
             // Push the client to the client list
-            Console.WriteLine("Adding client " + client.Client.Handle.ToString() + " to client list");
             clients.Add(client);
 
             // Handle data comming in over the connection. Mainly we want to
@@ -197,23 +195,16 @@ namespace WFNodeServer {
         private void WSLog(string log_message) {
             List<TcpClient> rm = new List<TcpClient>();
 
-            int lines = WFLogging.EventLogCount;
-            if (lines % 100 == 0)
-                Console.WriteLine("*** Event Log is at " + lines.ToString() + " lines.");
-
             foreach (TcpClient c in clients) {
                 try {
-                    //Console.WriteLine("Sending to client " + c.Client.Handle.ToString());
                     SendMessage(c, log_message, 0x01);
                 } catch {
                     rm.Add(c);
                 }
             }
 
-            //Console.WriteLine("Remove List has " + rm.Count.ToString() + " clients");
             if (rm.Count > 0) {
                 foreach (TcpClient c in rm) {
-                    //Console.WriteLine("Removing client " + c.Client.Handle.ToString() + " from the list");
                     c.Close();
                     clients.Remove(c);
                 }
