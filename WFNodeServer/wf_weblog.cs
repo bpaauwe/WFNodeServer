@@ -123,7 +123,7 @@ namespace WFNodeServer {
             page += "<script>\n";
             page += "  var paused = false;\n";
             page += "  var pause_log = \"\";\n";
-            page += "  var logSocket = new WebSocket(\"ws://" + GetMyIPAddress() + ":9001\", \"Log\");";
+            page += "  var logSocket = new WebSocket(\"ws://" + ISYDetect.GetMyIPAddress() + ":9001\", \"Log\");";
             page += "  logSocket.onopen = function(event) {\n";
             page += "      //alert(\"Opened websocket connection\");\n";
             page += "  }\n";
@@ -179,29 +179,6 @@ namespace WFNodeServer {
             page += "</body></html>\n";
 
             return page;
-        }
-
-        private static string GetMyIPAddress() {
-            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces()) {
-                // Look for type == "Ethernet" && status == "Up"
-                if (ni.NetworkInterfaceType.ToString() != "Ethernet")
-                    continue;
-                if (ni.OperationalStatus.ToString() != "Up")
-                    continue;
-
-                foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses) {
-                    if (ip.IPv4Mask.ToString() == "0.0.0.0")
-                        continue;
-                    if (ip.Address.AddressFamily != AddressFamily.InterNetwork)
-                        continue;
-
-                    var addrInt = BitConverter.ToInt32(ip.Address.GetAddressBytes(), 0);
-                    IPAddress myIP = new IPAddress(BitConverter.GetBytes(addrInt));
-                    return myIP.ToString();
-                }
-            }
-
-            return "";
         }
 
     }

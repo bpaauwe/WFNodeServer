@@ -91,6 +91,29 @@ namespace WFNodeServer {
             return bcast_addr;
         }
 
+        internal static string GetMyIPAddress() {
+            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces()) {
+                // Look for type == "Ethernet" && status == "Up"
+                if (ni.NetworkInterfaceType.ToString() != "Ethernet")
+                    continue;
+                if (ni.OperationalStatus.ToString() != "Up")
+                    continue;
+
+                foreach (UnicastIPAddressInformation ip in ni.GetIPProperties().UnicastAddresses) {
+                    if (ip.IPv4Mask.ToString() == "0.0.0.0")
+                        continue;
+                    if (ip.Address.AddressFamily != AddressFamily.InterNetwork)
+                        continue;
+
+                    var addrInt = BitConverter.ToInt32(ip.Address.GetAddressBytes(), 0);
+                    IPAddress myIP = new IPAddress(BitConverter.GetBytes(addrInt));
+                    return myIP.ToString();
+                }
+            }
+
+            return "";
+        }
+
         internal static string FindISY() {
             UdpClient listen_udp;
             UdpState state;
