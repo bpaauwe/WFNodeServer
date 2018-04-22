@@ -56,12 +56,25 @@ namespace WFNodeServer {
         internal string TimeStamp {
             get { return data.ob[0].ToString(); }
         }
+        internal string SpeedUOM {
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return WeatherFlow_UDP.MS2KPH(data.ob[1]).ToString("0.#") + "/32";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#") + "/48";
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#") + "/48";
+                    default: return data.ob[1].ToString("0.#") + "/49";
+                }
+            }
+        }
+
         internal string Speed {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#");
-                else
-                    return data.ob[1].ToString();
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return WeatherFlow_UDP.MS2KPH(data.ob[1]).ToString("0.#");
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#");
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.MS2MPH(data.ob[1]).ToString("0.#");
+                    default: return data.ob[1].ToString("0.#");
+                }
             }
         }
         // Cardinal directions
@@ -97,8 +110,26 @@ namespace WFNodeServer {
         internal string TimeStamp {
             get { return data.evt[0].ToString(); }
         }
+        internal string DistanceUOM {
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return data.evt[1].ToString("0.#") + "/83";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.KM2Miles(data.evt[1]).ToString("0.#") + "/0";
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.KM2Miles(data.evt[1]).ToString("0.#") + "/0";
+                    default: return data.evt[1].ToString("0.#") + "/83";
+                }
+            }
+        }
+
         internal string Distance {
-            get { return data.evt[1].ToString(); }
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return data.evt[1].ToString("0.#");
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.KM2Miles(data.evt[1]).ToString("0.#");
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.KM2Miles(data.evt[1]).ToString("0.#");
+                    default: return data.evt[1].ToString("0.#");
+                }
+            }
         }
         internal string Energy {
             get { return data.evt[2].ToString(); }
@@ -283,43 +314,107 @@ namespace WFNodeServer {
             get { return data.obs[0][0].ToString(); }
         }
 
+        private double MB2InHg(double mb) {
+            return mb * 0.02952998751;
+        }
+
         internal string Pressure {
             get {
-                double inhg = data.obs[0][1].GetValueOrDefault() * 0.02952998751;
-                return inhg.ToString("0.###");
+                double mb = data.obs[0][1].GetValueOrDefault();
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return mb.ToString("0.#") + "/0";
+                    case (int)WF_UNITS.US: return MB2InHg(mb).ToString("0.###") + "/23";
+                    case (int)WF_UNITS.UK: return mb.ToString("0.#") + "/0";
+                    default: return mb.ToString("0.#") + "/0";
+                }
             }
         }
         internal double SetSeaLevel {
             set { sealevel = value; }
         }
+        internal string SeaLevelUOM {
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return sealevel.ToString("0.#") + "/0";
+                    case (int)WF_UNITS.US: return MB2InHg(sealevel).ToString("0.###") + "/23";
+                    case (int)WF_UNITS.UK: return sealevel.ToString("0.#") + "/0";
+                    default: return sealevel.ToString("0.#") + "/0";
+                }
+            }
+        }
         internal string SeaLevel {
             get {
-                double inhg = sealevel * 0.02952998751;
-                return inhg.ToString("0.###");
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return sealevel.ToString("0.#");
+                    case (int)WF_UNITS.US: return MB2InHg(sealevel).ToString("0.###");
+                    case (int)WF_UNITS.UK: return sealevel.ToString("0.#");
+                    default: return sealevel.ToString("0.#");
+                }
+            }
+        }
+
+        internal string TemperatureValue(double t) {
+            switch (WF_Config.Units) {
+                case (int)WF_UNITS.SI: return t.ToString("0.##");
+                case (int)WF_UNITS.US: return WeatherFlow_UDP.TempF(t).ToString("0.##");
+                case (int)WF_UNITS.UK: return t.ToString("0.##");
+                default: return t.ToString("0.##");
+            }
+        }
+
+        internal string TemperatureUOM {
+            get {
+                string t = TemperatureValue(data.obs[0][2].GetValueOrDefault());
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return t + "/4";
+                    case (int)WF_UNITS.US: return t + "/17";
+                    case (int)WF_UNITS.UK: return t + "/4";
+                    default: return t + "/t";
+                }
             }
         }
 
         internal string Temperature {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.TempF(data.obs[0][2].GetValueOrDefault()).ToString("0.#");
-                else
-                    return data.obs[0][2].GetValueOrDefault().ToString();
+                return TemperatureValue(data.obs[0][2].GetValueOrDefault());
             }
+        }
+
+        internal string HumidityUOM {
+            get { return data.obs[0][3].GetValueOrDefault().ToString() + "/51"; }
         }
         internal string Humidity {
             get { return data.obs[0][3].GetValueOrDefault().ToString(); }
         }
+        internal string StrikesUOM {
+            get { return data.obs[0][4].GetValueOrDefault().ToString() + "/56"; }
+        }
         internal string Strikes {
             get { return data.obs[0][4].GetValueOrDefault().ToString(); }
         }
+        internal string DistanceUOM {
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return data.obs[0][5].GetValueOrDefault().ToString("0.#") + "/83";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#") + "/0";
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#") + "/0";
+                    default: return data.obs[0][5].GetValueOrDefault().ToString("0.#") + "/83";
+                }
+            }
+        }
+
         internal string Distance {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
-                else
-                    return data.obs[0][5].GetValueOrDefault().ToString();
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return data.obs[0][5].GetValueOrDefault().ToString("0.#");
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
+                    case (int)WF_UNITS.UK: return WeatherFlow_UDP.KM2Miles(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
+                    default: return data.obs[0][5].GetValueOrDefault().ToString("0.#");
                 }
+            }
+        }
+        internal string BatteryUOM {
+            get { return data.obs[0][6].GetValueOrDefault().ToString() + "/72"; }
         }
         internal string Battery {
             get { return data.obs[0][6].GetValueOrDefault().ToString(); }
@@ -328,34 +423,51 @@ namespace WFNodeServer {
         internal double SetDewpoint {
             set { dewpoint = value; }
         }
+        internal string DewpointUOM {
+            get {
+                string t = TemperatureValue(dewpoint);
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return t + "/4";
+                    case (int)WF_UNITS.US: return t + "/17";
+                    case (int)WF_UNITS.UK: return t + "/4";
+                    default: return t + "/t";
+                }
+            }
+        }
         internal string Dewpoint {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.TempF(dewpoint).ToString("0.#");
-                else
-                    return dewpoint.ToString("0.#");
+                return TemperatureValue(dewpoint);
             }
         }
 
         internal double SetApparentTemp {
             set { apparent_temp = value; }
         }
+        internal string ApparentTempUOM {
+            get {
+                string t = TemperatureValue(apparent_temp);
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return t + "/4";
+                    case (int)WF_UNITS.US: return t + "/17";
+                    case (int)WF_UNITS.UK: return t + "/4";
+                    default: return t + "/4";
+                }
+            }
+        }
         internal string ApparentTemp {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.TempF(apparent_temp).ToString("0.#");
-                else
-                    return apparent_temp.ToString("0.#");
+                return TemperatureValue(apparent_temp);
             }
         }
 
         internal int SetTrend {
             set { trend = value; }
         }
+        internal string TrendUOM {
+            get { return trend.ToString() + "/25"; }
+        }
         internal string Trend {
-            get {
-                    return trend.ToString();
-            }
+            get { return trend.ToString(); }
         }
 
         internal int DeviceID {
@@ -397,18 +509,55 @@ namespace WFNodeServer {
         internal string TS {
             get { return data.obs[0][0].ToString(); }
         }
+        internal string IlluminationUOM {
+            get { return data.obs[0][1].GetValueOrDefault().ToString() + "/36"; }
+        }
         internal string Illumination {
             get { return data.obs[0][1].GetValueOrDefault().ToString(); }
+        }
+        internal string UVUOM {
+            get { return data.obs[0][2].GetValueOrDefault().ToString() + "/71"; }
         }
         internal string UV {
             get { return data.obs[0][2].GetValueOrDefault().ToString(); }
         }
+        internal string RainUOM {
+            get {
+                double r = data.obs[0][3].GetValueOrDefault();
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return r.ToString("0.#") + "/82";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MM2Inch(r).ToString("0.###") + "/105";
+                    case (int)WF_UNITS.UK: return r.ToString("0.###") + "/82";
+                    default: return r.ToString("0.#") + "/82";
+                }
+            }
+        }
+
         internal string Rain {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(data.obs[0][3].GetValueOrDefault()).ToString("0.###");
-                else
-                    return data.obs[0][3].GetValueOrDefault().ToString("0.#");
+                double r = data.obs[0][3].GetValueOrDefault();
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return r.ToString("0.#");
+                    case (int)WF_UNITS.US: return r.ToString("0.###");
+                    case (int)WF_UNITS.UK: return r.ToString("0.###");
+                    default: return r.ToString("0.#");
+                }
+            }
+        }
+        internal string RainRateUOM {
+            get {
+                double interval = data.obs[0][9].GetValueOrDefault();
+                double rate = data.obs[0][3].GetValueOrDefault() * 60;
+
+                if (interval > 0)
+                    rate = rate / interval;
+
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return rate.ToString("0.#") + "/46";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MM2Inch(rate).ToString("0.###") + "/24";
+                    case (int)WF_UNITS.UK: return rate.ToString("0.###") + "/46";
+                    default: return rate.ToString("0.#") + "/46";
+                }
             }
         }
         internal string RainRate {
@@ -419,33 +568,73 @@ namespace WFNodeServer {
                 if (interval > 0)
                     rate = rate / interval;
 
-                if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(rate).ToString("0.###");
-                else
-                    return rate.ToString("0.#");
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return rate.ToString("0.#");
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MM2Inch(rate).ToString("0.###");
+                    case (int)WF_UNITS.UK: return rate.ToString("0.###");
+                    default: return rate.ToString("0.#");
+                }
+            }
+        }
+        private string speedstr(double sp) {
+            switch (WF_Config.Units) {
+                case (int)WF_UNITS.SI: return WeatherFlow_UDP.MS2KPH(sp).ToString("0.#");
+                case (int)WF_UNITS.US: return WeatherFlow_UDP.MS2MPH(sp).ToString("0.#");
+                case (int)WF_UNITS.UK: return WeatherFlow_UDP.MS2MPH(sp).ToString("0.#");
+                default: return WeatherFlow_UDP.MS2KPH(sp).ToString("0.#");
+            }
+        }
+
+        internal string WindLullUOM {
+            get {
+                string s = speedstr(data.obs[0][4].GetValueOrDefault());
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return s + "/32";
+                    case (int)WF_UNITS.US: return s + "/48";
+                    case (int)WF_UNITS.UK: return s + "/48";
+                    default: return s + "/32";
+                }
             }
         }
         internal string WindLull {
-            get { return data.obs[0][4].GetValueOrDefault().ToString(); }
+            get { return speedstr(data.obs[0][4].GetValueOrDefault()); }
+        }
+        internal string WindSpeedUOM {
+            get {
+                string s = speedstr(data.obs[0][5].GetValueOrDefault());
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return s + "/32";
+                    case (int)WF_UNITS.US: return s + "/48";
+                    case (int)WF_UNITS.UK: return s + "/48";
+                    default: return s + "/32";
+                }
+            }
         }
         internal string WindSpeed {
+            get { return speedstr(data.obs[0][5].GetValueOrDefault()); }
+        }
+        internal string GustSpeedUOM {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.MS2MPH(data.obs[0][5].GetValueOrDefault()).ToString("0.#");
-                else
-                    return data.obs[0][5].GetValueOrDefault().ToString();
+                string s = speedstr(data.obs[0][6].GetValueOrDefault());
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return s + "/32";
+                    case (int)WF_UNITS.US: return s + "/48";
+                    case (int)WF_UNITS.UK: return s + "/48";
+                    default: return s + "/32";
+                }
             }
         }
         internal string GustSpeed {
-            get {
-                if (si_units)
-                    return WeatherFlow_UDP.MS2MPH(data.obs[0][6].GetValueOrDefault()).ToString("0.#");
-                else
-                    return data.obs[0][5].GetValueOrDefault().ToString();
-            }
+            get { return speedstr(data.obs[0][6].GetValueOrDefault()); }
+        }
+        internal string WindDirectionUOM {
+            get { return data.obs[0][7].GetValueOrDefault().ToString() + "/14"; }
         }
         internal string WindDirection {
             get { return data.obs[0][7].GetValueOrDefault().ToString(); }
+        }
+        internal string BatteryUOM {
+            get { return data.obs[0][8].GetValueOrDefault().ToString() + "/72"; }
         }
         internal string Battery {
             get { return data.obs[0][8].GetValueOrDefault().ToString(); }
@@ -453,11 +642,17 @@ namespace WFNodeServer {
         internal string Interval {
             get { return data.obs[0][9].GetValueOrDefault().ToString(); }
         }
+        internal string SolarRadiationUOM {
+            get { return data.obs[0][10].GetValueOrDefault().ToString() + "/74"; }
+        }
         internal string SolarRadiation {
             get { return data.obs[0][10].GetValueOrDefault().ToString(); }
         }
         internal string PrecipitationDay {
             get { return data.obs[0][11].GetValueOrDefault().ToString(); }
+        }
+        internal string PrecipitationTypeUOM {
+            get { return data.obs[0][12].GetValueOrDefault().ToString() + "/25"; }
         }
         internal string PrecipitationType {
             get { return data.obs[0][12].GetValueOrDefault().ToString(); }
@@ -468,12 +663,24 @@ namespace WFNodeServer {
         internal double SetDaily {
             set { daily = value; }
         }
+        internal string DailyUOM {
+            get {
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return daily.ToString("0.#") + "/82";
+                    case (int)WF_UNITS.US: return daily.ToString("0.###") + "/105";
+                    case (int)WF_UNITS.UK: return daily.ToString("0.#") + "/82";
+                    default: return daily.ToString("0.#") + "/82";
+                }
+            }
+        }
         internal string Daily {
             get {
-                if (si_units)
-                    return WeatherFlow_UDP.MM2Inch(daily).ToString("0.###");
-                else
-                    return daily.ToString("0.#");
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI: return daily.ToString("0.#");
+                    case (int)WF_UNITS.US: return daily.ToString("0.###");
+                    case (int)WF_UNITS.UK: return daily.ToString("0.#");
+                    default: return daily.ToString("0.#");
+                }
             }
         }
 

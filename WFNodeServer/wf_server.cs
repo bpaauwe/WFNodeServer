@@ -42,15 +42,19 @@ namespace WFNodeServer {
         private Dictionary<string, string> NodeDefs = new Dictionary<string, string> {
             {"WF_Sky", "Sky Sensor - metric"},
             {"WF_Air", "Air Sensor - metric"},
-            {"WF_SkySI", "Sky Sensor - imperial"},
-            {"WF_AirSI", "Air Sensor - imperial"},
+            {"WF_SkyUS", "Sky Sensor - imperial"},
+            {"WF_AirUS", "Air Sensor - imperial"},
+            {"WF_SkyUK", "Sky Sensor - UK"},
+            {"WF_AirUK", "Air Sensor - UK"},
             {"WF_SkyD", "Sky Sensor - device data"},
             {"WF_AirD", "Air Sensor - device data"},
             {"WF_Hub", "Hub data / heartbeat"},
             {"WF_Lightning", "Lightning event data"},
-            {"WF_LightningSI", "Lightning event data"},
+            {"WF_LightningUS", "Lightning event data"},
+            {"WF_LightningUK", "Lightning event data"},
             {"WF_RapidWind", "Rapid Wind speed/direction data"},
-            {"WF_RapidWindSI", "Rapid Wind speed/direction data"},
+            {"WF_RapidWindUS", "Rapid Wind speed/direction data"},
+            {"WF_RapidWindUK", "Rapid Wind speed/direction data"},
         };
 
         internal int Port {
@@ -382,6 +386,13 @@ namespace WFNodeServer {
                                     saveCfg = true;
                                 }
                                 break;
+                            case "sUnits":
+                                int.TryParse(pair[1], out v);
+                                if (v != WF_Config.Units) {
+                                    WF_Config.Units = v;
+                                    saveCfg = true;
+                                }
+                                break;
                             case "sLogLevel":
                                 int.TryParse(pair[1], out v);
                                 if (v != WF_Config.LogLevel) {
@@ -484,6 +495,21 @@ namespace WFNodeServer {
             return item;
         }
 
+        private string ConfigUnits(string title, string varname, int selected) {
+            string item;
+
+            item = "<tr>\n";
+            item += "<td><b>" + title + "</b></td>\n";
+            item += "<td><select name=\"" + varname + "\" onchange=\"this.form.submit()\">";
+            item += "<option value=\"0\" " + ((selected == 0) ? "selected" : "") + ">Metric</option>";
+            item += "<option value=\"1\" " + ((selected == 1) ? "selected" : "") + ">US (imperial)</option>";
+            item += "<option value=\"2\" " + ((selected == 2) ? "selected" : "") + ">UK (mixed)</option>";
+            item += "</select>\n";
+            item += "</td>\n";
+            item += "</tr>\n";
+
+            return item;
+        }
         private string ConfigItem(string title, string varname, string varvalue, int type) {
             string item;
 
@@ -548,9 +574,9 @@ namespace WFNodeServer {
             page += ConfigItem("ISY Username", "sUsername", WF_Config.Username, 1);
             page += ConfigItem("ISY Password", "sPassword", WF_Config.Password, 2);
             page += ConfigItem("Profile Number", "sProfile", WF_Config.Profile.ToString(), 0);
-            page += ConfigBoolItem("Use SI Units", "sSI", WF_Config.SI);
             page += ConfigBoolItem("Include Hub data", "sHub", WF_Config.Hub);
             page += ConfigBoolItem("Include Device data", "sDevice", WF_Config.Device);
+            page += ConfigUnits("Set Units", "sUnits", WF_Config.Units);
             page += ConfigList("Set Logging Level", "sLogLevel", WF_Config.LogLevel);
 
             page += "<tr>\n";

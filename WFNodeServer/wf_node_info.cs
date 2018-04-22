@@ -60,7 +60,7 @@ namespace WFNodeServer {
             string table;
             AirEventArgs args = null;
 
-            table = "<tr><th colspan=\"5\">WeatherFlow Smart Weather Station Air (metric/SI)</th></tr>";
+            table = "<tr><th colspan=\"5\">WeatherFlow Smart Weather Station Air</th></tr>";
             table += "<tr><th>Value</th><th>Name</th><th>Custom Notification</th><th>Value</th><th>Notes</th></tr>";
             if (WeatherFlowNS.NS.NodeData.ContainsKey(address)) {
                 args = (AirEventArgs)WeatherFlowNS.NS.NodeData[address];
@@ -130,7 +130,7 @@ namespace WFNodeServer {
             string table;
             SkyEventArgs args = null;
 
-            table = "<tr><th colspan=\"5\">WeatherFlow Smart Weather Station Sky (metric/SI)</th></tr>";
+            table = "<tr><th colspan=\"5\">WeatherFlow Smart Weather Station Sky</th></tr>";
             table += "<tr><th>Value</th><th>Name</th><th>Custom Notification</th><th>Value</th><th>Notes</th></tr>";
             if (WeatherFlowNS.NS.NodeData.ContainsKey(address)) {
                 args = (SkyEventArgs)WeatherFlowNS.NS.NodeData[address];
@@ -280,13 +280,17 @@ namespace WFNodeServer {
 
             foreach (string addr in WeatherFlowNS.NS.NodeList.Keys) {
                 page += "<table border=\"1\" style=\"width: 900px; border-collapse:collapse; box-shadow: 4px 4px 4px #999; \">";
-                if (WeatherFlowNS.NS.NodeList[addr] == "WF_AirSI")
+                if (WeatherFlowNS.NS.NodeList[addr] == "WF_AirUS")
                     page += AirDoc(addr);
                 else if (WeatherFlowNS.NS.NodeList[addr] == "WF_Air")
                     page += AirDoc(addr);
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_AirUK")
+                    page += AirDoc(addr);
                 else if (WeatherFlowNS.NS.NodeList[addr] == "WF_AirD")
                     page += AirDeviceDoc(addr);
-                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_SkySI")
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_SkyUS")
+                    page += SkyDoc(addr);
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_SkyUK")
                     page += SkyDoc(addr);
                 else if (WeatherFlowNS.NS.NodeList[addr] == "WF_Sky")
                     page += SkyDoc(addr);
@@ -296,11 +300,15 @@ namespace WFNodeServer {
                     page += HubDoc(addr);
                 else if (WeatherFlowNS.NS.NodeList[addr] == "WF_Lightning")
                     page += LightningDoc(addr);
-                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_LightningSI")
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_LightningUS")
+                    page += LightningDoc(addr);
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_LightningUK")
                     page += LightningDoc(addr);
                 else if (WeatherFlowNS.NS.NodeList[addr] == "WF_RapidWind")
                     page += RapidDoc(addr);
-                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_RapidWindSI")
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_RapidWindUS")
+                    page += RapidDoc(addr);
+                else if (WeatherFlowNS.NS.NodeList[addr] == "WF_RapidWindUK")
                     page += RapidDoc(addr);
                 else
                     WFLogging.Log("Unknown node type " + WeatherFlowNS.NS.NodeList[addr]);

@@ -31,6 +31,12 @@ using System.Reflection;
 using System.Web.Script.Serialization;
 
 namespace WFNodeServer {
+    internal enum WF_UNITS {
+        SI = 0,
+        US = 1,
+        UK = 2,
+    }
+
     static class WF_Config {
         internal static string Username { get; set; }
         internal static string Password { get; set; }
@@ -45,6 +51,7 @@ namespace WFNodeServer {
         internal static bool Device { get; set; }
         internal static bool Valid { get; set; }
         internal static int LogLevel { get; set; }
+        internal static int Units { get; set; }
     }
 
     public class cfgstate {
@@ -60,6 +67,7 @@ namespace WFNodeServer {
         public int ProfileVersion { get; set; }
         public bool Device { get; set; }
         public int LogLevel { get; set; }
+        public int Units { get; set; }
 
         public cfgstate() {
             Username = WF_Config.Username;
@@ -74,6 +82,7 @@ namespace WFNodeServer {
             ProfileVersion = WF_Config.ProfileVersion;
             Device = WF_Config.Device;
             LogLevel = WF_Config.LogLevel;
+            Units = WF_Config.Units;
         }
 
         internal void LoadState() {
@@ -89,6 +98,7 @@ namespace WFNodeServer {
             WF_Config.ProfileVersion = ProfileVersion;
             WF_Config.Device = Device;
             WF_Config.LogLevel = LogLevel;
+            WF_Config.Units = Units;
 
             if ((Password != "") && (Username != "") && (Profile != 0) && (WFStationInfo.Count > 0))
                 WF_Config.Valid = true;
@@ -128,7 +138,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        internal static int ProfileVersion = 3;
+        internal static int ProfileVersion = 4;
         internal static bool Debug = false;
         internal static string ConfigFile = "wfnodeserver.json";
 
@@ -152,6 +162,7 @@ namespace WFNodeServer {
             WF_Config.Valid = false;
             WF_Config.WFStationInfo = new List<StationInfo>();
             WF_Config.LogLevel = 1;
+            WF_Config.Units = (int)WF_UNITS.SI;
 
             // First check for command line config file path
             for (int i = 0; i < args.Length; i++) {
@@ -474,38 +485,64 @@ namespace WFNodeServer {
                 WF_Config.Profile = Profile;
                 ProfileDetected = true;
             }
+
+            // Fix up for pre version 4 profiles, convert SI nodes to US nodes, this should
+            // only need to run if we're moving to profile version 4.
+            //if (WF_Config.ProfileVersion < 4) {
+            string[] keys = NodeList.Keys.ToArray<string>();
+            foreach (string address in keys) {
+                if (NodeList[address] == "WF_AirSI") {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirUS");
+                    NodeList[address] = "WF_AirUS";
+                    WFLogging.Log("  - Converted " + address);
+                } else if (NodeList[address] == "WF_SkySI") {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkyUS");
+                    NodeList[address] = "WF_SkyUS";
+                    WFLogging.Log("  - Converted " + address);
+                } else if (NodeList[address] == "WF_LightningSI") {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_LightningUS");
+                    NodeList[address] = "WF_LightningUS";
+                    WFLogging.Log("  - Converted " + address);
+                } else if (NodeList[address] == "WF_RapidWindSI") {
+                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWindUS");
+                    NodeList[address] = "WF_RapidWindUS";
+                    WFLogging.Log("  - Converted " + address);
+                }
+            }
                 
-            // If si units, switch the nodedef 
+            // Set the nodes to the proper type matching the configuration value
             foreach (string address in NodeList.Keys) {
-                if (WF_Config.SI && (NodeList[address] == "WF_Air")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirSI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Air");
-                } else if (WF_Config.SI && (NodeList[address] == "WF_Sky")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkySI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_Sky")) {
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_Air")) {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_SkySI")) {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_AirSI")) {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_Lightning")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_LightningSI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_LightningSI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Lightning");
-                } else if (WF_Config.SI && NodeList[address] == "WF_LightningSI") {
-                } else if (!WF_Config.SI && NodeList[address] == "WF_Lightning") {
-                } else if (WF_Config.SI && (NodeList[address] == "WF_RapidWind")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWindSI");
-                } else if (!WF_Config.SI && (NodeList[address] == "WF_RapidWindSI")) {
-                    Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWind");
-                } else if (WF_Config.SI && NodeList[address] == "WF_RapidWindSI") {
-                } else if (!WF_Config.SI && NodeList[address] == "WF_RapidWind") {
-                } else if (NodeList[address] == "WF_SkyD") {
-                } else if (NodeList[address] == "WF_AirD") {
-                } else if (NodeList[address] == "WF_Hub") {
-                } else {
-                    WFLogging.Error("Node with address " + address + " has unknown type " + NodeList[address]);
+                switch (WF_Config.Units) {
+                    case (int)WF_UNITS.SI:
+                        if ((NodeList[address] == "WF_AirUS") || (NodeList[address] == "WF_AirUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Air");
+                        if ((NodeList[address] == "WF_SkyUS") || (NodeList[address] == "WF_SkyUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Sky");
+                        if ((NodeList[address] == "WF_LightningUS") || (NodeList[address] == "WF_LightningUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_Lightning");
+                        if ((NodeList[address] == "WF_RapidWindUS") || (NodeList[address] == "WF_RapidWindUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWind");
+                        break;
+                    case (int)WF_UNITS.US:
+                        if ((NodeList[address] == "WF_Air") || (NodeList[address] == "WF_AirUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirUS");
+                        if ((NodeList[address] == "WF_Sky") || (NodeList[address] == "WF_SkyUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkyUS");
+                        if ((NodeList[address] == "WF_Lightning") || (NodeList[address] == "WF_LightningUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_LightningUS");
+                        if ((NodeList[address] == "WF_RapidWind") || (NodeList[address] == "WF_RapidWindUK"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWindUS");
+                        break;
+                    case (int)WF_UNITS.UK:
+                        if ((NodeList[address] == "WF_AirUS") || (NodeList[address] == "WF_Air"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_AirUK");
+                        if ((NodeList[address] == "WF_SkyUS") || (NodeList[address] == "WF_Sky"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_SkyUK");
+                        if ((NodeList[address] == "WF_LightningUS") || (NodeList[address] == "WF_Lightning"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_LightningUK");
+                        if ((NodeList[address] == "WF_RapidWindUS") || (NodeList[address] == "WF_RapidWind"))
+                            Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address + "/change/WF_RapidWindUK");
+                        break;
                 }
             }
         }
@@ -648,16 +685,21 @@ namespace WFNodeServer {
                 WFRainSubscribers(sender, e);
         }
 
+        private string NodeSuffix() {
+            if (WF_Config.Units == (int)WF_UNITS.SI) return "";
+            else if (WF_Config.Units == (int)WF_UNITS.US) return "US";
+            else if (WF_Config.Units == (int)WF_UNITS.UK) return "UK";
+            return "";
+        }
+
+
         // Handler that is called when we receive Air data
         internal void HandleAir(object sender, AirEventArgs air) {
-            string report;
-            string unit;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber + "_d";
             DateTime start = DateTime.Now;
 
-            air.si_units = WF_Config.SI;
             NodeData[address] = air;
 
             if (!NodeList.Keys.Contains(address)) {
@@ -669,48 +711,24 @@ namespace WFNodeServer {
                 }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Air" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
-                NodeList.Add(address, "WF_Air" + ((WF_Config.SI) ? "SI" : ""));
+                    "/add/WF_Air" + NodeSuffix() + "/?name=WeatherFlow%20(" + air.SerialNumber + ")");
+                NodeList.Add(address, "WF_Air" + NodeSuffix());
             }
-
 
             StationInfo sinfo = wf_station.FindStationAir(air.serial_number);
             if (sinfo.station_id == -1)
                 AddStationAir(0, air.DeviceID, air.serial_number);
 
-            //report = prefix + address + "/report/status/GV0/" + air.TS + "/25";
-            //Rest.REST(report);
-
-            unit = (WF_Config.SI) ? "/F" : "/C";
-            report = prefix + address + "/report/status/GV1/" + air.Temperature + unit;
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV2/" + air.Humidity + "/PERCENT";
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV3/" + air.SeaLevel + "/23";
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV4/" + air.Strikes + "/25";
-            Rest.REST(report);
-
-            unit = (WF_Config.SI) ? "/0" : "/KM";
-            report = prefix + address + "/report/status/GV5/" + air.Distance + unit;
-            Rest.REST(report);
-
-            unit = (WF_Config.SI) ? "/F" : "/C";
-            report = prefix + address + "/report/status/GV6/" + air.Dewpoint + unit;
-            Rest.REST(report);
-
-            unit = (WF_Config.SI) ? "/F" : "/C";
-            report = prefix + address + "/report/status/GV7/" + air.ApparentTemp + unit;
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV8/" + air.Trend + "/25";
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV9/" + air.Battery + "/72";
-            Rest.REST(report);
+            string url = prefix + address + "/report/status/";
+            Rest.REST(url + "GV1/" + air.TemperatureUOM);
+            Rest.REST(url + "GV2/" + air.HumidityUOM);
+            Rest.REST(url + "GV3/" + air.SeaLevelUOM);
+            Rest.REST(url + "GV4/" + air.StrikesUOM);
+            Rest.REST(url + "GV5/" + air.DistanceUOM);
+            Rest.REST(url + "GV6/" + air.DewpointUOM);
+            Rest.REST(url + "GV7/" + air.ApparentTempUOM);
+            Rest.REST(url + "GV8/" + air.TrendUOM);
+            Rest.REST(url + "GV9/" + air.BatteryUOM);
 
             // Normally, we'd add the new node when we see a device status message
             // but device status doesn't tell us what type of device it is for so
@@ -728,14 +746,11 @@ namespace WFNodeServer {
 
         // Handler that is called when re receive Sky data
         internal void HandleSky(object sender, SkyEventArgs sky) {
-            string report;
-            string unit;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber + "_d";
             DateTime start = DateTime.Now;
 
-            sky.si_units = WF_Config.SI;
             NodeData[address] = sky;
 
             if (!NodeList.Keys.Contains(address)) {
@@ -747,53 +762,25 @@ namespace WFNodeServer {
                 }
 
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Sky" + ((WF_Config.SI) ? "SI" : "") + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
-                NodeList.Add(address, "WF_Sky" + ((WF_Config.SI) ? "SI" : ""));
-
-                // Do we want to add a secondary diagnostic node?
+                    "/add/WF_Sky" + NodeSuffix() + "/?name=WeatherFlow%20(" + sky.SerialNumber + ")");
+                NodeList.Add(address, "WF_Sky" + NodeSuffix());
             }
 
             StationInfo sinfo = wf_station.FindStationSky(sky.serial_number);
             if (sinfo.station_id == -1)
                 AddStationSky(0, sky.DeviceID, sky.serial_number);
 
-            //report = prefix + address + "/report/status/GV0/" + sky.TS + "/25";
-            //Rest.REST(report);
-            report = prefix + address + "/report/status/GV1/" + sky.Illumination + "/36";
-            Rest.REST(report);
-            report = prefix + address + "/report/status/GV2/" + sky.UV + "/71";
-            Rest.REST(report);
-            report = prefix + address + "/report/status/GV3/" + sky.SolarRadiation + "/74";
-            Rest.REST(report);
-            unit = (WF_Config.SI) ? "/48" : "/32";
-            report = prefix + address + "/report/status/GV4/" + sky.WindSpeed + unit;
-            Rest.REST(report);
-            report = prefix + address + "/report/status/GV5/" + sky.GustSpeed + unit;
-            Rest.REST(report);
-            report = prefix + address + "/report/status/GV6/" + sky.WindLull + unit;
-            Rest.REST(report);
-            report = prefix + address + "/report/status/GV7/" + sky.WindDirection + "/14";
-            Rest.REST(report);
-
-            // Currently we just report the rain over 1 minute. If we want the rate
-            // this number should be multiplied by 60 to get inches/hour (which is UOM 24)
-            // mm/hour is uom 46
-            //unit = (WF_Config.SI) ? "/105" : "/82";
-            //report = prefix + address + "/report/status/GV7/" + sky.Rain + unit;
-            //Rest.REST(report);
-            unit = (WF_Config.SI) ? "/24" : "/46";
-            report = prefix + address + "/report/status/GV8/" + sky.RainRate + unit;
-            Rest.REST(report);
-
-            unit = (WF_Config.SI) ? "/105" : "/82";
-            report = prefix + address + "/report/status/GV9/" + sky.Daily + unit;
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV11/" + sky.PrecipitationType + "/25";
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV10/" + sky.Battery + "/72";
-            Rest.REST(report);
+            Rest.REST(prefix + address + "/report/status/GV1/" + sky.IlluminationUOM);
+            Rest.REST(prefix + address + "/report/status/GV2/" + sky.UVUOM);
+            Rest.REST(prefix + address + "/report/status/GV3/" + sky.SolarRadiationUOM);
+            Rest.REST(prefix + address + "/report/status/GV4/" + sky.WindSpeedUOM);
+            Rest.REST(prefix + address + "/report/status/GV5/" + sky.GustSpeedUOM);
+            Rest.REST(prefix + address + "/report/status/GV6/" + sky.WindLullUOM);
+            Rest.REST(prefix + address + "/report/status/GV7/" + sky.WindDirectionUOM);
+            Rest.REST(prefix + address + "/report/status/GV8/" + sky.RainRateUOM);
+            Rest.REST(prefix + address + "/report/status/GV9/" + sky.DailyUOM);
+            Rest.REST(prefix + address + "/report/status/GV11/" + sky.PrecipitationTypeUOM);
+            Rest.REST(prefix + address + "/report/status/GV10/" + sky.BatteryUOM);
 
             // Normally, we'd add the new node when we see a device status message
             // but device status doesn't tell us what type of device it is for so
@@ -810,7 +797,6 @@ namespace WFNodeServer {
         }
 
         internal void HandleDevice(object sender, DeviceEventArgs device) {
-            string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
             string units;
@@ -835,51 +821,32 @@ namespace WFNodeServer {
             units = "/10";
 
             if (NodeList[address].Contains("Air")) {
-                report = prefix + address + "/report/status/GV0/" + device.Voltage + "/72";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x001) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + device.SensorStatus(0x002) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV5/" + device.SensorStatus(0x004) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV6/" + device.SensorStatus(0x008) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV7/" + device.SensorStatus(0x010) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV9/" + device.Firmware + "/56";
-                Rest.REST(report);
+                Rest.REST(prefix + address + "/report/status/GV0/" + device.Voltage + "/72");
+                Rest.REST(prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units);
+                Rest.REST(prefix + address + "/report/status/GV2/" + device.RSSI + "/56");
+                Rest.REST(prefix + address + "/report/status/GV3/" + device.SensorStatus(0x001) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV4/" + device.SensorStatus(0x002) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV5/" + device.SensorStatus(0x004) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV6/" + device.SensorStatus(0x008) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV7/" + device.SensorStatus(0x010) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV9/" + device.Firmware + "/56");
 
             } else if (NodeList[address].Contains("Sky")) {
-                report = prefix + address + "/report/status/GV0/" + device.Voltage + "/72";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units;
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + device.RSSI + "/56";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV3/" + device.SensorStatus(0x040) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV6/" + device.Firmware + "/56";
-                Rest.REST(report);
+                Rest.REST(prefix + address + "/report/status/GV0/" + device.Voltage + "/72");
+                Rest.REST(prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units);
+                Rest.REST(prefix + address + "/report/status/GV2/" + device.RSSI + "/56");
+                Rest.REST(prefix + address + "/report/status/GV3/" + device.SensorStatus(0x040) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25");
+                Rest.REST(prefix + address + "/report/status/GV6/" + device.Firmware + "/56");
             }
             WFLogging.Info("HandleDevice    " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleWind(object sender, RapidEventArgs wind) {
-            string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
-            string unit;
             DateTime start = DateTime.Now;
 
             NodeData[address] = wind;
@@ -891,32 +858,24 @@ namespace WFNodeServer {
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_RapidWind" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
+                    "/add/WF_RapidWind" + NodeSuffix() + "/?primary=" + sky_address + "&name=WeatherFlow%20(" + wind.SerialNumber + ")");
                 NodeList.Add(address, "WF_RapidWind");
 
                 // Group it
                 Rest.SendWSDLReqeust("SetParent", sky_address, address);
             }
 
-            wind.si_units = WF_Config.SI;
 
-            unit = (WF_Config.SI) ? "/48" : "/32";
-            //report = prefix + address + "/report/status/GV11/" + wind.Speed + unit;
-            report = prefix + address + "/report/status/GV1/" + wind.Speed + unit;
-            Rest.REST(report);
-            //report = prefix + address + "/report/status/GV10/" + wind.Direction.ToString() + "/25";
-            report = prefix + address + "/report/status/GV0/" + wind.Direction.ToString() + "/25";
-            Rest.REST(report);
+            Rest.REST(prefix + address + "/report/status/GV1/" + wind.SpeedUOM);
+            Rest.REST(prefix + address + "/report/status/GV0/" + wind.Direction.ToString() + "/25");
             WFLogging.Info("HandleWind      " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
         internal void HandleLightning(object sender, LightningEventArgs strike) {
-            string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.SerialNumber;
             DateTime start = DateTime.Now;
 
-            strike.si_units = WF_Config.SI;
             NodeData[address] = strike;
 
             if (!NodeList.Keys.Contains(address)) {
@@ -926,20 +885,14 @@ namespace WFNodeServer {
 
                 // Ideally, this should be a secondary node under tha matching Air node.
                 Rest.REST("ns/" + WF_Config.Profile.ToString() + "/nodes/" + address +
-                    "/add/WF_Lightning" + ((WF_Config.SI) ? "SI" : "") + "/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
+                    "/add/WF_Lightning" + NodeSuffix() + "/?primary=" + air_address + "&name=WeatherFlow%20(" + strike.SerialNumber + ")");
                 NodeList.Add(address, "WF_Lightning");
 
                 Rest.SendWSDLReqeust("SetParent", air_address, address);
             }
-            report = prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25";
-            Rest.REST(report);
-
-            string unit = (WF_Config.SI) ? "/56" : "/KM";
-            report = prefix + address + "/report/status/GV1/" + strike.Distance + unit;
-            Rest.REST(report);
-
-            report = prefix + address + "/report/status/GV2/" + strike.Energy + "/56";
-            Rest.REST(report);
+            Rest.REST(prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25");
+            Rest.REST(prefix + address + "/report/status/GV1/" + strike.DistanceUOM);
+            Rest.REST(prefix + address + "/report/status/GV2/" + strike.Energy + "/56");
             WFLogging.Info("HandleLightning " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
@@ -954,7 +907,6 @@ namespace WFNodeServer {
         }
 
         internal void HandleHub(object sender, HubEventArgs hub) {
-            string report;
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + hub.SerialNumber;
             DateTime start = DateTime.Now;
@@ -973,14 +925,10 @@ namespace WFNodeServer {
             if (WF_Config.Hub) {
                 double up = (double)hub.Uptime / (60.0 * 60.0 * 24.0); // Days
 
-                report = prefix + address + "/report/status/GV1/" + hub.Firmware + "/56";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV2/" + up.ToString("0.##") + "/10";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV3/" + hub.RSSI + "/56";
-                Rest.REST(report);
-                report = prefix + address + "/report/status/GV4/" + hub.Sequence + "/25";
-                Rest.REST(report);
+                Rest.REST(prefix + address + "/report/status/GV1/" + hub.Firmware + "/56");
+                Rest.REST(prefix + address + "/report/status/GV2/" + up.ToString("0.##") + "/10");
+                Rest.REST(prefix + address + "/report/status/GV3/" + hub.RSSI + "/56");
+                Rest.REST(prefix + address + "/report/status/GV4/" + hub.Sequence + "/25");
             }
 
             WFLogging.Debug("HUB: firmware    = " + hub.Firmware);
@@ -1038,14 +986,20 @@ namespace WFNodeServer {
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Air") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Air");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
-                        }  else if (node.Attributes["nodeDefId"].Value == "WF_AirSI") {
-                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirSI");
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_AirUS") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirUS");
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_AirUK") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirUK");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Sky") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Sky");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
-                        }  else if (node.Attributes["nodeDefId"].Value == "WF_SkySI") {
-                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkySI");
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_SkyUS") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkyUS");
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_SkyUK") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkyUK");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Hub") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Hub");
@@ -1059,15 +1013,31 @@ namespace WFNodeServer {
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_Lightning") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_Lightning");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
-                        }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningSI") {
-                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningSI");
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningUS") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningUS");
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningUK") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningUK");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWind") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWind");
                             WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWindUS") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWindUS");
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWindUK") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWindUK");
+                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
+
+                        // These will need to be converted!
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_AirSI") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_AirSI");
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_SkySI") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_SkySI");
+                        }  else if (node.Attributes["nodeDefId"].Value == "WF_LightningSI") {
+                            NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_LightningSI");
                         }  else if (node.Attributes["nodeDefId"].Value == "WF_RapidWindSI") {
                             NodeList.Add(node.SelectSingleNode("address").InnerText, "WF_RapidWindSI");
-                            WFLogging.Info("Found: " + node.SelectSingleNode("address").InnerText);
                         }
                     } catch {
                         WFLogging.Error("Failed to parse nodeDefId attribute from " + node.Name);
