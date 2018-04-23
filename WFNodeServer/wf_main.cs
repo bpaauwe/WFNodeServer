@@ -236,7 +236,7 @@ namespace WFNodeServer {
 
             NS = new NodeServer();
 
-            WF_WebsocketLog LogServer = new WF_WebsocketLog(9001);
+            WF_WebsocketLog LogServer = new WF_WebsocketLog(8289);
 
             while (!shutdown) {
                 Thread.Sleep(30000);

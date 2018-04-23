@@ -123,7 +123,7 @@ namespace WFNodeServer {
             page += "<script>\n";
             page += "  var paused = false;\n";
             page += "  var pause_log = \"\";\n";
-            page += "  var logSocket = new WebSocket(\"ws://" + ISYDetect.GetMyIPAddress() + ":9001\", \"Log\");";
+            page += "  var logSocket = new WebSocket(\"ws://" + ISYDetect.GetMyIPAddress() + ":8289\", \"Log\");";
             page += "  logSocket.onopen = function(event) {\n";
             page += "      //alert(\"Opened websocket connection\");\n";
             page += "  }\n";
