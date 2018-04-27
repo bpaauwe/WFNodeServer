@@ -924,8 +924,8 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.SerialNumber;
             DateTime start = DateTime.Now;
-
-            NodeData[address] = strike;
+            LightningEventArgs prev;
+            bool force = false;
 
             if (!NodeList.Keys.Contains(address)) {
                 string air_address = "n" + WF_Config.Profile.ToString("000") + "_" + strike.Parent;
@@ -939,9 +939,19 @@ namespace WFNodeServer {
 
                 Rest.SendWSDLReqeust("SetParent", air_address, address);
             }
-            Rest.REST(prefix + address + "/report/status/GV0/" + strike.TimeStamp + "/25");
-            Rest.REST(prefix + address + "/report/status/GV1/" + strike.DistanceUOM);
-            Rest.REST(prefix + address + "/report/status/GV2/" + strike.Energy + "/56");
+
+            if (NodeData.ContainsKey(address)) {
+                prev = (LightningEventArgs)NodeData[address];
+            } else {
+                prev = strike;
+                force = true;
+            }
+
+            SendIfDiff(address, "GV0", prev.TimeStamp, strike.TimeStamp, "/25", force);
+            SendIfDiff(address, "GV1", prev.DistanceUOM, strike.DistanceUOM, force);
+            SendIfDiff(address, "GV2", prev.Energy, strike.Energy, "/56", force);
+
+            NodeData[address] = strike;
             WFLogging.Info("HandleLightning " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
