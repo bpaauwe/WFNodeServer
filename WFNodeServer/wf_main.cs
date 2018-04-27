@@ -692,6 +692,13 @@ namespace WFNodeServer {
             return "";
         }
 
+        private void SendIfDiff(string address, string gv, string prev, string curr, bool force) {
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            if (prev != curr || force) {
+                WFLogging.Debug("Sending: " + prefix + address + "/report/status/" + gv + "/" + curr);
+                Rest.REST(prefix + address + "/report/status/" + gv + "/" + curr);
+            }
+        }
 
         // Handler that is called when we receive Air data
         internal void HandleAir(object sender, AirEventArgs air) {
@@ -699,8 +706,8 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + air.SerialNumber + "_d";
             DateTime start = DateTime.Now;
-
-            NodeData[address] = air;
+            AirEventArgs prev;
+            bool force = false;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -719,16 +726,24 @@ namespace WFNodeServer {
             if (sinfo.station_id == -1)
                 AddStationAir(0, air.DeviceID, air.serial_number);
 
-            string url = prefix + address + "/report/status/";
-            Rest.REST(url + "GV1/" + air.TemperatureUOM);
-            Rest.REST(url + "GV2/" + air.HumidityUOM);
-            Rest.REST(url + "GV3/" + air.SeaLevelUOM);
-            Rest.REST(url + "GV4/" + air.StrikesUOM);
-            Rest.REST(url + "GV5/" + air.DistanceUOM);
-            Rest.REST(url + "GV6/" + air.DewpointUOM);
-            Rest.REST(url + "GV7/" + air.ApparentTempUOM);
-            Rest.REST(url + "GV8/" + air.TrendUOM);
-            Rest.REST(url + "GV9/" + air.BatteryUOM);
+            if (NodeData.ContainsKey(address)) {
+                prev = (AirEventArgs)NodeData[address];
+            } else {
+                prev = air;
+                force = true;
+            }
+
+            SendIfDiff(address, "GV1", prev.TemperatureUOM, air.TemperatureUOM, force);
+            SendIfDiff(address, "GV2", prev.HumidityUOM, air.HumidityUOM, force);
+            SendIfDiff(address, "GV3", prev.SeaLevelUOM, air.SeaLevelUOM, force);
+            SendIfDiff(address, "GV4", prev.StrikesUOM, air.StrikesUOM, force);
+            SendIfDiff(address, "GV5", prev.DistanceUOM, air.DistanceUOM, force);
+            SendIfDiff(address, "GV6", prev.DewpointUOM, air.DewpointUOM, force);
+            SendIfDiff(address, "GV7", prev.ApparentTempUOM, air.ApparentTempUOM, force);
+            SendIfDiff(address, "GV8", prev.TrendUOM, air.TrendUOM, force);
+            SendIfDiff(address, "GV9", prev.BatteryUOM, air.BatteryUOM, force);
+
+            NodeData[address] = air;
 
             // Normally, we'd add the new node when we see a device status message
             // but device status doesn't tell us what type of device it is for so
@@ -750,8 +765,8 @@ namespace WFNodeServer {
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber;
             string sec_address = "n" + WF_Config.Profile.ToString("000") + "_" + sky.SerialNumber + "_d";
             DateTime start = DateTime.Now;
-
-            NodeData[address] = sky;
+            SkyEventArgs prev;
+            bool force = false;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -770,17 +785,26 @@ namespace WFNodeServer {
             if (sinfo.station_id == -1)
                 AddStationSky(0, sky.DeviceID, sky.serial_number);
 
-            Rest.REST(prefix + address + "/report/status/GV1/" + sky.IlluminationUOM);
-            Rest.REST(prefix + address + "/report/status/GV2/" + sky.UVUOM);
-            Rest.REST(prefix + address + "/report/status/GV3/" + sky.SolarRadiationUOM);
-            Rest.REST(prefix + address + "/report/status/GV4/" + sky.WindSpeedUOM);
-            Rest.REST(prefix + address + "/report/status/GV5/" + sky.GustSpeedUOM);
-            Rest.REST(prefix + address + "/report/status/GV6/" + sky.WindLullUOM);
-            Rest.REST(prefix + address + "/report/status/GV7/" + sky.WindDirectionUOM);
-            Rest.REST(prefix + address + "/report/status/GV8/" + sky.RainRateUOM);
-            Rest.REST(prefix + address + "/report/status/GV9/" + sky.DailyUOM);
-            Rest.REST(prefix + address + "/report/status/GV11/" + sky.PrecipitationTypeUOM);
-            Rest.REST(prefix + address + "/report/status/GV10/" + sky.BatteryUOM);
+            if (NodeData.ContainsKey(address)) {
+                prev = (SkyEventArgs)NodeData[address];
+            } else {
+                prev = sky;
+                force = true;
+            }
+
+            SendIfDiff(address, "GV1", prev.IlluminationUOM, sky.IlluminationUOM, force);
+            SendIfDiff(address, "GV2", prev.UVUOM, sky.UVUOM, force);
+            SendIfDiff(address, "GV3", prev.SolarRadiationUOM, sky.SolarRadiationUOM, force);
+            SendIfDiff(address, "GV4", prev.WindSpeedUOM, sky.WindSpeedUOM, force);
+            SendIfDiff(address, "GV5", prev.GustSpeedUOM, sky.GustSpeedUOM, force);
+            SendIfDiff(address, "GV6", prev.WindLullUOM, sky.WindLullUOM, force);
+            SendIfDiff(address, "GV7", prev.WindDirectionUOM, sky.WindDirectionUOM, force);
+            SendIfDiff(address, "GV8", prev.RainRateUOM, sky.RainRateUOM, force);
+            SendIfDiff(address, "GV9", prev.DailyUOM, sky.DailyUOM, force);
+            SendIfDiff(address, "GV10", prev.BatteryUOM, sky.BatteryUOM, force);
+            SendIfDiff(address, "GV11", prev.PrecipitationTypeUOM, sky.PrecipitationTypeUOM, force);
+
+            NodeData[address] = sky;
 
             // Normally, we'd add the new node when we see a device status message
             // but device status doesn't tell us what type of device it is for so
