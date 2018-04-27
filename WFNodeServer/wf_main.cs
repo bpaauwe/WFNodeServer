@@ -888,8 +888,8 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.SerialNumber;
             DateTime start = DateTime.Now;
-
-            NodeData[address] = wind;
+            RapidEventArgs prev;
+            bool force = false;
 
             if (!NodeList.Keys.Contains(address)) {
                 string sky_address = "n" + WF_Config.Profile.ToString("000") + "_" + wind.Parent;
@@ -905,9 +905,18 @@ namespace WFNodeServer {
                 Rest.SendWSDLReqeust("SetParent", sky_address, address);
             }
 
+            if (NodeData.ContainsKey(address)) {
+                prev = (RapidEventArgs)NodeData[address];
+            } else {
+                prev = wind;
+                force = true;
+            }
 
-            Rest.REST(prefix + address + "/report/status/GV1/" + wind.SpeedUOM);
-            Rest.REST(prefix + address + "/report/status/GV0/" + wind.Direction.ToString() + "/25");
+            SendIfDiff(address, "GV0", prev.Direction.ToString(), wind.Direction.ToString(), "/25", force);
+            SendIfDiff(address, "GV1", prev.SpeedUOM, wind.SpeedUOM, force);
+
+            NodeData[address] = wind;
+
             WFLogging.Info("HandleWind      " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
