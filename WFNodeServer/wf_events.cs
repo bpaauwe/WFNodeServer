@@ -274,6 +274,10 @@ namespace WFNodeServer {
         internal string Debug {
             get { return data.debug.ToString(); }
         }
+
+        internal string Frequency {
+            get { return data.freq.ToString(); }
+        }
     }
 
     internal class AirEventArgs : System.EventArgs {

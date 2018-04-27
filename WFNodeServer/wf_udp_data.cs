@@ -145,6 +145,7 @@ namespace WFNodeServer {
             public int hub_rssi { get; set; }  // Added in firmware 35
             public int sensor_status { get; set; }
             public int debug { get; set; }  // Added in firmware 35
+            public int freq { get; set; }  // Added in firmware 40
         }
 
         public class HubData {

@@ -138,7 +138,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        internal static int ProfileVersion = 4;
+        internal static int ProfileVersion = 5;
         internal static bool Debug = false;
         internal static string ConfigFile = "wfnodeserver.json";
 
@@ -831,6 +831,7 @@ namespace WFNodeServer {
                 Rest.REST(prefix + address + "/report/status/GV7/" + device.SensorStatus(0x010) + "/25");
                 Rest.REST(prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25");
                 Rest.REST(prefix + address + "/report/status/GV9/" + device.Firmware + "/56");
+                Rest.REST(prefix + address + "/report/status/GV10/" + device.Frequency + "/56");
 
             } else if (NodeList[address].Contains("Sky")) {
                 Rest.REST(prefix + address + "/report/status/GV0/" + device.Voltage + "/72");
@@ -840,6 +841,7 @@ namespace WFNodeServer {
                 Rest.REST(prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25");
                 Rest.REST(prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25");
                 Rest.REST(prefix + address + "/report/status/GV6/" + device.Firmware + "/56");
+                Rest.REST(prefix + address + "/report/status/GV7/" + device.Frequency + "/56");
             }
             WFLogging.Info("HandleDevice    " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }

@@ -27,6 +27,7 @@ ST-139AD-GV6-NAME = Pressure Sensor
 ST-139AD-GV7-NAME = Temperature Sensor
 ST-139AD-GV8-NAME = Humidity Sensor
 ST-139AD-GV9-NAME = Firmware Revision
+ST-139SD-GV10-NAME = Frequency
 
 ND-WF_Sky-NAME = WeatherFlow Smart Weather Station Sky (metric)
 ND-WF_Sky-ICON = Weather
@@ -56,6 +57,7 @@ ST-139SD-GV3-NAME = Wind Sensor
 ST-139SD-GV4-NAME = Precipitation Sensor
 ST-139SD-GV5-NAME = Light/UV Sensor
 ST-139SD-GV6-NAME = Firmware Revision
+ST-139SD-GV7-NAME = Frequency
 
 ND-WF_Hub-NAME = WeatherFlow Smart Weather Station Hub
 ND-WF_Hub-ICON = Input
