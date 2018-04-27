@@ -168,7 +168,8 @@ namespace WFNodeServer {
                     xml = "";
                     //Console.WriteLine(xml);
                     //throw new RestException();
-                    WFLogging.Error("Request failed: " + ex.Message);
+                    WFLogging.Error("REST request " + url + " failed:");
+                    WFLogging.Error("    " + ex.Message);
                 }
 
                 stats.RequestTime = DateTime.Now.Subtract(start).TotalMilliseconds;
