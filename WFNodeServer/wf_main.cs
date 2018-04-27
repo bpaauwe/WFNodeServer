@@ -969,8 +969,8 @@ namespace WFNodeServer {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + hub.SerialNumber;
             DateTime start = DateTime.Now;
-
-            NodeData[address] = hub;
+            HubEventArgs prev;
+            bool force = false;
 
             if (!NodeList.Keys.Contains(address)) {
                 // Add it
@@ -984,11 +984,20 @@ namespace WFNodeServer {
             if (WF_Config.Hub) {
                 double up = (double)hub.Uptime / (60.0 * 60.0 * 24.0); // Days
 
-                Rest.REST(prefix + address + "/report/status/GV1/" + hub.Firmware + "/56");
-                Rest.REST(prefix + address + "/report/status/GV2/" + up.ToString("0.##") + "/10");
-                Rest.REST(prefix + address + "/report/status/GV3/" + hub.RSSI + "/56");
-                Rest.REST(prefix + address + "/report/status/GV4/" + hub.Sequence + "/25");
+                if (NodeData.ContainsKey(address)) {
+                    prev = (HubEventArgs)NodeData[address];
+                } else {
+                    prev = hub;
+                    force = true;
+                }
+
+                SendIfDiff(address, "GV1", prev.Firmware, hub.Firmware, "/56", force);
+                SendIfDiff(address, "GV2", "", up.ToString("0.##"), "/10", force);
+                SendIfDiff(address, "GV3", prev.RSSI, hub.RSSI, "/56", force);
+                SendIfDiff(address, "GV4", prev.Sequence, hub.Sequence, "/56", force);
             }
+
+            NodeData[address] = hub;
 
             WFLogging.Debug("HUB: firmware    = " + hub.Firmware);
             WFLogging.Debug("HUB: reset flags = " + hub.ResetFlags);
