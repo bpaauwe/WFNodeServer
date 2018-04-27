@@ -820,15 +820,21 @@ namespace WFNodeServer {
             WFLogging.Info("HandleSky       " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
+        private void SendIfDiff(string address, string gv, string prev, string curr, string uom, bool force) {
+            string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
+            if (prev != curr || force) {
+                Rest.REST(prefix + address + "/report/status/" + gv + "/" + curr + uom);
+            }
+        }
+
         internal void HandleDevice(object sender, DeviceEventArgs device) {
             string prefix = "ns/" + WF_Config.Profile.ToString() + "/nodes/";
             string address = "n" + WF_Config.Profile.ToString("000") + "_" + device.SerialNumber;
-            string units;
             double up;
             double secsperday = 60 * 60 * 24;
             DateTime start = DateTime.Now;
-
-            NodeData[address] = device;
+            DeviceEventArgs prev;
+            bool force = false;
 
             // Skip if not enabled.
             if (!WF_Config.Device)
@@ -842,31 +848,39 @@ namespace WFNodeServer {
             // Device uptime is in seconds.  Lets make this easier to understand and 
             // report it in days
             up = (double)device.Uptime / secsperday; // Days
-            units = "/10";
+
+            if (NodeData.ContainsKey(address)) {
+                prev = (DeviceEventArgs)NodeData[address];
+            } else {
+                prev = device;
+                force = true;
+            }
 
             if (NodeList[address].Contains("Air")) {
-                Rest.REST(prefix + address + "/report/status/GV0/" + device.Voltage + "/72");
-                Rest.REST(prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units);
-                Rest.REST(prefix + address + "/report/status/GV2/" + device.RSSI + "/56");
-                Rest.REST(prefix + address + "/report/status/GV3/" + device.SensorStatus(0x001) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV4/" + device.SensorStatus(0x002) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV5/" + device.SensorStatus(0x004) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV6/" + device.SensorStatus(0x008) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV7/" + device.SensorStatus(0x010) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV8/" + device.SensorStatus(0x020) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV9/" + device.Firmware + "/56");
-                Rest.REST(prefix + address + "/report/status/GV10/" + device.Frequency + "/56");
-
+                SendIfDiff(address, "GV0", prev.Voltage, device.Voltage, "/72", force);
+                SendIfDiff(address, "GV1", "", up.ToString("0.##"), "/10", force);
+                SendIfDiff(address, "GV2", prev.RSSI, device.RSSI, "/56", force);
+                SendIfDiff(address, "GV3", prev.SensorStatus(0x001), device.SensorStatus(0x001), "/25", force);
+                SendIfDiff(address, "GV4", prev.SensorStatus(0x002), device.SensorStatus(0x002), "/25", force);
+                SendIfDiff(address, "GV5", prev.SensorStatus(0x004), device.SensorStatus(0x004), "/25", force);
+                SendIfDiff(address, "GV6", prev.SensorStatus(0x008), device.SensorStatus(0x008), "/25", force);
+                SendIfDiff(address, "GV7", prev.SensorStatus(0x010), device.SensorStatus(0x010), "/25", force);
+                SendIfDiff(address, "GV8", prev.SensorStatus(0x020), device.SensorStatus(0x020), "/25", force);
+                SendIfDiff(address, "GV9", prev.Firmware, device.Firmware, "/56", force);
+                SendIfDiff(address, "GV10", prev.Frequency, device.Frequency, "/56", force);
             } else if (NodeList[address].Contains("Sky")) {
-                Rest.REST(prefix + address + "/report/status/GV0/" + device.Voltage + "/72");
-                Rest.REST(prefix + address + "/report/status/GV1/" + up.ToString("0.##") + units);
-                Rest.REST(prefix + address + "/report/status/GV2/" + device.RSSI + "/56");
-                Rest.REST(prefix + address + "/report/status/GV3/" + device.SensorStatus(0x040) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV4/" + device.SensorStatus(0x080) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV5/" + device.SensorStatus(0x100) + "/25");
-                Rest.REST(prefix + address + "/report/status/GV6/" + device.Firmware + "/56");
-                Rest.REST(prefix + address + "/report/status/GV7/" + device.Frequency + "/56");
-            }
+                SendIfDiff(address, "GV0", prev.Voltage, device.Voltage, "/72", force);
+                SendIfDiff(address, "GV1", "", up.ToString("0.##"), "/10", force);
+                SendIfDiff(address, "GV2", prev.RSSI, device.RSSI, "/56", force);
+                SendIfDiff(address, "GV3", prev.SensorStatus(0x040), device.SensorStatus(0x040), "/25", force);
+                SendIfDiff(address, "GV4", prev.SensorStatus(0x080), device.SensorStatus(0x080), "/25", force);
+                SendIfDiff(address, "GV5", prev.SensorStatus(0x100), device.SensorStatus(0x100), "/25", force);
+                SendIfDiff(address, "GV6", prev.Firmware, device.Firmware, "/56", force);
+                SendIfDiff(address, "GV7", prev.Frequency, device.Frequency, "/56", force);
+            } 
+
+            NodeData[address] = device;
+
             WFLogging.Info("HandleDevice    " + DateTime.Now.Subtract(start).TotalMilliseconds.ToString("#.00") + " ms");
         }
 
