@@ -84,8 +84,8 @@ namespace WFNodeServer {
                         WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
                     break;
                 case WeatherFlow_UDP.DataType.DEVICE:
-                    // Expect data every 30 seconds
-                    if (diff >= 60)
+                    // Expect data every 60 seconds
+                    if (diff >= 90)
                         WFLogging.Warning("Possible Missing data for " + address + ": " + diff.ToString() + " seconds");
                     break;
                 case WeatherFlow_UDP.DataType.HUB:
