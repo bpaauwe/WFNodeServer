@@ -105,8 +105,10 @@ namespace WFNodeServer {
 
         [Serializable]
         internal class RestException : Exception {
+            internal int Code { get; set; }
             internal RestException() : base() { }
             internal RestException(string message) : base(message) { }
+            internal RestException(int code, string message) : base(message) { Code = code; }
         }
 
         //
@@ -114,12 +116,8 @@ namespace WFNodeServer {
         // the XML response
         //
         internal string REST(string url) {
-            HttpWebRequest request;
-            HttpWebResponse response;
-            string xml = "";
             string rest_url;
-            int code;
-            DateTime start = DateTime.Now;
+            string resp = "";
 
             rest_url = Base + url;
 
@@ -131,52 +129,71 @@ namespace WFNodeServer {
 
             lock (RateLimit) {
                 WFLogging.Debug(rest_url);
-                request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
-                request.UserAgent = "WFNodeServer";
-                if (AuthRequired)
-                    request.Headers.Add("Authorization", Authorize());
-                request.Proxy = null;
-                request.ServicePoint.ConnectionLimit = 10;
-                request.Timeout = 2000;
-                request.KeepAlive = true;
-                //request.Pipelined = true;
+                int retrys = 3;
 
-                // Read data from the stream
-                try {
-                    response = (HttpWebResponse)request.GetResponse();
-                    if (response.ContentLength > 0) {
-                        code = (int)response.StatusCode;
-                        if (code != 200) {
-                            if (code == 404) {  // No entries match this request
-                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
-                            } else if (code == 405) { // URL doesn't exist (bad request)
-                                WFLogging.Error("REST request " + url + " failed " + response.StatusDescription);
-                            } else {
-                                WFLogging.Error("ISY REST request to URL, " +
-                                        url + ", failed with " +
-                                        response.StatusDescription);
+                while (retrys > 0) {
+                    retrys--;
+                    try {
+                        resp = MakeRequest(rest_url);
+                    } catch (RestException re) {
+                        if (re.Code != 0) {
+                            WFLogging.Error("REST request " + url + " failed " + re.Message);
+                            retrys = 0;
+                        } else {
+                            if (retrys == 0) {
+                                WFLogging.Error("REST request " + url + " failed after 3 retries with " + re.Message);
                             }
-                        } else {  // code == 200 OK, read response
-                            xml = ChunkedRead(response);
                         }
-                    } else if (response.ContentLength == -1) {// End of content length > 0
-                        // Response is chunked?
-                        xml = ChunkedRead(response);
                     }
+                    Thread.Sleep(100);
+                }
+            }
+            return resp;
+        }
+
+        private string MakeRequest(string rest_url) {
+            HttpWebRequest request;
+            HttpWebResponse response;
+            int code;
+            DateTime start = DateTime.Now;
+            string xml = "";
+
+            request = (HttpWebRequest)HttpWebRequest.Create(rest_url);
+            request.UserAgent = "WFNodeServer";
+            if (AuthRequired)
+                request.Headers.Add("Authorization", Authorize());
+            request.Proxy = null;
+            request.ServicePoint.ConnectionLimit = 10;
+            request.Timeout = 2000;
+            request.KeepAlive = true;
+            //request.Pipelined = true;
+
+            // Read data from the stream
+            try {
+                response = (HttpWebResponse)request.GetResponse();
+                code = (int)response.StatusCode;
+                if (code != 200) {
                     response.Close();
-                } catch (WebException ex) {
-                    xml = "";
-                    //Console.WriteLine(xml);
-                    //throw new RestException();
-                    WFLogging.Error("REST request " + url + " failed:");
-                    WFLogging.Error("    " + ex.Message);
+                    throw new RestException(code, response.StatusDescription);
                 }
 
-                stats.RequestTime = DateTime.Now.Subtract(start).TotalMilliseconds;
-                stats.Count++;
-                //Thread.Sleep(50);
-                return xml;
+                if (response.ContentLength == 0)
+                    return "";
+
+                // sucess with content
+                xml = ChunkedRead(response);
+                response.Close();
+            } catch (WebException ex) {
+                if (ex.Status == WebExceptionStatus.ProtocolError)
+                    throw new RestException(400, ex.Message);
+
+                WFLogging.Error("GetResponse thew exception: " + ex.Status.ToString());
+                throw new RestException(0, ex.Message);
             }
+
+            stats.RequestTime = DateTime.Now.Subtract(start).TotalMilliseconds;
+            stats.Count++;
+            return xml;
         }
 
         internal void REST_POST(string url, string content, int len) {
