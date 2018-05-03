@@ -221,7 +221,11 @@ namespace WFNodeServer {
                 DeviceObj = serializer.Deserialize<DeviceData>(json);
 
                 // Add event to update this info.
-                WeatherFlowNS.NS.RaiseDeviceEvent(this, new WFNodeServer.DeviceEventArgs(DeviceObj));
+                try {
+                    WeatherFlowNS.NS.RaiseDeviceEvent(this, new WFNodeServer.DeviceEventArgs(DeviceObj));
+                } catch {
+                    WFLogging.Warning("Failed to process device event.");
+                }
                 WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)DeviceObj.timestamp, DeviceObj.serial_number + "_d", DataType.DEVICE));
 
                 //Console.WriteLine("Serial Number:     " + DeviceObj.serial_number);
@@ -313,10 +317,15 @@ namespace WFNodeServer {
                 } else {
                 }
 
-                WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
-                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)AirObj.obs[0][0], AirObj.serial_number, DataType.AIR));
+                try {
+                    WeatherFlowNS.NS.RaiseAirEvent(this, evnt);
+                } catch (Exception ex) {
+                    WFLogging.Warning("Failed to process Air event. " + ex.Message);
+                }
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)AirObj.obs[0][0].GetValueOrDefault(), AirObj.serial_number, DataType.AIR));
             } catch (Exception ex) {
                 WFLogging.Error("Deserialization failed for air data: " + ex.Message);
+                WFLogging.Verbose(json);
             }
 		}
 
@@ -331,10 +340,15 @@ namespace WFNodeServer {
                 evnt.SetDaily = CalcDailyPrecipitation();
                 evnt.Raw = json;
 
-                WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
-                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)SkyObj.obs[0][0], SkyObj.serial_number, DataType.SKY));
+                try {
+                    WeatherFlowNS.NS.RaiseSkyEvent(this, evnt);
+                } catch (Exception ex) {
+                    WFLogging.Warning("Failed to process Sky event. " + ex.Message);
+                }
+                WeatherFlowNS.NS.RaiseUpdateEvent(this, new UpdateEventArgs((int)SkyObj.obs[0][0].GetValueOrDefault(), SkyObj.serial_number, DataType.SKY));
             } catch (Exception ex) {
                 WFLogging.Error("Deserialization failed for sky data: " + ex.Message);
+                WFLogging.Verbose(json);
                 return;
             }
 
