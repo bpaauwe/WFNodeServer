@@ -129,23 +129,25 @@ namespace WFNodeServer {
 
             lock (RateLimit) {
                 WFLogging.Debug(rest_url);
-                int retrys = 3;
+                int retrys = 0;
 
-                while (retrys > 0) {
-                    retrys--;
+                while (retrys < 5) {
                     try {
                         resp = MakeRequest(rest_url);
+                        break;
                     } catch (RestException re) {
                         if (re.Code != 0) {
                             WFLogging.Error("REST request " + url + " failed " + re.Message);
-                            retrys = 0;
+                            break;
                         } else {
-                            if (retrys == 0) {
-                                WFLogging.Error("REST request " + url + " failed after 3 retries with " + re.Message);
+                            // Timeout or failed to get result
+                            retrys++;
+                            if (retrys == 5) {
+                                WFLogging.Error("REST request " + url + " failed after 5 retries with " + re.Message);
                             }
+                            Thread.Sleep(50 * retrys);
                         }
                     }
-                    Thread.Sleep(100);
                 }
             }
             return resp;
@@ -164,7 +166,7 @@ namespace WFNodeServer {
                 request.Headers.Add("Authorization", Authorize());
             request.Proxy = null;
             request.ServicePoint.ConnectionLimit = 10;
-            request.Timeout = 2000;
+            request.Timeout = 4000;
             request.KeepAlive = true;
             //request.Pipelined = true;
 
