@@ -30,6 +30,7 @@ namespace WFNodeServer {
         UPDATE = 0x00,
         ERROR,
         WARNING,
+        VERBOSE,
         INFO,
         DEBUG
     };
@@ -110,6 +111,9 @@ namespace WFNodeServer {
         }
         public static void Info(string msg) {
             WriteEntry(LOG_LEVELS.INFO, msg, false);
+        }
+        public static void Verbose(string msg) {
+            WriteEntry(LOG_LEVELS.VERBOSE, msg, false);
         }
         public static void Error(string msg) {
             WriteEntry(LOG_LEVELS.ERROR, msg, false);

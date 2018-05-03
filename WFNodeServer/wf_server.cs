@@ -486,8 +486,9 @@ namespace WFNodeServer {
             item += "<option value=\"0\" " + ((selected == 0) ? "selected" : "") + ">Updates</option>";
             item += "<option value=\"1\" " + ((selected == 1) ? "selected" : "") + ">Errors</option>";
             item += "<option value=\"2\" " + ((selected == 2) ? "selected" : "") + ">Warnings</option>";
-            item += "<option value=\"3\" " + ((selected == 3) ? "selected" : "") + ">Info</option>";
-            item += "<option value=\"4\" " + ((selected == 4) ? "selected" : "") + ">Debug</option>";
+            item += "<option value=\"3\" " + ((selected == 3) ? "selected" : "") + ">Verbose</option>";
+            item += "<option value=\"4\" " + ((selected == 4) ? "selected" : "") + ">Info</option>";
+            item += "<option value=\"5\" " + ((selected == 5) ? "selected" : "") + ">Debug</option>";
             item += "</select>\n";
             item += "</td>\n";
             item += "</tr>\n";
