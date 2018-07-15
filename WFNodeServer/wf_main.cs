@@ -138,7 +138,7 @@ namespace WFNodeServer {
         internal static bool shutdown = false;
         internal static double Elevation = 0;
         internal static string VERSION = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-        internal static int ProfileVersion = 5;
+        internal static int ProfileVersion = 6;
         internal static bool Debug = false;
         internal static string ConfigFile = "wfnodeserver.json";
 
@@ -867,7 +867,7 @@ namespace WFNodeServer {
                 SendIfDiff(address, "GV7", prev.SensorStatus(0x010), device.SensorStatus(0x010), "/25", force);
                 SendIfDiff(address, "GV8", prev.SensorStatus(0x020), device.SensorStatus(0x020), "/25", force);
                 SendIfDiff(address, "GV9", prev.Firmware, device.Firmware, "/56", force);
-                SendIfDiff(address, "GV10", prev.Frequency, device.Frequency, "/56", force);
+                //SendIfDiff(address, "GV10", prev.Frequency, device.Frequency, "/56", force);
             } else if (NodeList[address].Contains("Sky")) {
                 SendIfDiff(address, "GV0", prev.Voltage, device.Voltage, "/72", force);
                 SendIfDiff(address, "GV1", "", up.ToString("0.##"), "/10", force);
@@ -876,7 +876,7 @@ namespace WFNodeServer {
                 SendIfDiff(address, "GV4", prev.SensorStatus(0x080), device.SensorStatus(0x080), "/25", force);
                 SendIfDiff(address, "GV5", prev.SensorStatus(0x100), device.SensorStatus(0x100), "/25", force);
                 SendIfDiff(address, "GV6", prev.Firmware, device.Firmware, "/56", force);
-                SendIfDiff(address, "GV7", prev.Frequency, device.Frequency, "/56", force);
+                //SendIfDiff(address, "GV7", prev.Frequency, device.Frequency, "/56", force);
             } 
 
             NodeData[address] = device;
