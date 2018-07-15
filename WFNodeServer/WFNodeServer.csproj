@@ -78,7 +78,9 @@
   <ItemGroup>
     <EmbeddedResource Include="nodesetup\EN_US.TXT" />
     <EmbeddedResource Include="nodesetup\I_EDIT.XML" />
-    <EmbeddedResource Include="nodesetup\I_NDEFS.XML" />
+    <EmbeddedResource Include="nodesetup\I_NDEFS.XML">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="nodesetup\version.txt" />
