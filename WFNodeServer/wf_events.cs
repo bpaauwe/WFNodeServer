@@ -671,7 +671,7 @@ namespace WFNodeServer {
             get {
                 switch (WF_Config.Units) {
                     case (int)WF_UNITS.SI: return daily.ToString("0.#") + "/82";
-                    case (int)WF_UNITS.US: return daily.ToString("0.###") + "/105";
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MM2Inch(daily).ToString("0.###") + "/105";
                     case (int)WF_UNITS.UK: return daily.ToString("0.#") + "/82";
                     default: return daily.ToString("0.#") + "/82";
                 }
@@ -681,7 +681,7 @@ namespace WFNodeServer {
             get {
                 switch (WF_Config.Units) {
                     case (int)WF_UNITS.SI: return daily.ToString("0.#");
-                    case (int)WF_UNITS.US: return daily.ToString("0.###");
+                    case (int)WF_UNITS.US: return WeatherFlow_UDP.MM2Inch(daily).ToString("0.###");
                     case (int)WF_UNITS.UK: return daily.ToString("0.#");
                     default: return daily.ToString("0.#");
                 }
