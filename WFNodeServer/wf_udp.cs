@@ -101,6 +101,8 @@ namespace WFNodeServer {
                                 DeviceStatus(json);
                             } else if (json.Contains("hub_status")) {
                                 HubStatus(json);
+                            } else if (json.Contains("obs_tower")) {
+                                // Skip
                             } else {
                                 // Unknown type of packet
                             }
